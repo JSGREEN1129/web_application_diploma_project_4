@@ -5,57 +5,114 @@
 
 {% block content %}
 
-<section class="homepage-hero py-5 text-center">
-  <div class="container position-relative">
-    <h1 class="display-4 fw-bold">Green Square Capital</h1>
-    <p class="lead mt-3">
-      A prototype platform connecting property developers with private investors to fund renovation and development projects.
-    </p>
 
-    <div class="d-flex justify-content-center w-100 gap-3 mt-5">
-      <a href="{% url 'users:login' %}" class="btn same-size-btn btn-primary btn-lg">Login</a>
-      <a href="{% url 'users:register' %}" class="btn same-size-btn btn-primary btn-lg">Register</a>
+
+<!-- Tagline + two intro panels over background -->
+<section class="py-5 gsc-hero-bg">
+  <div class="container text-white">
+    <h2 class="h4 mb-4 text-center">
+      Where Real Estate Investors Meet Real Estate Investment Opportunities
+    </h2>
+
+    <div class="row g-4">
+      <div class="col-12 col-md-6">
+        <div class="h-100 p-3 p-md-4 border border-2 border-light bg-opacity-25 bg-success">
+          <p class="mb-0">
+            “Green Square Capital connects investors with property projects listed by individual
+            developers. Browse investment opportunities, fund projects, and earn a share of the
+            rental income through a secure, transparent platform that makes property investing
+            simple and accessible.”
+          </p>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-6">
+        <div class="h-100 p-3 p-md-4 border border-2 border-light bg-opacity-25 bg-success">
+          <p class="mb-0">
+            “Green Square Capital makes it simple for property owners and developers to fund their
+            projects. List your property development opportunity, attract investors, and secure the
+            funding you need – all while offering a transparent platform to repay investors with a
+            share of the rental income.”
+          </p>
+        </div>
+      </div>
     </div>
   </div>
 </section>
 
-<section class="features-section py-5">
+<!-- Successful projects section -->
+<section class="py-5" style="background-color: #f5f5f5;">
   <div class="container">
-    <div class="row g-4 text-center">
 
-      <div class="col-12 col-md-6 col-lg-3">
-        <div class="features-box features-box-1 p-3">
-          <div class="features-content">
-            <h4>Project Listings</h4>
-            <p>Explore development and renovation opportunities, each with clear funding targets, minimum investment amounts, and expected returns.</p>
-          </div>
+    <div class="bg-success text-white text-center py-3 mb-4">
+      <h2 class="h5 mb-0">
+        Successful Projects Funded Through Green Square Capital
+      </h2>
+    </div>
+
+    <div class="row g-4">
+
+      <!-- Project 1 -->
+      <div class="col-12 col-md-6">
+        <div class="h-100 p-3 p-md-4 bg-white border">
+          <p class="fw-bold mb-1">
+            Project: Old Cotton Factory Works, 117 Green Street, Manchester
+          </p>
+          <p class="mb-1"><strong>Description:</strong></p>
+          <p class="mb-0">
+            A former commercial building transformed into four modern, fully refurbished residential flats.
+            This project used investor funding to convert underutilised space into high-quality rental
+            accommodation, increasing the property’s value and generating ongoing rental income for both
+            investors and the property owner.
+          </p>
         </div>
       </div>
 
-      <div class="col-12 col-md-6 col-lg-3">
-        <div class="features-box features-box-2 p-3">
-          <div class="features-content">
-            <h4>Investment Pledges</h4>
-            <p>Pledge investment amounts towards projects that match your interests and track how close a project is to reaching its funding target.</p>
-          </div>
+      <!-- Project 2 -->
+      <div class="col-12 col-md-6">
+        <div class="h-100 p-3 p-md-4 bg-white border">
+          <p class="fw-bold mb-1">
+            Project: Bedford Police Station, 99b Walkway, Bristol
+          </p>
+          <p class="mb-1"><strong>Description:</strong></p>
+          <p class="mb-0">
+            A former police station transformed into residential flats, with a fully refurbished
+            gym in the basement exclusively for residents. Investor funding enabled the conversion
+            of the building into high-quality rental accommodation, boosting the property’s value
+            and generating long-term rental income for both investors and the property owner.
+          </p>
         </div>
       </div>
 
-      <div class="col-12 col-md-6 col-lg-3">
-        <div class="features-box features-box-3 p-3">
-          <div class="features-content">
-            <h4>Developer-Friendly</h4>
-            <p>Submit projects with key financial details and manage investor interest through a simple listing and pledge flow.</p>
-          </div>
+      <!-- Project 3 -->
+      <div class="col-12 col-md-6">
+        <div class="h-100 p-3 p-md-4 bg-white border">
+          <p class="fw-bold mb-1">
+            Project: The Willow House, 22 Meadow Lane, Leeds
+          </p>
+          <p class="mb-1"><strong>Description:</strong></p>
+          <p class="mb-0">
+            A derelict property transformed into a modern, comfortable family home. Investor
+            funding facilitated the full renovation, turning an underutilised building into a
+            high-quality, long-term rental. The project increased the property’s market value while
+            providing investors with a share of future rental income or capital growth.
+          </p>
         </div>
       </div>
 
-      <div class="col-12 col-md-6 col-lg-3">
-        <div class="features-box features-box-4 p-3">
-          <div class="features-content">
-            <h4>Secure & Educational</h4>
-            <p>Built as an educational prototype with a focus on authentication, database relationships, and investment tracking logic.</p>
-          </div>
+      <!-- Project 4 -->
+      <div class="col-12 col-md-6">
+        <div class="h-100 p-3 p-md-4 bg-white border">
+          <p class="fw-bold mb-1">
+            Project: Hawthorne Manor, 15 Kingsway, Oxford
+          </p>
+          <p class="mb-1"><strong>Description:</strong></p>
+          <p class="mb-0">
+            A historic manor house converted into modern serviced offices. Investor funding enabled
+            the restoration of the building, preserving its character while providing flexible office
+            space for small businesses. The project enhanced the property’s value and created a
+            consistent long-term income stream for both investors and the property owner.
+          </p>
         </div>
       </div>
 

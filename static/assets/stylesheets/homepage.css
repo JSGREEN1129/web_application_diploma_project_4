@@ -1,0 +1,7 @@
+/* Background image for green hero section */
+.gsc-hero-bg {
+    background: url('/static/images/gsc_homepage_greyscale_green_overlay.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
