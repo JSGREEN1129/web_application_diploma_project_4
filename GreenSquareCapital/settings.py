@@ -38,7 +38,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'widget_tweaks',
-    'templates',
     'users',
     'investments',
     'listings',
@@ -102,6 +101,13 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
+]
+
+AUTHENTICATION_BACKENDS = [
+    # Custom backend to allow login via email
+    'users.backends.EmailBackend',
+    # Default backend (kept as a fallback, still allows admin login by username)
+    'django.contrib.auth.backends.ModelBackend',
 ]
 
 
