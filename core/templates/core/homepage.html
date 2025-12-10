@@ -1,0 +1,66 @@
+{% extends "core/base_public.html" %}
+{% load static %}
+
+{% block title %}GSC - Green Square Capital{% endblock %}
+
+{% block content %}
+
+<section class="homepage-hero py-5 text-center">
+  <div class="container position-relative">
+    <h1 class="display-4 fw-bold">Green Square Capital</h1>
+    <p class="lead mt-3">
+      A prototype platform connecting property developers with private investors to fund renovation and development projects.
+    </p>
+
+    <div class="d-flex justify-content-center w-100 gap-3 mt-5">
+      <a href="{% url 'users:login' %}" class="btn same-size-btn btn-primary btn-lg">Login</a>
+      <a href="{% url 'users:register' %}" class="btn same-size-btn btn-primary btn-lg">Register</a>
+    </div>
+  </div>
+</section>
+
+<section class="features-section py-5">
+  <div class="container">
+    <div class="row g-4 text-center">
+
+      <div class="col-12 col-md-6 col-lg-3">
+        <div class="features-box features-box-1 p-3">
+          <div class="features-content">
+            <h4>Project Listings</h4>
+            <p>Explore development and renovation opportunities, each with clear funding targets, minimum investment amounts, and expected returns.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-6 col-lg-3">
+        <div class="features-box features-box-2 p-3">
+          <div class="features-content">
+            <h4>Investment Pledges</h4>
+            <p>Pledge investment amounts towards projects that match your interests and track how close a project is to reaching its funding target.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-6 col-lg-3">
+        <div class="features-box features-box-3 p-3">
+          <div class="features-content">
+            <h4>Developer-Friendly</h4>
+            <p>Submit projects with key financial details and manage investor interest through a simple listing and pledge flow.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-6 col-lg-3">
+        <div class="features-box features-box-4 p-3">
+          <div class="features-content">
+            <h4>Secure & Educational</h4>
+            <p>Built as an educational prototype with a focus on authentication, database relationships, and investment tracking logic.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+{% endblock %}

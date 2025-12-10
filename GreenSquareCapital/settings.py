@@ -41,7 +41,8 @@ INSTALLED_APPS = [
     'users',
     'investments',
     'listings',
-    'search'
+    'search',
+    'core',
 ]
 
 MIDDLEWARE = [
