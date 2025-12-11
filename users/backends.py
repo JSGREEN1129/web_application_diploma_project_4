@@ -38,8 +38,7 @@ class EmailBackend(ModelBackend):
             # the user is allowed to authenticate
             if (
                 user.check_password(password)
-                and self.user_can_authenticate(user)
-            ):
+                    and self.user_can_authenticate(user)):
                 return user
 
         return None

@@ -1,22 +1,107 @@
-{% extends "base.html" %}
+{% extends 'core/base_public.html' %}
+{% load static %}
+{% load widget_tweaks %}
 
 {% block title %}Register – Green Square Capital{% endblock %}
 
 {% block content %}
 <div class="container py-5">
-  <div class="row justify-content-center">
-    <div class="col-md-6 col-lg-4">
-      <h1 class="mb-4 text-center">Register</h1>
-      <form method="post" class="card card-body">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-primary w-100 mt-2">Create account</button>
-      </form>
-      <p class="text-center mt-3">
-        Already have an account?
-        <a href="{% url 'users:login' %}">Login</a>
-      </p>
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-4 login-register-container border-primary">
+            {# Tabs for Login and Register #}
+            <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="pills-login-tab" data-bs-toggle="pill" href="#pills-login" role="tab"
+                        aria-controls="pills-login" aria-selected="false">SIGN-IN</a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link active" id="pills-register-tab" data-bs-toggle="pill" href="#pills-register"
+                        role="tab" aria-controls="pills-register" aria-selected="true">SIGN-UP</a>
+                </li>
+            </ul>
+
+            {# Tab content block for Login and Register forms #}
+            <div class="tab-content" id="pills-tabContent">
+                {# ---------------- Login Form Tab ---------------- #}
+                <div class="tab-pane fade" id="pills-login" role="tabpanel" aria-labelledby="pills-login-tab">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title text-center mb-4">SIGN-IN</h5>
+                            <form method="POST" action="{% url 'users:login' %}" novalidate>
+                                {% csrf_token %}
+
+                                <div class="mb-3">
+                                    {{ login_form.username.label_tag }}
+                                    {{ login_form.username|add_class:"form-control"|attr:"placeholder:Enter Your Email" }}
+                                    {% if login_form.username.errors %}
+                                    <div class="text-danger small">{{ login_form.username.errors }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="mb-3">
+                                    {{ login_form.password.label_tag }}
+                                    {{ login_form.password|add_class:"form-control"|attr:"placeholder:Enter Your Password" }}
+                                    {% if login_form.password.errors %}
+                                    <div class="text-danger small">{{ login_form.password.errors }}</div>
+                                    {% endif %}
+                                </div>
+
+                                {% if login_form.non_field_errors %}
+                                    <div class="alert alert-danger">
+                                        {{ login_form.non_field_errors }}
+                                    </div>
+                                {% endif %}
+
+                                <button type="submit" name="login_submit" class="btn btn-primary w-100">SIGN-IN</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                {# ---------------- Register Form Tab ---------------- #}
+                <div class="tab-pane fade show active" id="pills-register" role="tabpanel"
+                    aria-labelledby="pills-register-tab">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title text-center mb-4">SIGN-UP</h5>
+                            <form method="POST" action="{% url 'users:register' %}" novalidate>
+                                {% csrf_token %}
+
+                                {% if register_form.non_field_errors %}
+                                    <div class="alert alert-danger">
+                                        {{ register_form.non_field_errors }}
+                                    </div>
+                                {% endif %}
+
+                                {% for field in register_form %}
+                                <div class="mb-3">
+                                    {{ field.label_tag }}
+                                    {% if field.name == 'first_name' %}
+                                    {{ field|add_class:"form-control"|attr:"placeholder:Enter your first name" }}
+                                    {% elif field.name == 'last_name' %}
+                                    {{ field|add_class:"form-control"|attr:"placeholder:Enter your last name" }}
+                                    {% elif field.name == 'email' %}
+                                    {{ field|add_class:"form-control"|attr:"placeholder:Enter your email" }}
+                                    {% elif field.name == 'password1' %}
+                                    {{ field|add_class:"form-control"|attr:"placeholder:Enter your password" }}
+                                    {% elif field.name == 'password2' %}
+                                    {{ field|add_class:"form-control"|attr:"placeholder:Confirm your password" }}
+                                    {% else %}
+                                    {{ field|add_class:"form-control" }}
+                                    {% endif %}
+                                    {% if field.errors %}
+                                    <div class="text-danger small">{{ field.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+
+                                <button type="submit" name="register_submit" class="btn btn-primary w-100">SIGN-UP</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 {% endblock %}
