@@ -1,0 +1,187 @@
+/* Components stylesheet */
+
+
+/* Bootstrap header and paragraph styles modified for better suitability */
+
+h2 {
+    font-size: 3rem;
+    color: #2f6f3a;
+    font-weight: 600;
+}
+
+h3 {
+    color: #2f6f3a;
+    font-weight: 600;
+}
+
+h4 {
+    color: #ffffff;
+}
+
+.project_list_header_p {
+    font-size: 1.4rem;
+    color: #2f6f3a;
+}
+
+.description-text {
+    font-size: 1.0rem;
+    color: #2f6f3a;
+
+}
+
+.card-text {
+    font-size: 1.0rem;
+    color: #2f6f3a;
+}
+
+.task-description p {
+    font-size: 1.0rem;
+    color: #2f6f3a;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+/* Bootstrap buttons styles modified for better suitability */
+
+.btn-primary {
+    background-color: #2f6f3a;
+    /* Colour change */
+    border-color: #2f6f3a;
+    /* Border colour change */
+}
+
+.btn-primary:hover {
+    background-color: #2f6f3a;
+    /* Lighter shade on hover */
+    border-color: #2f6f3a;
+    /* Border colour change */
+
+}
+
+.btn-secondary {
+    background-color: #820101;
+    /* Colour change */
+    border-color: #820101;
+    color: #fff;
+    outline: none;
+    box-shadow: none;
+}
+
+.btn-secondary:hover,
+.btn-secondary:focus:hover {
+    background-color: #d60000;
+    /* Lighter shade on hover */
+    border-color: #d60000;
+}
+
+.btn-secondary:focus,
+.btn-secondary:active,
+.btn-secondary.focus {
+    background-color: #820101;
+    border-color: #820101;
+    color: #fff;
+    outline: none;
+    box-shadow: none;
+}
+
+
+.btn-edit {
+    background-color: #995414;
+    border-color: #995414;
+    color: #ffffff;
+}
+
+.btn-edit:hover {
+    background-color: #e3730b;
+    border-color: #e3730b;
+    color: #ffffff;
+
+}
+
+.btn-confirm-close {
+    background-color: #3b9333;
+    /* Primary button color */
+    border-color: #3b9333;
+    color: #ffffff;
+
+}
+
+.btn-confirm-close:hover,
+.btn-confirm-close:focus:hover {
+    background-color: #43c936;
+    /* Primary button color */
+    border-color: #43c936;
+    color: #ffffff;
+
+}
+
+.btn-confirm-close:focus,
+.btn-confirm-close:active,
+.btn-confirm-close.focus {
+    background-color: #43c936;
+    border-color: #43c936;
+    color: #fff;
+    outline: none;
+    box-shadow: none;
+}
+
+.btn-re-open {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    color: #ffffff;
+}
+
+.btn-re-open:hover,
+.btn-re-open:focus:hover {
+    background-color: #b9bbb6;
+    border-color: #b9bbb6;
+    color: #ffffff;
+}
+
+.btn-re-open:focus,
+.btn-re-open:active,
+.btn-re-open.focus {
+    background-color: #b9bbb6;
+    border-color: #b9bbb6;
+    color: #ffffff;
+    outline: none;
+    box-shadow: none;
+}
+
+/* Card taggle button styling for complete/re-open */
+
+.only-top-border {
+    border-top: 2px solid;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    border-radius: 0 !important;
+    background-color: transparent;
+    transition: all 0.3s ease;
+    padding: 6px 12px;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.only-top-border.success {
+    border-top-color: var(--bs-success);
+    color: var(--bs-success);
+}
+
+.only-top-border.success:hover {
+    background-color: var(--bs-success);
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.only-top-border.secondary {
+    border-top-color: var(--bs-secondary);
+    color: var(--bs-secondary);
+}
+
+.only-top-border.secondary:hover {
+    background-color: var(--bs-secondary);
+    color: #ffffff;
+    text-decoration: none;
+}

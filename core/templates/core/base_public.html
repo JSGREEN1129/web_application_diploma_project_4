@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="{% static 'assets/stylesheets/base.css' %}">
     <link rel="stylesheet" href="{% static 'assets/stylesheets/components.css' %}">
     <link rel="stylesheet" href="{% static 'assets/stylesheets/homepage.css' %}">
-
+    <link rel="stylesheet" href="{% static 'assets/stylesheets/authentication.css' %}">
 </head>
 
 <body>
@@ -23,7 +23,15 @@
         <div class="container">
             <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-md-between">
                 <h1 class="h3 mb-2 mb-md-0">
-                    GSC - Green Square Capital
+                    {% if request.path != '/' %}
+                        <a href="{% url 'core:homepage' %}"
+                           class="text-white text-decoration-none"
+                           title="Go to Homepage">
+                            GSC - Green Square Capital
+                        </a>
+                    {% else %}
+                        GSC - Green Square Capital
+                    {% endif %}
                 </h1>
                 <div class="d-flex gap-3">
                     <a href="{% url 'users:login' %}" class="text-white text-decoration-none fw-semibold">

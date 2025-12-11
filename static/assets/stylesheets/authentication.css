@@ -8,7 +8,7 @@
     background-color: #f7f7f7;
     border-radius: 8px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    border: 2px solid #000080;
+    border: 2px solid #2f6f3a;
 }
 
 /* Smaller screens: reduce width and padding */
@@ -24,31 +24,30 @@
 }
 
 .border-primary {
-    border-color: #000080 !important;
+    border-color: #2f6f3a !important;
     border-width: 2px !important;
 }
 
 .card-title {
     font-size: 1.8rem;
     /* Increase title font size */
-    color: #000080;
+    color: #2f6f3a !important;
     /* Dark text color */
 }
 
 .nav-pills .nav-link {
-    color: #000080;
-    /* Dark color for tab links */
-}
+    color: #2f6f3a !important;
+    border-color: #2f6f3a !important;}
 
 .nav-pills .nav-link.active {
-    background-color: #000080;
-    /* Blue color for active tab */
-    color: #ffffff;
+    background-color: #2f6f3a !important;
+    border-color: #2f6f3a !important;    
+    color: #ffffff !important;
     /* White text for active tab */
 }
 
 .form-label {
-    color: #000080;
+    color: #ffffff !important;
     font-weight: 400;
     /* Optional: make it bold */
 }
