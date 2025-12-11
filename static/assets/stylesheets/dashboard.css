@@ -1,0 +1,25 @@
+/* Horizontal scrolling rows for dashboard cards */
+.dashboard-scroll {
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+}
+
+/* Show about three cards on wider screens, still scrollable */
+.dashboard-card {
+    min-width: 280px;
+    max-width: 340px;
+}
+
+/* Optional: nicer scrollbar on WebKit browsers */
+.dashboard-scroll::-webkit-scrollbar {
+    height: 6px;
+}
+
+.dashboard-scroll::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.dashboard-scroll::-webkit-scrollbar-thumb {
+    background: #2f6f3a;
+    border-radius: 3px;
+}

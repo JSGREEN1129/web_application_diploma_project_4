@@ -88,5 +88,14 @@ def logout_view(request):
 
 
 def dashboard_view(request):
-    # Simple placeholder dashboard view
-    return render(request, 'users/dashboard.html')
+    investments = []
+    listings = []  
+
+    context = {
+        'investments': investments,
+        'listings': listings,
+    }
+    return render(request, 'users/dashboard.html', context)
+
+def create_listing_view(request):
+    return render(request, 'users/create_listing.html')
