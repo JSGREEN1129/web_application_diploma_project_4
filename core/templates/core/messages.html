@@ -1,10 +1,95 @@
 {% if messages %}
-  <div class="container mt-3">
+<div class="container-fluid mt-2 mb-3 px-0">
+
+    {# Loop through messages, only displays the last looped messages #}
     {% for message in messages %}
-      <div class="alert alert-{{ message.tags|default:"info" }} alert-dismissible fade show" role="alert">
-        {{ message }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-      </div>
+    {% if forloop.last %}
+    <div class="alert
+        {# Determine the Bootstrap alert class based on message type or level #} 
+        {% if message.tags %}alert-{{ message.tags }}
+        {% elif message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}alert-danger
+        {% elif message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}alert-success
+        {% elif message.level == DEFAULT_MESSAGE_LEVELS.WARNING %}alert-warning
+        {% elif message.level == DEFAULT_MESSAGE_LEVELS.INFO %}alert-info
+        {% elif message.level == DEFAULT_MESSAGE_LEVELS.DEBUG %}alert-secondary
+        {% else %}alert-primary
+        {% endif %}
+        alert-dismissible fade show" role="alert" id="main-message-alert">
+
+        <div class="d-flex align-items-center">
+            {# Use Bootstrap icons based on message type #}
+            <i class="bi {% if message.tags == 'success' or message.level == 25 %}bi-check-circle-fill text-success
+                {% elif message.tags == 'error' or message.level == 40 %}bi-exclamation-triangle-fill text-danger
+                {% elif message.tags == 'warning' or message.level == 30 %}bi-exclamation-circle-fill text-warning
+                {% else %}bi-info-circle-fill text-info
+                {% endif %} me-2"></i>
+            <div class="flex-grow-1">{{ message }}</div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    </div>
+    {% endif %}
     {% endfor %}
-  </div>
+</div>
+
+<style>
+    /* Ensure smooth animations */
+    #main-message-alert {
+        animation: slideInDown 0.3s ease-out;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        border: none;
+        border-radius: 0.375rem;
+    }
+
+    /* Custom animation for message appearance */
+    @keyframes slideInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+</style>
+
+<script>
+    // Auto-hide success messages after 5 seconds, keep errors visible longer
+    document.addEventListener('DOMContentLoaded', function () {
+        const alertElement = document.getElementById('main-message-alert');
+        if (alertElement) {
+            // Check if it's a success message
+            const isSuccess = alertElement.classList.contains('alert-success');
+            const isError = alertElement.classList.contains('alert-danger');
+
+            let autoHideDelay = isSuccess ? 5000 : (isError ? 10000 : 7000);
+
+            setTimeout(function () {
+                const bsAlert = new bootstrap.Alert(alertElement);
+                bsAlert.close();
+            }, autoHideDelay);
+
+            // Listen for close event to remove from storage
+            alertElement.addEventListener('closed.bs.alert', function () {
+            });
+        }
+    });
+
+    // Prevent multiple messages from showing simultaneously
+    function ensureSingleMessage() {
+        const alerts = document.querySelectorAll('.alert');
+        if (alerts.length > 1) {
+            // Hide all but the last one
+            alerts.forEach((alert, index) => {
+                if (index < alerts.length - 1) {
+                    alert.style.display = 'none';
+                }
+            });
+        }
+    }
+
+    ensureSingleMessage();
+</script>
 {% endif %}

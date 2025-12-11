@@ -1,0 +1,54 @@
+/* Custom styles for the login/register container */
+
+/* Default size for larger screens */
+.login-register-container {
+    max-width: 400px;
+    margin: 50px auto;
+    padding: 30px;
+    background-color: #f7f7f7;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    border: 2px solid #000080;
+}
+
+/* Smaller screens: reduce width and padding */
+@media (max-width: 767.98px) {
+    .login-register-container {
+        max-width: 90%;
+        /* Make it responsive */
+        padding: 20px;
+        /* Slightly less padding */
+        margin: 30px auto;
+        /* Reduce vertical margin */
+    }
+}
+
+.border-primary {
+    border-color: #000080 !important;
+    border-width: 2px !important;
+}
+
+.card-title {
+    font-size: 1.8rem;
+    /* Increase title font size */
+    color: #000080;
+    /* Dark text color */
+}
+
+.nav-pills .nav-link {
+    color: #000080;
+    /* Dark color for tab links */
+}
+
+.nav-pills .nav-link.active {
+    background-color: #000080;
+    /* Blue color for active tab */
+    color: #ffffff;
+    /* White text for active tab */
+}
+
+.form-label {
+    color: #000080;
+    font-weight: 400;
+    /* Optional: make it bold */
+}
