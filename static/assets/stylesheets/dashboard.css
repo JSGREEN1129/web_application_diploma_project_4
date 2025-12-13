@@ -1,13 +1,37 @@
 /* Horizontal scrolling rows for dashboard cards */
 .dashboard-scroll {
     overflow-x: auto;
+    overflow-y: hidden;
     padding-bottom: 0.5rem;
+    -webkit-overflow-scrolling: touch;
+    cursor: grab;
+    scroll-snap-type: x mandatory;
 }
 
-/* Show about three cards on wider screens, still scrollable */
+/* Cards should never shrink to squeeze into the viewport */
 .dashboard-card {
-    min-width: 280px;
-    max-width: 340px;
+    flex: 0 0 auto;              /* important: prevents "all fit in one view" */
+    scroll-snap-align: start;    /* pairs with scroll-snap-type */
+
+    /* sensible default for small screens */
+    width: 85%;
+    max-width: 420px;
+}
+
+/* Tablet: 2 cards visible */
+@media (min-width: 768px) {
+    .dashboard-card {
+        width: calc((100% - 1rem) / 2); /* 2 cards, 1 gap (gap-3 ~ 1rem) */
+        max-width: none;
+    }
+}
+
+/* Desktop / large screens: 3 cards visible */
+@media (min-width: 992px) {
+    .dashboard-card {
+        width: calc((100% - 2rem) / 3); /* 3 cards, 2 gaps */
+        max-width: none;
+    }
 }
 
 /* Optional: nicer scrollbar on WebKit browsers */
@@ -23,3 +47,13 @@
     background: #2f6f3a;
     border-radius: 3px;
 }
+
+.dashboard-scroll.is-dragging {
+    cursor: grabbing;
+    user-select: none;
+}
+
+.dashboard-scroll.is-dragging * {
+    user-select: none;
+}
+
