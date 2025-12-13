@@ -18,23 +18,20 @@
                 {% for investment in investments %}
                     <div class="card dashboard-card flex-shrink-0">
                         <div class="card-body">
-                            <h5 class="card-title mb-1">
-                                {{ investment.name }}
-                            </h5>
-                            <p class="card-subtitle text-muted mb-2">
-                                {{ investment.asset_type }}
-                            </p>
+                            <h5 class="card-title mb-1">{{ investment.name }}</h5>
+                            <p class="card-subtitle text-muted mb-2">{{ investment.asset_type }}</p>
+
                             <p class="card-text small mb-2">
                                 Invested: £{{ investment.amount_invested }}<br>
                                 Current Value: £{{ investment.current_value }}
                             </p>
+
                             <p class="card-text small text-muted mb-3">
                                 Updated: {{ investment.last_updated|date:"d M Y" }}
                             </p>
 
-                            {# Adjust this URL to your actual investment detail route #}
-                            <a href="{% url 'investments:detail' investment.id %}"
-                               class="btn btn-sm btn-primary">
+                            {# Add investment detail route later #}
+                            <a href="#" class="btn btn-sm btn-outline-secondary disabled">
                                 View Details
                             </a>
                         </div>
@@ -44,7 +41,7 @@
                 <div class="card dashboard-card flex-shrink-0">
                     <div class="card-body d-flex flex-column justify-content-center">
                         <h5 class="card-title">No investments yet</h5>
-                        <p class="card-text text-muted">
+                        <p class="card-text text-muted mb-0">
                             When you add investments, they will appear here.
                         </p>
                     </div>
@@ -54,13 +51,14 @@
     </div>
 
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="mb-0">Active Listings</h2>
+        <h2 class="mb-0">Your Listings</h2>
         <a href="{% url 'users:create_listing' %}" class="btn btn-sm btn-primary">
             + Create Listing
         </a>
     </div>
+
     <p class="text-muted mb-3">
-        Your currently active listings. Scroll horizontally to view more.
+        Draft listings are saved but not active until payment is complete.
     </p>
 
     <div class="dashboard-scroll">
@@ -69,32 +67,61 @@
                 {% for listing in listings %}
                     <div class="card dashboard-card flex-shrink-0">
                         <div class="card-body">
-                            <h5 class="card-title mb-1">
-                                {{ listing.title }}
-                            </h5>
+
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="card-title mb-0">
+                                    {{ listing.source_use|capfirst }} → {{ listing.target_use|capfirst }}
+                                </h5>
+
+                                {% if listing.status == "draft" %}
+                                    <span class="badge text-bg-secondary">Draft</span>
+                                {% elif listing.status == "active" %}
+                                    <span class="badge text-bg-success">Active</span>
+                                {% elif listing.status == "expired" %}
+                                    <span class="badge text-bg-dark">Expired</span>
+                                {% else %}
+                                    <span class="badge text-bg-light">Unknown</span>
+                                {% endif %}
+                            </div>
+
                             <p class="card-subtitle text-muted mb-2">
-                                {{ listing.category }}
-                            </p>
-                            <p class="card-text small mb-2">
-                                Target: £{{ listing.target_amount }}<br>
-                                Raised: £{{ listing.raised_amount }}
-                            </p>
-                            <p class="card-text small text-muted mb-3">
-                                Status: {{ listing.status }}
+                                {{ listing.country|capfirst }} • {{ listing.county }} • {{ listing.postcode_prefix }}
                             </p>
 
-                            {# Adjust this URL name/args to match your listings app #}
-                            <a href="{% url 'listings:detail' listing.id %}"
-                               class="btn btn-sm btn-outline-primary">
-                                View Listing
-                            </a>
+                            <p class="card-text small text-muted mb-2">
+                                {{ listing.media.count }} file{{ listing.media.count|pluralize }} uploaded
+                            </p>
+
+                            <p class="card-text small mb-2">
+                                Funding: {{ listing.get_funding_band_display }}<br>
+                                Return Type: {{ listing.get_return_type_display }}<br>
+                                Potential Return: {{ listing.get_return_band_display }}
+                            </p>
+
+                            <p class="card-text small text-muted mb-3">
+                                Duration: {{ listing.duration_days }} days
+                                {% if listing.active_until %}
+                                    • Ends: {{ listing.active_until|date:"d M Y" }}
+                                {% endif %}
+                            </p>
+
+                            {% if listing.status == "draft" %}
+                                <a href="{% url 'users:listing_detail' listing.pk %}" class="btn btn-sm btn-outline-primary">
+                                    View Draft
+                                </a>
+                            {% else %}
+                                <a href="{% url 'users:listing_detail' listing.pk %}" class="btn btn-sm btn-outline-primary">
+                                    View Listing
+                                </a>
+                            {% endif %}
+
                         </div>
                     </div>
                 {% endfor %}
             {% else %}
                 <div class="card dashboard-card flex-shrink-0">
                     <div class="card-body d-flex flex-column justify-content-center">
-                        <h5 class="card-title">No active listings</h5>
+                        <h5 class="card-title">No listings yet</h5>
                         <p class="card-text text-muted mb-2">
                             Create a listing to start offering new opportunities.
                         </p>
@@ -108,4 +135,9 @@
     </div>
 
 </div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/click_hold_drag_scroll.js' %}"></script>
 {% endblock %}

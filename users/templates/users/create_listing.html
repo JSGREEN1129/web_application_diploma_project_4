@@ -1,8 +1,208 @@
-{% extends "core/base_public.html" %}
+{% extends "core/base_users.html" %}
+{% load widget_tweaks %}
+
 {% block title %}Create Listing – Green Square Capital{% endblock %}
+
 {% block content %}
-<div class="container py-5">
-    <h1>Create Listing</h1>
-    <p>Listing form will go here.</p>
+<div class="container py-5" style="max-width: 900px;">
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <h1 class="mb-0">Create Listing</h1>
+    <a href="{% url 'users:dashboard' %}" class="btn btn-outline-secondary btn-sm">Back to dashboard</a>
+  </div>
+
+  <form method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+      <div class="alert alert-danger">
+        {{ form.non_field_errors }}
+      </div>
+    {% endif %}
+
+    {% if media_form.non_field_errors %}
+      <div class="alert alert-danger">
+        {{ media_form.non_field_errors }}
+      </div>
+    {% endif %}
+
+    <div class="card mb-4">
+      <div class="card-body">
+        <h5 class="mb-3">Project Type</h5>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label for="id_source_use" class="form-label">From</label>
+            {{ form.source_use|add_class:"form-select" }}
+            {% if form.source_use.errors %}
+              <div class="text-danger small mt-1">{{ form.source_use.errors }}</div>
+            {% endif %}
+          </div>
+          <div class="col-md-6">
+            <label for="id_target_use" class="form-label">To</label>
+            {{ form.target_use|add_class:"form-select" }}
+            {% if form.target_use.errors %}
+              <div class="text-danger small mt-1">{{ form.target_use.errors }}</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-body">
+        <h5 class="mb-3">Location</h5>
+
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label for="id_country" class="form-label">Country</label>
+            {{ form.country|add_class:"form-select" }}
+            {% if form.country.errors %}
+              <div class="text-danger small mt-1">{{ form.country.errors }}</div>
+            {% endif %}
+          </div>
+
+          <div class="col-md-4">
+            <label for="id_county" class="form-label">County</label>
+            {{ form.county|add_class:"form-select" }}
+            {% if form.county.errors %}
+              <div class="text-danger small mt-1">{{ form.county.errors }}</div>
+            {% endif %}
+          </div>
+
+          <div class="col-md-4">
+            <label for="id_postcode_prefix" class="form-label">Postcode prefix</label>
+            {{ form.postcode_prefix|add_class:"form-select" }}
+            {% if form.postcode_prefix.errors %}
+              <div class="text-danger small mt-1">{{ form.postcode_prefix.errors }}</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="form-text mt-2">
+          Select a country, then a county, then a postcode prefix.
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-body">
+        <h5 class="mb-3">Funding & Returns</h5>
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label for="id_funding_band" class="form-label">Funding amount</label>
+            {{ form.funding_band|add_class:"form-select" }}
+            {% if form.funding_band.errors %}
+              <div class="text-danger small mt-1">{{ form.funding_band.errors }}</div>
+            {% endif %}
+          </div>
+
+          <div class="col-md-6">
+            <label for="id_return_type" class="form-label">Return type</label>
+            {{ form.return_type|add_class:"form-select" }}
+            {% if form.return_type.errors %}
+              <div class="text-danger small mt-1">{{ form.return_type.errors }}</div>
+            {% endif %}
+          </div>
+
+          <div class="col-md-6">
+            <label for="id_return_band" class="form-label">Potential return</label>
+            {{ form.return_band|add_class:"form-select" }}
+            {% if form.return_band.errors %}
+              <div class="text-danger small mt-1">{{ form.return_band.errors }}</div>
+            {% endif %}
+          </div>
+
+          <div class="col-md-6">
+            <label for="id_duration_days" class="form-label">Listing duration</label>
+            {{ form.duration_days|add_class:"form-select" }}
+            {% if form.duration_days.errors %}
+              <div class="text-danger small mt-1">{{ form.duration_days.errors }}</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NEW: Media uploads -->
+    <div class="card mb-4">
+      <div class="card-body">
+        <h5 class="mb-3">Media uploads</h5>
+
+        <div class="mb-3">
+          <label class="form-label" for="{{ media_form.images.id_for_label }}">{{ media_form.images.label }}</label>
+          {{ media_form.images|add_class:"form-control" }}
+          {% if media_form.images.errors %}
+            <div class="text-danger small mt-1">{{ media_form.images.errors }}</div>
+          {% endif %}
+          <div class="form-text">You can select multiple images.</div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="{{ media_form.documents.id_for_label }}">{{ media_form.documents.label }}</label>
+          {{ media_form.documents|add_class:"form-control" }}
+          {% if media_form.documents.errors %}
+            <div class="text-danger small mt-1">{{ media_form.documents.errors }}</div>
+          {% endif %}
+          <div class="form-text">You can select multiple documents.</div>
+        </div>
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary w-100">
+      Save draft & continue
+    </button>
+  </form>
 </div>
+
+<script>
+(function () {
+  const countryEl = document.getElementById("id_country");
+  const countyEl = document.getElementById("id_county");
+  const outcodeEl = document.getElementById("id_postcode_prefix");
+
+  function setOptions(selectEl, items, placeholder) {
+    if (!selectEl) return;
+    selectEl.innerHTML = "";
+
+    const opt0 = document.createElement("option");
+    opt0.value = "";
+    opt0.textContent = placeholder;
+    selectEl.appendChild(opt0);
+
+    (items || []).forEach(v => {
+      const opt = document.createElement("option");
+      opt.value = v;
+      opt.textContent = v;
+      selectEl.appendChild(opt);
+    });
+  }
+
+  async function loadCounties() {
+    const country = (countryEl?.value || "").trim();
+    setOptions(countyEl, [], "Select county");
+    setOptions(outcodeEl, [], "Select postcode prefix");
+    if (!country) return;
+
+    const res = await fetch("{% url 'users:api_counties' %}?country=" + encodeURIComponent(country));
+    const data = await res.json();
+    setOptions(countyEl, data.counties || [], "Select county");
+  }
+
+  async function loadOutcodes() {
+    const county = (countyEl?.value || "").trim();
+    setOptions(outcodeEl, [], "Select postcode prefix");
+    if (!county) return;
+
+    const res = await fetch("{% url 'users:api_outcodes' %}?county=" + encodeURIComponent(county));
+    const data = await res.json();
+    setOptions(outcodeEl, data.outcodes || [], "Select postcode prefix");
+  }
+
+  countryEl?.addEventListener("change", loadCounties);
+  countyEl?.addEventListener("change", loadOutcodes);
+
+  setOptions(countyEl, [], "Select county");
+  setOptions(outcodeEl, [], "Select postcode prefix");
+})();
+</script>
 {% endblock %}
