@@ -22,8 +22,7 @@
 </head>
 
 <body class="d-flex flex-column min-vh-100">
-  <nav class="navbar navbar-expand-md sticky-top bg-dark navbar-dark px-4">
-    <h1 class="navbar-brand mb-0">
+    <nav class="py-4" style="background-color: #2f6f3a; color: #ffffff;">    <h1 class="navbar-brand mb-0">
       {% if request.path != '/users/dashboard/' %}
         <a href="{% url 'users:dashboard' %}" class="text-decoration-none text-light" title="Go to dashboard">
           GSC
