@@ -1,20 +1,18 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
+from .models import Listing
 
-# Custom user registration form extending Django's built-in UserCreationForm
+# USER FORMS
 
 
 class CustomUserCreationForm(UserCreationForm):
-    # Add additional required fields
     first_name = forms.CharField(required=True)
     last_name = forms.CharField(required=True)
     email = forms.EmailField(required=True)
 
     class Meta:
-        # Use the built-in User model
         model = User
-        # Limit the fields to only what's necessary for registration
         fields = ('first_name', 'last_name', 'email', 'password1', 'password2')
 
     def save(self, commit=True):
@@ -24,32 +22,27 @@ class CustomUserCreationForm(UserCreationForm):
         - Assign additional fields to the user before saving
         """
         email = self.cleaned_data['email']
-        # Check for duplicate emails
         if User.objects.filter(email=email).exists():
             raise forms.ValidationError(
                 "A user with this email already exists.")
 
-        # Create the user object but don't save to DB yet
         user = super().save(commit=False)
         user.first_name = self.cleaned_data['first_name']
         user.last_name = self.cleaned_data['last_name']
-        user.email = self.cleaned_data['email']  # Save the email
+        user.email = self.cleaned_data['email']
         if commit:
-            user.save()  # Save to DB if commit=True
+            user.save()
 
         return user
-
-# Custom login form that uses email instead of usernam
 
 
 class CustomAuthenticationForm(AuthenticationForm):
     username = forms.EmailField(label='Email', widget=forms.EmailInput(
         attrs={'autofocus': True, 'class': 'form-control'}))
 
-    # Customise password input field styling
     password = forms.CharField(label='Password',
                                strip=False, widget=forms.PasswordInput(
-                                    attrs={'class': 'form-control'}))
+                                   attrs={'class': 'form-control'}))
 
     def clean_username(self):
         """
@@ -57,8 +50,90 @@ class CustomAuthenticationForm(AuthenticationForm):
         If not, raise a validation error.
         """
         username = self.cleaned_data.get('username')
-        # Ensure we are checking the email in
-        # the User model instead of username
         if not User.objects.filter(email=username).exists():
             raise forms.ValidationError("No account found with this email.")
         return username
+
+# LISTINGS FORM
+
+DURATION_CHOICES = [
+    (7, "7 days"),
+    (14, "14 days"),
+    (30, "30 days"),
+    (60, "60 days"),
+]
+
+
+class ListingCreateForm(forms.ModelForm):
+    """
+    Form for creating a property investment listing.
+    Listing is saved as DRAFT and activated after payment.
+    """
+
+    duration_days = forms.ChoiceField(
+        choices=DURATION_CHOICES,
+        label="Listing duration"
+    )
+
+    class Meta:
+        model = Listing
+        fields = [
+            "source_use",
+            "target_use",
+            "country",
+            "county",
+            "postcode_prefix",
+            "funding_band",
+            "return_type",
+            "return_band",
+            "duration_days",
+        ]
+
+        widgets = {
+            "source_use": forms.Select(),
+            "target_use": forms.Select(),
+            "country": forms.Select(),
+            "county": forms.Select(),
+            "postcode_prefix": forms.Select(),
+            "funding_band": forms.Select(),
+            "return_type": forms.Select(),
+            "return_band": forms.Select(),
+        }
+
+    def clean_postcode_prefix(self):
+        """
+        Basic validation for UK postcode outcodes (SW, CF, EH, etc.)
+        """
+        value = (self.cleaned_data.get(
+            "postcode_prefix") or "").strip().upper()
+
+        if len(value) < 2:
+            raise forms.ValidationError(
+                "Please select a valid postcode prefix (e.g. SW, CF, EH)."
+            )
+
+        return value
+
+
+class MultiFileInput(forms.ClearableFileInput):
+    allow_multiple_selected = True
+
+
+class ListingMediaForm(forms.Form):
+    images = forms.FileField(
+        required=False,
+        widget=MultiFileInput(attrs={
+            "multiple": True,
+            "accept": "image/jpeg,image/png,image/webp"
+        }),
+        label="Property images"
+    )
+
+    documents = forms.FileField(
+        required=False,
+        widget=MultiFileInput(attrs={
+            "multiple": True,
+            "accept": ".pdf,.doc,.docx"
+        }),
+        label="Plans / documents (PDF, DOC, DOCX)"
+    )
