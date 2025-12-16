@@ -57,3 +57,23 @@
     user-select: none;
 }
 
+@media (min-width: 992px) {
+  .edit-two-col > .col-lg-6 {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .existing-images-card {
+    flex: 1 1 auto !important;
+    min-height: 320px;
+  }
+
+  .existing-images-scroll {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    max-height: 420px;
+    padding-right: 0.25rem;
+  }
+}
+
+

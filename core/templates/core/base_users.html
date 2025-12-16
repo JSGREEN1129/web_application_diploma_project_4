@@ -23,26 +23,41 @@
 </head>
 
 <body class="d-flex flex-column min-vh-100">
-    <nav class="py-4" style="background-color: #2f6f3a; color: #ffffff;">    <h1 class="navbar-brand mb-0">
-      {% if request.path != '/users/dashboard/' %}
-        <a href="{% url 'users:dashboard' %}" class="text-decoration-none text-light" title="Go to dashboard">
-          GSC
-        </a>
-      {% else %}
-        GSC
-      {% endif %}
-    </h1>
+    <nav class="py-4 d-flex align-items-center px-4" style="background-color: #2f6f3a; color: #ffffff;">
 
-    <div class="ms-auto d-none d-md-flex align-items-center">
-      {% if request.user.is_authenticated %}
-        <span class="text-white me-4">Welcome, {{ user.first_name|default:user.email }}</span>
-        <a href="{% url 'users:logout' %}" class="btn btn-outline-light btn-sm me-3">Logout</a>
-      {% else %}
-        <a href="{% url 'users:login' %}" class="btn btn-outline-light btn-sm me-3">Login</a>
-        <a href="{% url 'users:register' %}" class="btn btn-outline-light btn-sm">Register</a>
-      {% endif %}
-    </div>
-  </nav>
+  <h1 class="navbar-brand mb-0">
+    {% if request.path != '/users/dashboard/' %}
+      <a href="{% url 'users:dashboard' %}" class="text-decoration-none text-light" title="Go to dashboard">
+        GSC
+      </a>
+    {% else %}
+      GSC
+    {% endif %}
+  </h1>
+
+  <div class="ms-auto d-none d-md-flex align-items-center gap-3">
+    {% if request.user.is_authenticated %}
+
+      <a href="{% url 'users:search_listings' %}" class="btn btn-light btn-sm">
+        <i class="bi bi-search me-1"></i>
+        Search opportunities
+      </a>
+
+      <span class="text-white ms-3">
+        Welcome, {{ user.first_name|default:user.email }}
+      </span>
+
+      <a href="{% url 'users:logout' %}" class="btn btn-outline-light btn-sm">
+        Logout
+      </a>
+
+    {% else %}
+      <a href="{% url 'users:login' %}" class="btn btn-outline-light btn-sm me-2">Login</a>
+      <a href="{% url 'users:register' %}" class="btn btn-outline-light btn-sm">Register</a>
+    {% endif %}
+  </div>
+
+</nav>
 
   <div class="container mt-3">
     {% if messages %}

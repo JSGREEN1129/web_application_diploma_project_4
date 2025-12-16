@@ -5,6 +5,8 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_GET, require_POST
 from django.http import JsonResponse
+from django.core.paginator import Paginator
+from django.db.models import Q
 
 from .forms import CustomUserCreationForm, CustomAuthenticationForm, ListingCreateForm, ListingMediaForm
 from .models import Listing, ListingMedia
@@ -394,3 +396,62 @@ def api_counties(request):
 def api_outcodes(request):
     county = (request.GET.get("county") or "").strip()
     return JsonResponse({"outcodes": OUTCODES_BY_COUNTY.get(county, [])})
+
+@login_required
+def search_listings_view(request):
+    q = (request.GET.get("q") or "").strip()
+    country = (request.GET.get("country") or "").strip()
+    county = (request.GET.get("county") or "").strip()
+    postcode_prefix = (request.GET.get("postcode_prefix") or "").strip()
+    funding_band = (request.GET.get("funding_band") or "").strip()
+    return_type = (request.GET.get("return_type") or "").strip()
+
+    qs = (
+        Listing.objects
+        .filter(status=Listing.Status.ACTIVE)
+        .exclude(owner=request.user) # show other users' listings
+        .prefetch_related("media")
+        .order_by("-created_at")
+    )
+
+    if q:
+        qs = qs.filter(
+            Q(country__icontains=q) |
+            Q(county__icontains=q) |
+            Q(postcode_prefix__icontains=q) |
+            Q(source_use__icontains=q) |
+            Q(target_use__icontains=q)
+        )
+
+    if country:
+        qs = qs.filter(country__iexact=country)
+
+    if county:
+        qs = qs.filter(county__iexact=county)
+
+    if postcode_prefix:
+        qs = qs.filter(postcode_prefix__iexact=postcode_prefix)
+
+    if funding_band:
+        qs = qs.filter(funding_band=funding_band)
+
+    if return_type:
+        qs = qs.filter(return_type=return_type)
+
+    paginator = Paginator(qs, 12)  # 12 results per page
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    return render(
+        request,
+        "users/search_listings.html",
+        {
+            "q": q,
+            "country": country,
+            "county": county,
+            "postcode_prefix": postcode_prefix,
+            "funding_band": funding_band,
+            "return_type": return_type,
+            "page_obj": page_obj,
+        }
+    )
