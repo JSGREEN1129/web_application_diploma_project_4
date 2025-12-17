@@ -1,15 +1,27 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import login, logout, authenticate, get_user_model
-from django.views.decorators.cache import never_cache
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from django.views.decorators.http import require_GET, require_POST
-from django.http import JsonResponse
+from datetime import timedelta
+import os
+
+import stripe
+
+from django.conf import settings
 from django.core.paginator import Paginator
+from django.contrib import messages
+from django.contrib.auth import login, logout, authenticate, get_user_model
+from django.contrib.auth.decorators import login_required
+from django.db import transaction
 from django.db.models import Q
+from django.http import JsonResponse, HttpResponse
+from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
+from django.utils import timezone
+from django.views.decorators.cache import never_cache
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_GET, require_POST
 
 from .forms import CustomUserCreationForm, CustomAuthenticationForm, ListingCreateForm, ListingMediaForm
 from .models import Listing, ListingMedia
+from .pricing import calculate_listing_price_pence
+
 
 User = get_user_model()
 
@@ -73,14 +85,12 @@ def login_view(request):
         email = request.POST.get('username', '').strip().lower()
         password = request.POST.get('password', '')
 
-        # If no email or password, show generic error to avoid info leak
         if not email or not password:
             messages.error(
                 request,
                 "Please enter your registered email and password to login."
             )
         else:
-            # Check if user with email exists
             user_exists = User.objects.filter(email=email).exists()
 
             if not user_exists:
@@ -89,7 +99,6 @@ def login_view(request):
                     "There is no account associated with the email address."
                 )
             else:
-                # User exists, check password
                 user_auth = authenticate(
                     request, username=email, password=password
                 )
@@ -111,18 +120,16 @@ def login_view(request):
     return render(request, 'users/login.html', context)
 
 
-# View to handle user registration
 @never_cache
 def register_view(request):
-    login_form = CustomAuthenticationForm(request)  # Blank form for display
+    login_form = CustomAuthenticationForm(request)
     register_form = CustomUserCreationForm(request.POST or None)
 
     if request.method == 'POST' and 'register_submit' in request.POST:
         if register_form.is_valid():
-            user = register_form.save(commit=False)  # Don't save yet
-            # Set username to email to ensure uniqueness
+            user = register_form.save(commit=False)
             user.username = user.email
-            user.save()  # Now save to DB
+            user.save()
 
             login(request, user, backend='users.backends.EmailBackend')
             messages.success(request, "Registered and logged in successfully!")
@@ -133,7 +140,7 @@ def register_view(request):
     context = {
         'login_form': login_form,
         'register_form': register_form,
-        'show_form': 'register'  # Tell template to show register first
+        'show_form': 'register'
     }
     return render(request, 'users/register.html', context)
 
@@ -165,7 +172,7 @@ def dashboard_view(request):
 def create_listing_view(request):
     if request.method == "POST":
         form = ListingCreateForm(request.POST)
-        media_form = ListingMediaForm()  # rendering only; we validate files ourselves
+        media_form = ListingMediaForm()
 
         if form.is_valid():
             images = request.FILES.getlist("images")
@@ -217,11 +224,8 @@ def create_listing_view(request):
                     media_type=ListingMedia.MediaType.DOCUMENT
                 )
 
-            if images or documents:
-                messages.success(request, "Listing created and media uploaded.")
-            else:
-                messages.success(request, "Listing created (no media uploaded).")
-            return redirect("users:dashboard")
+            messages.success(request, "Draft saved. Redirecting you to payment...")
+            return redirect("users:listing_checkout", pk=listing.pk)
 
     else:
         form = ListingCreateForm()
@@ -232,6 +236,159 @@ def create_listing_view(request):
         "users/create_listing.html",
         {"form": form, "media_form": media_form}
     )
+
+
+@login_required
+def start_listing_checkout_view(request, pk):
+    """
+    Create a Stripe Checkout Session for a user's draft listing.
+    The listing only becomes ACTIVE after a verified webhook confirms payment.
+    """
+
+    print("STRIPE_SECRET_KEY(prefix,len):",
+      (settings.STRIPE_SECRET_KEY or "")[:12],
+      len(settings.STRIPE_SECRET_KEY or ""),
+      "ENV_LEN:",
+      len(os.environ.get("STRIPE_SECRET_KEY", "") or ""))
+    
+    listing = get_object_or_404(Listing, pk=pk, owner=request.user)
+
+    if listing.status not in (Listing.Status.DRAFT, Listing.Status.PENDING_PAYMENT):
+        messages.error(request, "Only draft listings can be paid for.")
+        return redirect("users:listing_detail", pk=listing.pk)
+
+    # Safety: ensure duration is an int
+    duration_days = int(listing.duration_days)
+
+    try:
+        amount_pence = calculate_listing_price_pence(
+            funding_band=listing.funding_band,
+            duration_days=duration_days,
+        )
+    except ValueError:
+        messages.error(request, "Pricing could not be calculated for this listing.")
+        return redirect("users:listing_detail", pk=listing.pk)
+
+    if not settings.STRIPE_SECRET_KEY:
+        messages.error(request, "Stripe is not configured on the server.")
+        return redirect("users:listing_detail", pk=listing.pk)
+
+    stripe.api_key = settings.STRIPE_SECRET_KEY
+
+    success_url = settings.SITE_URL + reverse("users:payment_success")
+    cancel_url = settings.SITE_URL + reverse("users:payment_cancel", kwargs={"pk": listing.pk})
+
+    session = stripe.checkout.Session.create(
+        mode="payment",
+        currency="gbp",
+        client_reference_id=str(listing.pk),
+        metadata={
+            "listing_id": str(listing.pk),
+            "user_id": str(request.user.pk),
+            "funding_band": listing.funding_band,
+            "duration_days": str(duration_days),
+        },
+        line_items=[
+            {
+                "price_data": {
+                    "currency": "gbp",
+                    "product_data": {"name": "Listing upload fee"},
+                    "unit_amount": int(amount_pence),
+                },
+                "quantity": 1,
+            }
+        ],
+        success_url=success_url,
+        cancel_url=cancel_url,
+    )
+
+    listing.expected_amount_pence = int(amount_pence)
+    listing.stripe_checkout_session_id = session.id
+    listing.status = Listing.Status.PENDING_PAYMENT
+    listing.save(update_fields=["expected_amount_pence", "stripe_checkout_session_id", "status"])
+
+    return redirect(session.url, permanent=False)
+
+
+@login_required
+def payment_success_view(request):
+    messages.success(request, "Payment received. Your listing will activate shortly.")
+    return redirect("users:dashboard")
+
+
+@login_required
+def payment_cancel_view(request, pk):
+    messages.info(request, "Payment cancelled. Your listing is still saved as a draft.")
+    return redirect("users:listing_detail", pk=pk)
+
+
+@csrf_exempt
+@require_POST
+def stripe_webhook(request):
+    if not settings.STRIPE_WEBHOOK_SECRET or not settings.STRIPE_SECRET_KEY:
+        return HttpResponse(status=400)
+
+    stripe.api_key = settings.STRIPE_SECRET_KEY
+
+    payload = request.body
+    sig_header = request.META.get("HTTP_STRIPE_SIGNATURE", "")
+
+    try:
+        event = stripe.Webhook.construct_event(
+            payload=payload,
+            sig_header=sig_header,
+            secret=settings.STRIPE_WEBHOOK_SECRET,
+        )
+    except Exception:
+        return HttpResponse(status=400)
+
+    if event["type"] == "checkout.session.completed":
+        session = event["data"]["object"]
+
+        if session.get("payment_status") != "paid":
+            return HttpResponse(status=200)
+
+        listing_id = session.get("client_reference_id") or (session.get("metadata") or {}).get("listing_id")
+        if not listing_id:
+            return HttpResponse(status=200)
+
+        amount_total = session.get("amount_total")
+        payment_intent = session.get("payment_intent")
+        session_id = session.get("id")
+
+        with transaction.atomic():
+            listing = Listing.objects.select_for_update().filter(pk=listing_id).first()
+            if not listing:
+                return HttpResponse(status=200)
+
+            if listing.status == Listing.Status.ACTIVE:
+                return HttpResponse(status=200)
+
+            if listing.stripe_checkout_session_id and session_id != listing.stripe_checkout_session_id:
+                return HttpResponse(status=400)
+
+            if amount_total is None or int(amount_total) != int(listing.expected_amount_pence):
+                return HttpResponse(status=400)
+
+            now = timezone.now()
+            listing.paid_amount_pence = int(amount_total)
+            listing.paid_at = now
+            listing.stripe_payment_intent_id = str(payment_intent or "")
+
+            listing.status = Listing.Status.ACTIVE
+            listing.active_from = now
+            listing.active_until = now + timedelta(days=int(listing.duration_days))
+
+            listing.save(update_fields=[
+                "paid_amount_pence",
+                "paid_at",
+                "stripe_payment_intent_id",
+                "status",
+                "active_from",
+                "active_until",
+            ])
+
+    return HttpResponse(status=200)
 
 
 @login_required
@@ -397,6 +554,7 @@ def api_outcodes(request):
     county = (request.GET.get("county") or "").strip()
     return JsonResponse({"outcodes": OUTCODES_BY_COUNTY.get(county, [])})
 
+
 @login_required
 def search_listings_view(request):
     q = (request.GET.get("q") or "").strip()
@@ -409,7 +567,7 @@ def search_listings_view(request):
     qs = (
         Listing.objects
         .filter(status=Listing.Status.ACTIVE)
-        .exclude(owner=request.user) # show other users' listings
+        .exclude(owner=request.user)
         .prefetch_related("media")
         .order_by("-created_at")
     )
@@ -438,7 +596,7 @@ def search_listings_view(request):
     if return_type:
         qs = qs.filter(return_type=return_type)
 
-    paginator = Paginator(qs, 12)  # 12 results per page
+    paginator = Paginator(qs, 12)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 

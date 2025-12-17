@@ -18,5 +18,9 @@ urlpatterns = [
     path("listings/<int:pk>/edit/", views.edit_listing_view, name="listing_edit"),
     path("listings/<int:pk>/media/<int:media_id>/delete/", views.listing_media_delete_view, name="listing_media_delete"),
     path("listings/search/", views.search_listings_view, name="search_listings"),
+    path("listings/<int:pk>/checkout/", views.start_listing_checkout_view, name="listing_checkout"),
+    path("stripe/webhook/", views.stripe_webhook, name="stripe_webhook"),
+    path("payments/success/", views.payment_success_view, name="payment_success"),
+    path("payments/cancel/<int:pk>/", views.payment_cancel_view, name="payment_cancel"),   
 
 ]

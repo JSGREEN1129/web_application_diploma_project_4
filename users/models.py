@@ -36,10 +36,15 @@ class Listing(models.Model):
 
     class Status(models.TextChoices):
         DRAFT = "draft", "Draft"
+        PENDING_PAYMENT = "pending_payment", "Pending payment"
         ACTIVE = "active", "Active"
         EXPIRED = "expired", "Expired"
 
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="listings")
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="listings",
+    )
 
     source_use = models.CharField(max_length=20, choices=UseType.choices)
     target_use = models.CharField(max_length=20, choices=UseType.choices)
@@ -53,14 +58,34 @@ class Listing(models.Model):
     return_band = models.CharField(max_length=20, choices=ReturnBand.choices)
 
     duration_days = models.PositiveIntegerField()
+
     price_per_day_pence = models.PositiveIntegerField(default=199)
 
-    status = models.CharField(max_length=10, choices=Status.choices, default=Status.DRAFT)
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.DRAFT,
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     active_from = models.DateTimeField(null=True, blank=True)
     active_until = models.DateTimeField(null=True, blank=True)
 
-    stripe_checkout_session_id = models.CharField(max_length=255, blank=True, default="")
+    expected_amount_pence = models.PositiveIntegerField(default=0)
+    paid_amount_pence = models.PositiveIntegerField(default=0)
+    paid_at = models.DateTimeField(null=True, blank=True)
+
+    stripe_checkout_session_id = models.CharField(
+        max_length=255,
+        blank=True,
+        default="",
+        db_index=True,
+    )
+    stripe_payment_intent_id = models.CharField(
+        max_length=255,
+        blank=True,
+        default="",
+    )
 
     def total_price_pence(self) -> int:
         return self.duration_days * self.price_per_day_pence
@@ -72,8 +97,10 @@ class Listing(models.Model):
         self.active_until = now + timezone.timedelta(days=self.duration_days)
         self.save(update_fields=["status", "active_from", "active_until"])
 
+
 def listing_media_upload_to(instance, filename):
     return f"listing_media/listing_{instance.listing_id}/{filename}"
+
 
 class ListingMedia(models.Model):
     class MediaType(models.TextChoices):
@@ -83,13 +110,13 @@ class ListingMedia(models.Model):
     listing = models.ForeignKey(
         Listing,
         on_delete=models.CASCADE,
-        related_name="media"
+        related_name="media",
     )
 
     file = models.FileField(upload_to=listing_media_upload_to)
     media_type = models.CharField(
         max_length=20,
-        choices=MediaType.choices
+        choices=MediaType.choices,
     )
 
     uploaded_at = models.DateTimeField(auto_now_add=True)
