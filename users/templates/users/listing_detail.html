@@ -14,6 +14,8 @@
 
     {% if listing.status == "draft" %}
       <span class="badge text-bg-secondary">Draft</span>
+    {% elif listing.status == "pending_payment" %}
+      <span class="badge text-bg-warning">Pending payment</span>
     {% elif listing.status == "active" %}
       <span class="badge text-bg-success">Active</span>
     {% elif listing.status == "expired" %}
@@ -23,12 +25,16 @@
     {% endif %}
   </div>
 
-  <div class="d-flex gap-2">
+  <div class="d-flex gap-2 flex-wrap mb-3">
     <a href="{% url 'users:dashboard' %}" class="btn btn-sm btn-outline-secondary">← Back to Dashboard</a>
 
-    {% if listing.status == "draft" %}
+    {% if listing.status == "draft" or listing.status == "pending_payment" %}
       <a href="{% url 'users:listing_edit' listing.pk %}" class="btn btn-sm btn-primary">
-        Edit Draft
+        Edit listing
+      </a>
+
+      <a href="{% url 'users:listing_checkout' listing.pk %}" class="btn btn-sm btn-success">
+        Continue to payment
       </a>
     {% endif %}
   </div>

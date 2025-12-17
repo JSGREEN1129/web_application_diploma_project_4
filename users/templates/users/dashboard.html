@@ -75,6 +75,8 @@
 
                                 {% if listing.status == "draft" %}
                                     <span class="badge text-bg-secondary">Draft</span>
+                                {% elif listing.status == "pending_payment" %}
+                                    <span class="badge text-bg-warning">Pending payment</span>
                                 {% elif listing.status == "active" %}
                                     <span class="badge text-bg-success">Active</span>
                                 {% elif listing.status == "expired" %}
@@ -105,10 +107,18 @@
                                 {% endif %}
                             </p>
 
-                            {% if listing.status == "draft" %}
-                                <a href="{% url 'users:listing_detail' listing.pk %}" class="btn btn-sm btn-outline-primary">
-                                    View Draft
-                                </a>
+                            {% if listing.status == "draft" or listing.status == "pending_payment" %}
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <a href="{% url 'users:listing_detail' listing.pk %}" class="btn btn-sm btn-outline-primary">
+                                        View Draft
+                                    </a>
+                                    <a href="{% url 'users:listing_edit' listing.pk %}" class="btn btn-sm btn-primary">
+                                        Edit
+                                    </a>
+                                    <a href="{% url 'users:listing_checkout' listing.pk %}" class="btn btn-sm btn-success">
+                                        Pay
+                                    </a>
+                                </div>
                             {% else %}
                                 <a href="{% url 'users:listing_detail' listing.pk %}" class="btn btn-sm btn-outline-primary">
                                     View Listing
