@@ -360,7 +360,6 @@ def payment_cancel_view(request, pk):
 @require_POST
 def stripe_webhook(request):
     if not settings.STRIPE_WEBHOOK_SECRET or not settings.STRIPE_SECRET_KEY:
-        print("WEBHOOK: Missing STRIPE_WEBHOOK_SECRET or STRIPE_SECRET_KEY")
         return HttpResponse(status=400)
 
     stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -374,95 +373,59 @@ def stripe_webhook(request):
             sig_header=sig_header,
             secret=settings.STRIPE_WEBHOOK_SECRET,
         )
-    except Exception as e:
-        print("WEBHOOK: construct_event FAILED:", repr(e))
+    except Exception:
         return HttpResponse(status=400)
 
-    event_type = event.get("type")
-    obj = (event.get("data") or {}).get("object") or {}
+    if event["type"] == "checkout.session.completed":
+        session = event["data"]["object"]
 
-    print("WEBHOOK: type =", event_type)
-
-    if event_type and event_type.startswith("checkout.session"):
-        print("WEBHOOK: session.id =", obj.get("id"))
-        print("WEBHOOK: session.payment_status =", obj.get("payment_status"))
-        print("WEBHOOK: session.client_reference_id =", obj.get("client_reference_id"))
-        print("WEBHOOK: session.metadata =", obj.get("metadata"))
-        print("WEBHOOK: session.amount_total =", obj.get("amount_total"))
-        print("WEBHOOK: session.currency =", obj.get("currency"))
-
-    if event_type != "checkout.session.completed":
-        print("WEBHOOK: Ignored event type")
-        return HttpResponse(status=200)
-
-    session = obj
-
-    if session.get("payment_status") != "paid":
-        print("WEBHOOK: checkout.session.completed but NOT paid -> returning 200")
-        return HttpResponse(status=200)
-
-    listing_id = session.get("client_reference_id") or (session.get("metadata") or {}).get("listing_id")
-    print("WEBHOOK: resolved listing_id =", listing_id)
-
-    if not listing_id:
-        print("WEBHOOK: No listing_id found in client_reference_id or metadata -> returning 200")
-        return HttpResponse(status=200)
-
-    amount_total = session.get("amount_total")
-    payment_intent = session.get("payment_intent")
-    session_id = session.get("id")
-
-    with transaction.atomic():
-        listing = Listing.objects.select_for_update().filter(pk=listing_id).first()
-        print("WEBHOOK: listing found =", bool(listing))
-
-        if not listing:
-            print("WEBHOOK: Listing does not exist -> returning 200")
+        if session.get("payment_status") != "paid":
             return HttpResponse(status=200)
 
-        print("WEBHOOK: listing.status =", listing.status)
-        print("WEBHOOK: listing.expected_amount_pence =", listing.expected_amount_pence)
-        print("WEBHOOK: listing.stripe_checkout_session_id =", listing.stripe_checkout_session_id)
-
-        if listing.status == Listing.Status.ACTIVE:
-            print("WEBHOOK: Listing already ACTIVE -> returning 200")
+        listing_id = session.get("client_reference_id") or (
+            session.get("metadata") or {}
+        ).get("listing_id")
+        if not listing_id:
             return HttpResponse(status=200)
 
-        if listing.stripe_checkout_session_id and session_id != listing.stripe_checkout_session_id:
-            print("WEBHOOK: SESSION MISMATCH -> returning 200")
-            print("WEBHOOK:   incoming session_id =", session_id)
-            print("WEBHOOK:   stored session_id   =", listing.stripe_checkout_session_id)
-            return HttpResponse(status=200)
+        amount_total = session.get("amount_total")
+        payment_intent = session.get("payment_intent")
+        session_id = session.get("id")
 
-        if amount_total is None:
-            print("WEBHOOK: amount_total is None -> returning 200")
-            return HttpResponse(status=200)
+        with transaction.atomic():
+            listing = Listing.objects.select_for_update().filter(pk=listing_id).first()
+            if not listing:
+                return HttpResponse(status=200)
 
-        if int(amount_total) != int(listing.expected_amount_pence):
-            print("WEBHOOK: AMOUNT MISMATCH -> returning 200")
-            print("WEBHOOK:   incoming amount_total =", int(amount_total))
-            print("WEBHOOK:   expected_amount_pence =", int(listing.expected_amount_pence))
-            return HttpResponse(status=200)
+            if listing.status == Listing.Status.ACTIVE:
+                return HttpResponse(status=200)
 
-        now = timezone.now()
-        listing.paid_amount_pence = int(amount_total)
-        listing.paid_at = now
-        listing.stripe_payment_intent_id = str(payment_intent or "")
+            if listing.stripe_checkout_session_id and session_id != listing.stripe_checkout_session_id:
+                return HttpResponse(status=200)
 
-        listing.status = Listing.Status.ACTIVE
-        listing.active_from = now
-        listing.active_until = now + timedelta(days=int(listing.duration_days))
+            if amount_total is None or int(amount_total) != int(listing.expected_amount_pence):
+                return HttpResponse(status=200)
 
-        listing.save(update_fields=[
-            "paid_amount_pence",
-            "paid_at",
-            "stripe_payment_intent_id",
-            "status",
-            "active_from",
-            "active_until",
-        ])
+            now = timezone.now()
+            listing.paid_amount_pence = int(amount_total)
+            listing.paid_at = now
+            listing.stripe_payment_intent_id = str(payment_intent or "")
 
-        print("WEBHOOK: Listing ACTIVATED! id =", listing.pk)
+            listing.status = Listing.Status.ACTIVE
+            listing.active_from = now
+            listing.active_until = now + \
+                timedelta(days=int(listing.duration_days))
+
+            listing.save(
+                update_fields=[
+                    "paid_amount_pence",
+                    "paid_at",
+                    "stripe_payment_intent_id",
+                    "status",
+                    "active_from",
+                    "active_until",
+                ]
+            )
 
     return HttpResponse(status=200)
 
