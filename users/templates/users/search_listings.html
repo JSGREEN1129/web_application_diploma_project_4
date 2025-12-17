@@ -14,35 +14,66 @@
   <form method="get" class="card mb-4">
     <div class="card-body">
       <div class="row g-3 align-items-end">
+
         <div class="col-12 col-lg-4">
           <label class="form-label">Search</label>
-          <input type="text" name="q" value="{{ q }}" class="form-control"
-                 placeholder="e.g. London, SW, residential → commercial">
+          <input
+            type="text"
+            name="q"
+            value="{{ q }}"
+            class="form-control"
+            placeholder="e.g. London, SW, residential → commercial"
+          >
         </div>
 
         <div class="col-6 col-lg-2">
           <label class="form-label">Country</label>
-          <input type="text" name="country" value="{{ country }}" class="form-control" placeholder="England">
+          <select id="id_country" name="country" class="form-select" data-selected="{{ country }}">
+            <option value="">Any country</option>
+            {% for value,label in country_choices %}
+              <option value="{{ value }}" {% if country == value %}selected{% endif %}>
+                {{ label }}
+              </option>
+            {% endfor %}
+          </select>
         </div>
 
         <div class="col-6 col-lg-2">
           <label class="form-label">County</label>
-          <input type="text" name="county" value="{{ county }}" class="form-control" placeholder="Greater London">
+          <select id="id_county" name="county" class="form-select" data-selected="{{ county }}" disabled>
+            <option value="">Any county</option>
+          </select>
         </div>
 
         <div class="col-6 col-lg-2">
           <label class="form-label">Postcode prefix</label>
-          <input type="text" name="postcode_prefix" value="{{ postcode_prefix }}" class="form-control" placeholder="SW">
+          <select id="id_postcode_prefix" name="postcode_prefix" class="form-select" data-selected="{{ postcode_prefix }}" disabled>
+            <option value="">Any prefix</option>
+          </select>
         </div>
 
         <div class="col-6 col-lg-2">
           <label class="form-label">Funding band</label>
-          <input type="text" name="funding_band" value="{{ funding_band }}" class="form-control" placeholder="(optional)">
+          <select name="funding_band" class="form-select">
+            <option value="">Any funding band</option>
+            {% for value,label in funding_band_choices %}
+              <option value="{{ value }}" {% if funding_band == value %}selected{% endif %}>
+                {{ label }}
+              </option>
+            {% endfor %}
+          </select>
         </div>
 
         <div class="col-6 col-lg-2">
           <label class="form-label">Return type</label>
-          <input type="text" name="return_type" value="{{ return_type }}" class="form-control" placeholder="(optional)">
+          <select name="return_type" class="form-select">
+            <option value="">Any return type</option>
+            {% for value,label in return_type_choices %}
+              <option value="{{ value }}" {% if return_type == value %}selected{% endif %}>
+                {{ label }}
+              </option>
+            {% endfor %}
+          </select>
         </div>
 
         <div class="col-12 col-lg-2 d-grid">
@@ -50,11 +81,11 @@
         </div>
 
         <div class="col-12 col-lg-2 d-grid">
-          <a class="btn btn-outline-secondary"
-             href="{% url 'users:search_listings' %}">
+          <a class="btn btn-outline-secondary" href="{% url 'users:search_listings' %}">
             Clear
           </a>
         </div>
+
       </div>
     </div>
   </form>
@@ -131,4 +162,97 @@
   {% endif %}
 
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  const countryEl = document.getElementById("id_country");
+  const countyEl = document.getElementById("id_county");
+  const outcodeEl = document.getElementById("id_postcode_prefix");
+
+  const initialCountry = (countryEl?.dataset?.selected || "").trim();
+  const initialCounty = (countyEl?.dataset?.selected || "").trim();
+  const initialOutcode = (outcodeEl?.dataset?.selected || "").trim();
+
+  function setOptions(selectEl, items, placeholder, selectedValue) {
+    if (!selectEl) return;
+
+    selectEl.innerHTML = "";
+
+    const opt0 = document.createElement("option");
+    opt0.value = "";
+    opt0.textContent = placeholder;
+    selectEl.appendChild(opt0);
+
+    (items || []).forEach(v => {
+      const opt = document.createElement("option");
+      opt.value = v;
+      opt.textContent = v;
+      if (selectedValue && v === selectedValue) opt.selected = true;
+      selectEl.appendChild(opt);
+    });
+  }
+
+  function setDisabled(el, disabled) {
+    if (!el) return;
+    el.disabled = !!disabled;
+  }
+
+  async function loadCounties(selectedCounty = "") {
+    const country = (countryEl?.value || "").trim();
+
+    setDisabled(countyEl, true);
+    setDisabled(outcodeEl, true);
+    setOptions(countyEl, [], "Any county");
+    setOptions(outcodeEl, [], "Any prefix");
+
+    if (!country) return;
+
+    try {
+      const res = await fetch("{% url 'users:api_counties' %}?country=" + encodeURIComponent(country));
+      const data = await res.json();
+
+      setOptions(countyEl, data.counties || [], "Any county", selectedCounty);
+      setDisabled(countyEl, false);
+
+      const countyNow = (countyEl?.value || "").trim();
+      if (countyNow) {
+        await loadOutcodes(initialOutcode);
+      }
+    } catch (e) {
+      setOptions(countyEl, [], "Any county");
+      setOptions(outcodeEl, [], "Any prefix");
+    }
+  }
+
+  async function loadOutcodes(selectedOutcode = "") {
+    const county = (countyEl?.value || "").trim();
+
+    setDisabled(outcodeEl, true);
+    setOptions(outcodeEl, [], "Any prefix");
+
+    if (!county) return;
+
+    try {
+      const res = await fetch("{% url 'users:api_outcodes' %}?county=" + encodeURIComponent(county));
+      const data = await res.json();
+
+      setOptions(outcodeEl, data.outcodes || [], "Any prefix", selectedOutcode);
+      setDisabled(outcodeEl, false);
+    } catch (e) {
+      setOptions(outcodeEl, [], "Any prefix");
+    }
+  }
+
+  countryEl?.addEventListener("change", () => loadCounties(""));
+  countyEl?.addEventListener("change", () => loadOutcodes(""));
+
+  if (initialCountry) {
+    countryEl.value = initialCountry;
+  }
+
+  loadCounties(initialCounty);
+})();
+</script>
 {% endblock %}

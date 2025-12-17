@@ -115,9 +115,11 @@ def login_view(request):
                     "There is no account associated with the email address.",
                 )
             else:
-                user_auth = authenticate(request, username=email, password=password)
+                user_auth = authenticate(
+                    request, username=email, password=password)
                 if user_auth is not None:
-                    login(request, user_auth, backend="users.backends.EmailBackend")
+                    login(request, user_auth,
+                          backend="users.backends.EmailBackend")
                     messages.success(request, "Logged in successfully!")
                     return redirect("users:dashboard")
                 else:
@@ -237,7 +239,8 @@ def create_listing_view(request):
                     media_type=ListingMedia.MediaType.DOCUMENT,
                 )
 
-            messages.success(request, "Draft saved. Redirecting you to payment...")
+            messages.success(
+                request, "Draft saved. Redirecting you to payment...")
             return redirect("users:listing_checkout", pk=listing.pk)
 
     else:
@@ -271,7 +274,8 @@ def start_listing_checkout_view(request, pk):
             duration_days=duration_days,
         )
     except ValueError:
-        messages.error(request, "Pricing could not be calculated for this listing.")
+        messages.error(
+            request, "Pricing could not be calculated for this listing.")
         return redirect("users:listing_detail", pk=listing.pk)
 
     if not settings.STRIPE_SECRET_KEY:
@@ -313,7 +317,8 @@ def start_listing_checkout_view(request, pk):
     listing.stripe_checkout_session_id = session.id
     listing.status = Listing.Status.PENDING_PAYMENT
     listing.save(
-        update_fields=["expected_amount_pence", "stripe_checkout_session_id", "status"]
+        update_fields=["expected_amount_pence",
+                       "stripe_checkout_session_id", "status"]
     )
 
     return redirect(session.url, permanent=False)
@@ -321,7 +326,8 @@ def start_listing_checkout_view(request, pk):
 
 @login_required
 def payment_success_view(request):
-    messages.success(request, "Payment received. Your listing will activate shortly.")
+    messages.success(
+        request, "Payment received. Your listing will activate shortly.")
     return redirect("users:dashboard")
 
 
@@ -345,7 +351,8 @@ def payment_cancel_view(request, pk):
             ]
         )
 
-    messages.info(request, "Payment cancelled. Your listing is still saved as a draft.")
+    messages.info(
+        request, "Payment cancelled. Your listing is still saved as a draft.")
     return redirect("users:listing_detail", pk=pk)
 
 
@@ -353,6 +360,7 @@ def payment_cancel_view(request, pk):
 @require_POST
 def stripe_webhook(request):
     if not settings.STRIPE_WEBHOOK_SECRET or not settings.STRIPE_SECRET_KEY:
+        print("WEBHOOK: Missing STRIPE_WEBHOOK_SECRET or STRIPE_SECRET_KEY")
         return HttpResponse(status=400)
 
     stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -366,61 +374,95 @@ def stripe_webhook(request):
             sig_header=sig_header,
             secret=settings.STRIPE_WEBHOOK_SECRET,
         )
-    except Exception:
+    except Exception as e:
+        print("WEBHOOK: construct_event FAILED:", repr(e))
         return HttpResponse(status=400)
 
-    if event["type"] == "checkout.session.completed":
-        session = event["data"]["object"]
+    event_type = event.get("type")
+    obj = (event.get("data") or {}).get("object") or {}
 
-        if session.get("payment_status") != "paid":
+    print("WEBHOOK: type =", event_type)
+
+    if event_type and event_type.startswith("checkout.session"):
+        print("WEBHOOK: session.id =", obj.get("id"))
+        print("WEBHOOK: session.payment_status =", obj.get("payment_status"))
+        print("WEBHOOK: session.client_reference_id =", obj.get("client_reference_id"))
+        print("WEBHOOK: session.metadata =", obj.get("metadata"))
+        print("WEBHOOK: session.amount_total =", obj.get("amount_total"))
+        print("WEBHOOK: session.currency =", obj.get("currency"))
+
+    if event_type != "checkout.session.completed":
+        print("WEBHOOK: Ignored event type")
+        return HttpResponse(status=200)
+
+    session = obj
+
+    if session.get("payment_status") != "paid":
+        print("WEBHOOK: checkout.session.completed but NOT paid -> returning 200")
+        return HttpResponse(status=200)
+
+    listing_id = session.get("client_reference_id") or (session.get("metadata") or {}).get("listing_id")
+    print("WEBHOOK: resolved listing_id =", listing_id)
+
+    if not listing_id:
+        print("WEBHOOK: No listing_id found in client_reference_id or metadata -> returning 200")
+        return HttpResponse(status=200)
+
+    amount_total = session.get("amount_total")
+    payment_intent = session.get("payment_intent")
+    session_id = session.get("id")
+
+    with transaction.atomic():
+        listing = Listing.objects.select_for_update().filter(pk=listing_id).first()
+        print("WEBHOOK: listing found =", bool(listing))
+
+        if not listing:
+            print("WEBHOOK: Listing does not exist -> returning 200")
             return HttpResponse(status=200)
 
-        listing_id = session.get("client_reference_id") or (
-            session.get("metadata") or {}
-        ).get("listing_id")
-        if not listing_id:
+        print("WEBHOOK: listing.status =", listing.status)
+        print("WEBHOOK: listing.expected_amount_pence =", listing.expected_amount_pence)
+        print("WEBHOOK: listing.stripe_checkout_session_id =", listing.stripe_checkout_session_id)
+
+        if listing.status == Listing.Status.ACTIVE:
+            print("WEBHOOK: Listing already ACTIVE -> returning 200")
             return HttpResponse(status=200)
 
-        amount_total = session.get("amount_total")
-        payment_intent = session.get("payment_intent")
-        session_id = session.get("id")
+        if listing.stripe_checkout_session_id and session_id != listing.stripe_checkout_session_id:
+            print("WEBHOOK: SESSION MISMATCH -> returning 200")
+            print("WEBHOOK:   incoming session_id =", session_id)
+            print("WEBHOOK:   stored session_id   =", listing.stripe_checkout_session_id)
+            return HttpResponse(status=200)
 
-        with transaction.atomic():
-            listing = Listing.objects.select_for_update().filter(pk=listing_id).first()
-            if not listing:
-                return HttpResponse(status=200)
+        if amount_total is None:
+            print("WEBHOOK: amount_total is None -> returning 200")
+            return HttpResponse(status=200)
 
-            # already active -> idempotent ok
-            if listing.status == Listing.Status.ACTIVE:
-                return HttpResponse(status=200)
+        if int(amount_total) != int(listing.expected_amount_pence):
+            print("WEBHOOK: AMOUNT MISMATCH -> returning 200")
+            print("WEBHOOK:   incoming amount_total =", int(amount_total))
+            print("WEBHOOK:   expected_amount_pence =", int(listing.expected_amount_pence))
+            return HttpResponse(status=200)
 
-            # Ignore old session IDs instead of 400 (prevents Stripe retries)
-            if listing.stripe_checkout_session_id and session_id != listing.stripe_checkout_session_id:
-                return HttpResponse(status=200)
+        now = timezone.now()
+        listing.paid_amount_pence = int(amount_total)
+        listing.paid_at = now
+        listing.stripe_payment_intent_id = str(payment_intent or "")
 
-            # Ignore mismatched amount instead of 400 (prevents Stripe retries)
-            if amount_total is None or int(amount_total) != int(listing.expected_amount_pence):
-                return HttpResponse(status=200)
+        listing.status = Listing.Status.ACTIVE
+        listing.active_from = now
+        listing.active_until = now + timedelta(days=int(listing.duration_days))
 
-            now = timezone.now()
-            listing.paid_amount_pence = int(amount_total)
-            listing.paid_at = now
-            listing.stripe_payment_intent_id = str(payment_intent or "")
+        listing.save(update_fields=[
+            "paid_amount_pence",
+            "paid_at",
+            "stripe_payment_intent_id",
+            "status",
+            "active_from",
+            "active_until",
+        ])
 
-            listing.status = Listing.Status.ACTIVE
-            listing.active_from = now
-            listing.active_until = now + timedelta(days=int(listing.duration_days))
-
-            listing.save(
-                update_fields=[
-                    "paid_amount_pence",
-                    "paid_at",
-                    "stripe_payment_intent_id",
-                    "status",
-                    "active_from",
-                    "active_until",
-                ]
-            )
+        print("WEBHOOK: Listing ACTIVATED! id =", listing.pk)
 
     return HttpResponse(status=200)
 
@@ -459,7 +501,6 @@ def edit_listing_view(request, pk):
         owner=request.user,
     )
 
-    # Allow editing both draft + pending payment
     if listing.status not in (Listing.Status.DRAFT, Listing.Status.PENDING_PAYMENT):
         messages.error(request, "Only draft listings can be edited.")
         return redirect("users:listing_detail", pk=listing.pk)
@@ -513,7 +554,6 @@ def edit_listing_view(request, pk):
 
             listing = form.save(commit=False)
 
-            # Any successful edit invalidates any previous checkout/payment state
             _reset_payment_state(listing)
             listing.save()
 
@@ -531,7 +571,8 @@ def edit_listing_view(request, pk):
                     media_type=ListingMedia.MediaType.DOCUMENT,
                 )
 
-            messages.success(request, "Draft updated. Redirecting you to payment...")
+            messages.success(
+                request, "Draft updated. Redirecting you to payment...")
             return redirect("users:listing_checkout", pk=listing.pk)
 
     else:
@@ -556,7 +597,6 @@ def edit_listing_view(request, pk):
 def listing_media_delete_view(request, pk, media_id):
     listing = get_object_or_404(Listing, pk=pk, owner=request.user)
 
-    # Allow delete on draft + pending payment
     if listing.status not in (Listing.Status.DRAFT, Listing.Status.PENDING_PAYMENT):
         messages.error(request, "Only draft listings can be edited.")
         return redirect("users:listing_detail", pk=listing.pk)
@@ -566,7 +606,6 @@ def listing_media_delete_view(request, pk, media_id):
     media.file.delete(save=False)
     media.delete()
 
-    # Any media change invalidates any previous checkout/payment state
     if listing.status == Listing.Status.PENDING_PAYMENT:
         _reset_payment_state(listing)
         listing.save(
@@ -622,7 +661,7 @@ def api_outcodes(request):
 @login_required
 def search_listings_view(request):
     q = (request.GET.get("q") or "").strip()
-    country = (request.GET.get("country") or "").strip()
+    country = (request.GET.get("country") or "").strip().lower()
     county = (request.GET.get("county") or "").strip()
     postcode_prefix = (request.GET.get("postcode_prefix") or "").strip()
     funding_band = (request.GET.get("funding_band") or "").strip()
@@ -674,5 +713,10 @@ def search_listings_view(request):
             "funding_band": funding_band,
             "return_type": return_type,
             "page_obj": page_obj,
+
+            "funding_band_choices": Listing.FundingBand.choices,
+            "return_type_choices": Listing.ReturnType.choices,
+
+            "country_choices": Listing.Country.choices,
         },
     )
