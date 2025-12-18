@@ -1,6 +1,5 @@
-# users/views.py
-
 from datetime import timedelta
+import logging
 
 import stripe
 
@@ -28,10 +27,12 @@ from .forms import (
 from .models import Listing, ListingMedia
 from .pricing import calculate_listing_price_pence
 
+logger = logging.getLogger(__name__)
+
 User = get_user_model()
 
-MAX_IMAGE_SIZE = 5 * 1024 * 1024      # 5 MB
-MAX_DOCUMENT_SIZE = 10 * 1024 * 1024  # 10 MB
+MAX_IMAGE_SIZE = 5 * 1024 * 1024
+MAX_DOCUMENT_SIZE = 10 * 1024 * 1024
 
 ALLOWED_IMAGE_EXTENSIONS = {"jpg", "jpeg", "png", "webp"}
 ALLOWED_DOCUMENT_EXTENSIONS = {"pdf", "doc", "docx"}
@@ -80,16 +81,55 @@ def validate_uploaded_files(
 
 
 def _reset_payment_state(listing: Listing) -> None:
-    """
-    Any edit/media change should invalidate any previous checkout/payment info.
-    Keep listing in DRAFT until a fresh checkout completes.
-    """
     listing.status = Listing.Status.DRAFT
     listing.expected_amount_pence = 0
     listing.paid_amount_pence = 0
     listing.paid_at = None
     listing.stripe_checkout_session_id = ""
     listing.stripe_payment_intent_id = ""
+
+
+def _activate_listing_from_paid_session(*, listing: Listing, session: dict) -> bool:
+    session_id = session.get("id")
+    amount_total = session.get("amount_total")
+    payment_intent = session.get("payment_intent")
+
+    if session.get("payment_status") != "paid":
+        return False
+
+    if not session_id:
+        return False
+
+    if listing.status == Listing.Status.ACTIVE:
+        return True
+
+    if listing.stripe_checkout_session_id and session_id != listing.stripe_checkout_session_id:
+        return False
+
+    if amount_total is None:
+        return False
+
+    if int(amount_total) != int(listing.expected_amount_pence):
+        return False
+
+    now = timezone.now()
+    listing.paid_amount_pence = int(amount_total)
+    listing.paid_at = now
+    listing.stripe_payment_intent_id = str(payment_intent or "")
+    listing.status = Listing.Status.ACTIVE
+    listing.active_from = now
+    listing.active_until = now + timedelta(days=int(listing.duration_days))
+    listing.save(
+        update_fields=[
+            "paid_amount_pence",
+            "paid_at",
+            "stripe_payment_intent_id",
+            "status",
+            "active_from",
+            "active_until",
+        ]
+    )
+    return True
 
 
 @never_cache
@@ -102,31 +142,20 @@ def login_view(request):
         password = request.POST.get("password", "")
 
         if not email or not password:
-            messages.error(
-                request,
-                "Please enter your registered email and password to login.",
-            )
+            messages.error(request, "Please enter your registered email and password to login.")
         else:
             user_exists = User.objects.filter(email=email).exists()
 
             if not user_exists:
-                messages.error(
-                    request,
-                    "There is no account associated with the email address.",
-                )
+                messages.error(request, "There is no account associated with the email address.")
             else:
-                user_auth = authenticate(
-                    request, username=email, password=password)
+                user_auth = authenticate(request, username=email, password=password)
                 if user_auth is not None:
-                    login(request, user_auth,
-                          backend="users.backends.EmailBackend")
+                    login(request, user_auth, backend="users.backends.EmailBackend")
                     messages.success(request, "Logged in successfully!")
                     return redirect("users:dashboard")
                 else:
-                    messages.error(
-                        request,
-                        "You have entered your password incorrectly.",
-                    )
+                    messages.error(request, "You have entered your password incorrectly.")
 
     context = {
         "login_form": login_form,
@@ -169,18 +198,17 @@ def logout_view(request):
 
 @login_required
 def dashboard_view(request):
-    investments = []
     listings = (
         Listing.objects.filter(owner=request.user)
         .prefetch_related("media")
         .order_by("-created_at")
     )
 
-    context = {
-        "investments": investments,
-        "listings": listings,
-    }
-    return render(request, "users/dashboard.html", context)
+    return render(
+        request,
+        "users/dashboard.html",
+        {"listings": listings, "investments": []},
+    )
 
 
 @login_required
@@ -202,7 +230,6 @@ def create_listing_view(request):
                     label="Images",
                     allowed_exts_label="JPG, PNG or WEBP",
                 )
-
                 validate_uploaded_files(
                     documents,
                     allowed_exts=ALLOWED_DOCUMENT_EXTENSIONS,
@@ -211,7 +238,6 @@ def create_listing_view(request):
                     label="Documents",
                     allowed_exts_label="PDF, DOC or DOCX",
                 )
-
             except ValueError as e:
                 messages.error(request, str(e))
                 return render(
@@ -239,8 +265,7 @@ def create_listing_view(request):
                     media_type=ListingMedia.MediaType.DOCUMENT,
                 )
 
-            messages.success(
-                request, "Draft saved. Redirecting you to payment...")
+            messages.success(request, "Draft saved. Redirecting you to payment...")
             return redirect("users:listing_checkout", pk=listing.pk)
 
     else:
@@ -256,15 +281,52 @@ def create_listing_view(request):
 
 @login_required
 def start_listing_checkout_view(request, pk):
-    """
-    Create a Stripe Checkout Session for a user's draft listing.
-    Listing becomes ACTIVE only after verified webhook confirms payment.
-    """
     listing = get_object_or_404(Listing, pk=pk, owner=request.user)
 
     if listing.status not in (Listing.Status.DRAFT, Listing.Status.PENDING_PAYMENT):
         messages.error(request, "Only draft listings can be paid for.")
         return redirect("users:listing_detail", pk=listing.pk)
+
+    if not settings.STRIPE_SECRET_KEY:
+        messages.error(request, "Stripe is not configured on the server.")
+        return redirect("users:listing_detail", pk=listing.pk)
+
+    stripe.api_key = settings.STRIPE_SECRET_KEY
+
+    if listing.status == Listing.Status.PENDING_PAYMENT and listing.stripe_checkout_session_id:
+        try:
+            existing = stripe.checkout.Session.retrieve(listing.stripe_checkout_session_id)
+            existing_status = getattr(existing, "status", None)
+
+            if existing_status == "open" and getattr(existing, "url", None):
+                return redirect(existing.url, permanent=False)
+
+            if existing_status == "complete":
+                try:
+                    paid_session = stripe.checkout.Session.retrieve(listing.stripe_checkout_session_id)
+                except stripe.error.StripeError:
+                    paid_session = None
+
+                if paid_session:
+                    with transaction.atomic():
+                        locked = Listing.objects.select_for_update().get(pk=listing.pk)
+                        activated = _activate_listing_from_paid_session(listing=locked, session=paid_session)
+                    if activated:
+                        messages.success(request, "Payment received. Your listing is now active.")
+                    else:
+                        messages.info(request, "Payment was completed. Your listing will activate shortly.")
+                else:
+                    messages.info(request, "Payment was completed. Your listing will activate shortly.")
+
+                return redirect("users:dashboard")
+
+        except stripe.error.StripeError as e:
+            logger.warning(
+                "Failed to retrieve checkout session %s for listing %s: %s",
+                listing.stripe_checkout_session_id,
+                listing.pk,
+                str(e),
+            )
 
     duration_days = int(listing.duration_days)
 
@@ -274,15 +336,8 @@ def start_listing_checkout_view(request, pk):
             duration_days=duration_days,
         )
     except ValueError:
-        messages.error(
-            request, "Pricing could not be calculated for this listing.")
+        messages.error(request, "Pricing could not be calculated for this listing.")
         return redirect("users:listing_detail", pk=listing.pk)
-
-    if not settings.STRIPE_SECRET_KEY:
-        messages.error(request, "Stripe is not configured on the server.")
-        return redirect("users:listing_detail", pk=listing.pk)
-
-    stripe.api_key = settings.STRIPE_SECRET_KEY
 
     success_url = settings.SITE_URL + reverse("users:payment_success")
     cancel_url = settings.SITE_URL + reverse(
@@ -316,26 +371,19 @@ def start_listing_checkout_view(request, pk):
     listing.expected_amount_pence = int(amount_pence)
     listing.stripe_checkout_session_id = session.id
     listing.status = Listing.Status.PENDING_PAYMENT
-    listing.save(
-        update_fields=["expected_amount_pence",
-                       "stripe_checkout_session_id", "status"]
-    )
+    listing.save(update_fields=["expected_amount_pence", "stripe_checkout_session_id", "status"])
 
     return redirect(session.url, permanent=False)
 
 
 @login_required
 def payment_success_view(request):
-    messages.success(
-        request, "Payment received. Your listing will activate shortly.")
+    messages.success(request, "Payment received. Your listing will activate shortly.")
     return redirect("users:dashboard")
 
 
 @login_required
 def payment_cancel_view(request, pk):
-    """
-    If they cancel payment, return listing to DRAFT so it's not stuck in pending state.
-    """
     listing = get_object_or_404(Listing, pk=pk, owner=request.user)
 
     if listing.status == Listing.Status.PENDING_PAYMENT:
@@ -351,8 +399,7 @@ def payment_cancel_view(request, pk):
             ]
         )
 
-    messages.info(
-        request, "Payment cancelled. Your listing is still saved as a draft.")
+    messages.info(request, "Payment cancelled. Your listing is still saved as a draft.")
     return redirect("users:listing_detail", pk=pk)
 
 
@@ -382,14 +429,10 @@ def stripe_webhook(request):
         if session.get("payment_status") != "paid":
             return HttpResponse(status=200)
 
-        listing_id = session.get("client_reference_id") or (
-            session.get("metadata") or {}
-        ).get("listing_id")
+        listing_id = session.get("client_reference_id") or (session.get("metadata") or {}).get("listing_id")
         if not listing_id:
             return HttpResponse(status=200)
 
-        amount_total = session.get("amount_total")
-        payment_intent = session.get("payment_intent")
         session_id = session.get("id")
 
         with transaction.atomic():
@@ -403,29 +446,9 @@ def stripe_webhook(request):
             if listing.stripe_checkout_session_id and session_id != listing.stripe_checkout_session_id:
                 return HttpResponse(status=200)
 
-            if amount_total is None or int(amount_total) != int(listing.expected_amount_pence):
+            activated = _activate_listing_from_paid_session(listing=listing, session=session)
+            if not activated:
                 return HttpResponse(status=200)
-
-            now = timezone.now()
-            listing.paid_amount_pence = int(amount_total)
-            listing.paid_at = now
-            listing.stripe_payment_intent_id = str(payment_intent or "")
-
-            listing.status = Listing.Status.ACTIVE
-            listing.active_from = now
-            listing.active_until = now + \
-                timedelta(days=int(listing.duration_days))
-
-            listing.save(
-                update_fields=[
-                    "paid_amount_pence",
-                    "paid_at",
-                    "stripe_payment_intent_id",
-                    "status",
-                    "active_from",
-                    "active_until",
-                ]
-            )
 
     return HttpResponse(status=200)
 
@@ -438,21 +461,13 @@ def listing_detail_view(request, pk):
         owner=request.user,
     )
 
-    images = listing.media.filter(
-        media_type=ListingMedia.MediaType.IMAGE
-    ).order_by("uploaded_at")
-    documents = listing.media.filter(
-        media_type=ListingMedia.MediaType.DOCUMENT
-    ).order_by("uploaded_at")
+    images = listing.media.filter(media_type=ListingMedia.MediaType.IMAGE).order_by("uploaded_at")
+    documents = listing.media.filter(media_type=ListingMedia.MediaType.DOCUMENT).order_by("uploaded_at")
 
     return render(
         request,
         "users/listing_detail.html",
-        {
-            "listing": listing,
-            "images": images,
-            "documents": documents,
-        },
+        {"listing": listing, "images": images, "documents": documents},
     )
 
 
@@ -468,12 +483,8 @@ def edit_listing_view(request, pk):
         messages.error(request, "Only draft listings can be edited.")
         return redirect("users:listing_detail", pk=listing.pk)
 
-    images_qs = listing.media.filter(
-        media_type=ListingMedia.MediaType.IMAGE
-    ).order_by("uploaded_at")
-    documents_qs = listing.media.filter(
-        media_type=ListingMedia.MediaType.DOCUMENT
-    ).order_by("uploaded_at")
+    images_qs = listing.media.filter(media_type=ListingMedia.MediaType.IMAGE).order_by("uploaded_at")
+    documents_qs = listing.media.filter(media_type=ListingMedia.MediaType.DOCUMENT).order_by("uploaded_at")
 
     if request.method == "POST":
         form = ListingCreateForm(request.POST, instance=listing)
@@ -492,7 +503,6 @@ def edit_listing_view(request, pk):
                     label="Images",
                     allowed_exts_label="JPG, PNG or WEBP",
                 )
-
                 validate_uploaded_files(
                     documents,
                     allowed_exts=ALLOWED_DOCUMENT_EXTENSIONS,
@@ -516,7 +526,6 @@ def edit_listing_view(request, pk):
                 )
 
             listing = form.save(commit=False)
-
             _reset_payment_state(listing)
             listing.save()
 
@@ -534,8 +543,7 @@ def edit_listing_view(request, pk):
                     media_type=ListingMedia.MediaType.DOCUMENT,
                 )
 
-            messages.success(
-                request, "Draft updated. Redirecting you to payment...")
+            messages.success(request, "Draft updated. Redirecting you to payment...")
             return redirect("users:listing_checkout", pk=listing.pk)
 
     else:
@@ -676,10 +684,8 @@ def search_listings_view(request):
             "funding_band": funding_band,
             "return_type": return_type,
             "page_obj": page_obj,
-
             "funding_band_choices": Listing.FundingBand.choices,
             "return_type_choices": Listing.ReturnType.choices,
-
             "country_choices": Listing.Country.choices,
         },
     )
