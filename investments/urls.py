@@ -1,6 +1,8 @@
 from django.urls import path
+from . import views
 
 app_name = "investments"
 
 urlpatterns = [
+    path("pledge/<int:listing_id>/", views.pledge_investment_view, name="pledge"),
 ]

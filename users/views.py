@@ -2,6 +2,7 @@ from datetime import timedelta
 import logging
 
 import stripe
+from investments.models import Investment
 
 from django.conf import settings
 from django.contrib import messages
@@ -204,10 +205,16 @@ def dashboard_view(request):
         .order_by("-created_at")
     )
 
+    investments = (
+        Investment.objects.filter(investor=request.user, status=Investment.Status.PLEDGED)
+        .select_related("listing")
+        .order_by("-created_at")
+    )
+
     return render(
         request,
         "users/dashboard.html",
-        {"listings": listings, "investments": []},
+        {"listings": listings, "investments": investments},
     )
 
 
@@ -283,7 +290,7 @@ def create_listing_view(request):
 def start_listing_checkout_view(request, pk):
     listing = get_object_or_404(Listing, pk=pk, owner=request.user)
 
-    if listing.status not in (Listing.Status.DRAFT, Listing.Status.PENDING_PAYMENT):
+    if listing.status != Listing.Status.DRAFT:
         messages.error(request, "Only draft listings can be paid for.")
         return redirect("users:listing_detail", pk=listing.pk)
 
@@ -293,7 +300,7 @@ def start_listing_checkout_view(request, pk):
 
     stripe.api_key = settings.STRIPE_SECRET_KEY
 
-    if listing.status == Listing.Status.PENDING_PAYMENT and listing.stripe_checkout_session_id:
+    if listing.stripe_checkout_session_id:
         try:
             existing = stripe.checkout.Session.retrieve(listing.stripe_checkout_session_id)
             existing_status = getattr(existing, "status", None)
@@ -339,7 +346,11 @@ def start_listing_checkout_view(request, pk):
         messages.error(request, "Pricing could not be calculated for this listing.")
         return redirect("users:listing_detail", pk=listing.pk)
 
-    success_url = settings.SITE_URL + reverse("users:payment_success")
+    success_url = (
+        settings.SITE_URL
+        + reverse("users:payment_success")
+        + f"?listing_id={listing.pk}&session_id={{CHECKOUT_SESSION_ID}}"
+    )
     cancel_url = settings.SITE_URL + reverse(
         "users:payment_cancel", kwargs={"pk": listing.pk}
     )
@@ -370,15 +381,40 @@ def start_listing_checkout_view(request, pk):
 
     listing.expected_amount_pence = int(amount_pence)
     listing.stripe_checkout_session_id = session.id
-    listing.status = Listing.Status.PENDING_PAYMENT
-    listing.save(update_fields=["expected_amount_pence", "stripe_checkout_session_id", "status"])
+    listing.save(update_fields=["expected_amount_pence", "stripe_checkout_session_id"])
 
     return redirect(session.url, permanent=False)
 
 
 @login_required
 def payment_success_view(request):
-    messages.success(request, "Payment received. Your listing will activate shortly.")
+    listing_id = (request.GET.get("listing_id") or "").strip()
+    session_id = (request.GET.get("session_id") or "").strip()
+
+    if not (listing_id and session_id and settings.STRIPE_SECRET_KEY):
+        messages.success(request, "Payment received. Your listing will activate shortly.")
+        return redirect("users:dashboard")
+
+    stripe.api_key = settings.STRIPE_SECRET_KEY
+
+    try:
+        session = stripe.checkout.Session.retrieve(session_id)
+    except stripe.error.StripeError:
+        messages.success(request, "Payment received. Your listing will activate shortly.")
+        return redirect("users:dashboard")
+
+    try:
+        with transaction.atomic():
+            listing = Listing.objects.select_for_update().get(pk=listing_id, owner=request.user)
+            activated = _activate_listing_from_paid_session(listing=listing, session=session)
+    except Listing.DoesNotExist:
+        activated = False
+
+    if activated:
+        messages.success(request, "Payment received. Your listing is now active.")
+    else:
+        messages.success(request, "Payment received. Your listing will activate shortly.")
+
     return redirect("users:dashboard")
 
 
@@ -386,18 +422,17 @@ def payment_success_view(request):
 def payment_cancel_view(request, pk):
     listing = get_object_or_404(Listing, pk=pk, owner=request.user)
 
-    if listing.status == Listing.Status.PENDING_PAYMENT:
-        _reset_payment_state(listing)
-        listing.save(
-            update_fields=[
-                "status",
-                "expected_amount_pence",
-                "paid_amount_pence",
-                "paid_at",
-                "stripe_checkout_session_id",
-                "stripe_payment_intent_id",
-            ]
-        )
+    _reset_payment_state(listing)
+    listing.save(
+        update_fields=[
+            "status",
+            "expected_amount_pence",
+            "paid_amount_pence",
+            "paid_at",
+            "stripe_checkout_session_id",
+            "stripe_payment_intent_id",
+        ]
+    )
 
     messages.info(request, "Payment cancelled. Your listing is still saved as a draft.")
     return redirect("users:listing_detail", pk=pk)
@@ -471,6 +506,33 @@ def listing_detail_view(request, pk):
     )
 
 
+@require_POST
+@login_required
+def listing_delete_view(request, pk):
+    listing = get_object_or_404(Listing.objects.prefetch_related("media"), pk=pk, owner=request.user)
+
+    if listing.status != Listing.Status.DRAFT:
+        messages.error(request, "Only draft listings can be deleted.")
+        return redirect("users:listing_detail", pk=pk)
+
+    password = (request.POST.get("password") or "").strip()
+    if not password or not request.user.check_password(password):
+        messages.error(request, "Incorrect password. Listing was not deleted.")
+        return redirect("users:listing_detail", pk=pk)
+
+    for m in listing.media.all():
+        try:
+            m.file.delete(save=False)
+        except Exception:
+            pass
+    listing.media.all().delete()
+
+    listing.delete()
+
+    messages.success(request, "Listing deleted.")
+    return redirect("users:dashboard")
+
+
 @login_required
 def edit_listing_view(request, pk):
     listing = get_object_or_404(
@@ -479,7 +541,7 @@ def edit_listing_view(request, pk):
         owner=request.user,
     )
 
-    if listing.status not in (Listing.Status.DRAFT, Listing.Status.PENDING_PAYMENT):
+    if listing.status != Listing.Status.DRAFT:
         messages.error(request, "Only draft listings can be edited.")
         return redirect("users:listing_detail", pk=listing.pk)
 
@@ -568,7 +630,7 @@ def edit_listing_view(request, pk):
 def listing_media_delete_view(request, pk, media_id):
     listing = get_object_or_404(Listing, pk=pk, owner=request.user)
 
-    if listing.status not in (Listing.Status.DRAFT, Listing.Status.PENDING_PAYMENT):
+    if listing.status != Listing.Status.DRAFT:
         messages.error(request, "Only draft listings can be edited.")
         return redirect("users:listing_detail", pk=listing.pk)
 
@@ -576,19 +638,6 @@ def listing_media_delete_view(request, pk, media_id):
 
     media.file.delete(save=False)
     media.delete()
-
-    if listing.status == Listing.Status.PENDING_PAYMENT:
-        _reset_payment_state(listing)
-        listing.save(
-            update_fields=[
-                "status",
-                "expected_amount_pence",
-                "paid_amount_pence",
-                "paid_at",
-                "stripe_checkout_session_id",
-                "stripe_payment_intent_id",
-            ]
-        )
 
     messages.success(request, "File deleted.")
     return redirect("users:listing_edit", pk=listing.pk)
