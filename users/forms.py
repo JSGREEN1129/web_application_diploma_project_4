@@ -94,6 +94,7 @@ class ListingCreateForm(forms.ModelForm):
             "return_type",
             "return_band",
             "duration_days",
+            "project_name",
         ]
         widgets = {
             "source_use": forms.Select(),

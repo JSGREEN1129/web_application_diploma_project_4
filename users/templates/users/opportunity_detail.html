@@ -12,6 +12,13 @@
       <p class="text-muted small mb-0">
         {{ listing.country|capfirst }} • {{ listing.county }} • {{ listing.postcode_prefix }}
       </p>
+
+      {# ✅ NEW: show listing owner (posted by) #}
+      {% if listing.owner %}
+        <p class="text-muted small mb-0">
+          Posted by {{ listing.owner.get_full_name|default:listing.owner.first_name|default:listing.owner.email }}
+        </p>
+      {% endif %}
     </div>
     <span class="badge text-bg-success rounded-pill px-3">Active</span>
   </div>
@@ -63,6 +70,16 @@
               <span class="text-muted">Duration</span>
               <span class="fw-semibold">{{ listing.duration_days }} days</span>
             </div>
+
+            {% if listing.owner %}
+              <hr class="my-3">
+              <div class="d-flex justify-content-between small">
+                <span class="text-muted">Posted by</span>
+                <span class="fw-semibold">
+                  {{ listing.owner.get_full_name|default:listing.owner.first_name|default:listing.owner.email }}
+                </span>
+              </div>
+            {% endif %}
 
             {% if listing.active_until %}
               <hr class="my-3">

@@ -134,7 +134,16 @@
                   <p class="text-muted small mb-0 text-truncate">
                     {{ listing.country|capfirst }} • {{ listing.county }} • {{ listing.postcode_prefix }}
                   </p>
+
+                  {# ✅ NEW: show listing owner #}
+                  {% if listing.owner %}
+                    <p class="text-muted small mb-0">
+                      Posted by
+                      {{ listing.owner.get_full_name|default:listing.owner.first_name|default:listing.owner.email }}
+                    </p>
+                  {% endif %}
                 </div>
+
                 <span class="badge text-bg-success rounded-pill px-3">Active</span>
               </div>
 

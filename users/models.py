@@ -46,6 +46,13 @@ class Listing(models.Model):
         related_name="listings",
     )
 
+    project_name = models.CharField(
+    max_length=120,
+    blank=True,
+    default="",
+    help_text="Optional project name shown in dashboards and opportunities (e.g. Old Police Station).",
+    )
+
     source_use = models.CharField(max_length=20, choices=UseType.choices)
     target_use = models.CharField(max_length=20, choices=UseType.choices)
 
