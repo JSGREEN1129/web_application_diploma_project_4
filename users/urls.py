@@ -2,7 +2,7 @@ from django.urls import path
 from . import views
 from .views import (
     register_view, login_view, logout_view, dashboard_view, create_listing_view,
-    api_counties, api_outcodes, search_listings_view,
+    api_counties, api_outcodes, search_listings_view, 
 )
 
 app_name = 'users'
@@ -24,4 +24,6 @@ urlpatterns = [
     path("stripe/webhook/", views.stripe_webhook, name="stripe_webhook"),
     path("payments/success/", views.payment_success_view, name="payment_success"),
     path("payments/cancel/<int:pk>/", views.payment_cancel_view, name="payment_cancel"),
+    path("opportunities/<int:pk>/", views.opportunity_detail_view, name="opportunity_detail"),
+    path("opportunities/<int:pk>/estimate-return/", views.estimate_return_view, name="estimate_return"),
 ]

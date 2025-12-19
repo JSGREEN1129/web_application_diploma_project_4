@@ -24,3 +24,17 @@ def calculate_listing_price_pence(*, funding_band: str, duration_days: int) -> i
     if duration_days not in DURATION_TIER_PENCE:
         raise ValueError("Invalid duration")
     return FUNDING_TIER_PENCE[funding_band] + DURATION_TIER_PENCE[duration_days]
+
+from decimal import Decimal
+
+RETURN_BAND_TO_PCT = {
+    "2_4": (Decimal("2.0"), Decimal("4.0")),
+    "5_9": (Decimal("5.0"), Decimal("9.0")),
+    "10_14": (Decimal("10.0"), Decimal("14.0")),
+    "15_17_5": (Decimal("15.0"), Decimal("17.5")),
+}
+
+
+def get_return_pct_range(listing) -> tuple[Decimal, Decimal]:
+    key = listing.return_band  
+    return RETURN_BAND_TO_PCT[key]

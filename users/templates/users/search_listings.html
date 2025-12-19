@@ -119,27 +119,31 @@
 
               <div class="d-flex gap-2 flex-wrap">
                 <a class="btn btn-sm btn-outline-primary"
-                   href="{% url 'users:listing_detail' listing.pk %}">
+                   href="{% url 'users:opportunity_detail' listing.pk %}">
                   View Listing
                 </a>
               </div>
 
               <form method="post" action="{% url 'investments:pledge' listing.pk %}" class="mt-3">
                 {% csrf_token %}
+
                 <div class="input-group input-group-sm">
                   <span class="input-group-text">£</span>
                   <input
                     type="number"
                     name="amount_gbp"
-                    class="form-control"
+                    class="form-control js-pledge-amount"
                     step="0.01"
                     min="1"
                     placeholder="Amount"
                     required
+                    data-listing-id="{{ listing.id }}"
+                    data-estimate-url="{% url 'users:estimate_return' listing.pk %}"
                   >
                   <button type="submit" class="btn btn-success">Pledge</button>
                 </div>
-                <div class="form-text">
+
+                <div class="mt-2 text-muted js-return-estimate" data-listing-id="{{ listing.id }}">
                   Expected return will be calculated based on this listing’s return and duration.
                 </div>
               </form>
@@ -190,6 +194,7 @@
 {% block extra_js %}
 <script>
 (function () {
+  // Existing dynamic dropdown logic (unchanged)
   const countryEl = document.getElementById("id_country");
   const countyEl = document.getElementById("id_county");
   const outcodeEl = document.getElementById("id_postcode_prefix");
@@ -276,6 +281,70 @@
   }
 
   loadCounties(initialCounty);
+})();
+</script>
+
+<script>
+(function () {
+  // Estimated return logic (new)
+  const inputs = document.querySelectorAll(".js-pledge-amount");
+
+  function setEstimate(listingId, text) {
+    const box = document.querySelector(`.js-return-estimate[data-listing-id="${listingId}"]`);
+    if (box) box.textContent = text;
+  }
+
+  async function fetchEstimate(url, amount) {
+    const fullUrl = url + "?amount=" + encodeURIComponent(amount);
+    const res = await fetch(fullUrl, { headers: { "X-Requested-With": "XMLHttpRequest" } });
+    return await res.json();
+  }
+
+  inputs.forEach((input) => {
+    let timer = null;
+
+    input.addEventListener("input", () => {
+      const listingId = input.dataset.listingId;
+      const estimateUrl = input.dataset.estimateUrl || "";
+      const val = (input.value || "").trim();
+
+      clearTimeout(timer);
+
+      timer = setTimeout(async () => {
+        if (!val) {
+          setEstimate(listingId, "Expected return will be calculated based on this listing’s return and duration.");
+          return;
+        }
+
+        if (!/^\d+(\.\d{1,2})?$/.test(val)) {
+          setEstimate(listingId, "Enter a valid amount (e.g. 1000 or 1000.00).");
+          return;
+        }
+
+        if (!estimateUrl) {
+          setEstimate(listingId, "Return estimate is not available.");
+          return;
+        }
+
+        try {
+          const data = await fetchEstimate(estimateUrl, val);
+
+          if (!data.ok) {
+            setEstimate(listingId, data.error || "Could not calculate return.");
+            return;
+          }
+
+          setEstimate(
+            listingId,
+            `Estimated return: £${data.profit_min}–£${data.profit_max} (${data.min_pct}%–${data.max_pct}%). ` +
+            `Estimated total back: £${data.total_min}–£${data.total_max}.`
+          );
+        } catch (e) {
+          setEstimate(listingId, "Could not calculate return right now.");
+        }
+      }, 250);
+    });
+  });
 })();
 </script>
 {% endblock %}

@@ -2,7 +2,6 @@ from datetime import timedelta
 import logging
 
 import stripe
-from investments.models import Investment
 
 from django.conf import settings
 from django.contrib import messages
@@ -199,6 +198,8 @@ def logout_view(request):
 
 @login_required
 def dashboard_view(request):
+    from investments.models import Investment
+
     listings = (
         Listing.objects.filter(owner=request.user)
         .prefetch_related("media")
@@ -505,9 +506,26 @@ def listing_detail_view(request, pk):
         {"listing": listing, "images": images, "documents": documents},
     )
 
-
-@require_POST
 @login_required
+def opportunity_detail_view(request, pk):
+    listing = get_object_or_404(
+        Listing.objects.prefetch_related("media"),
+        pk=pk,
+        status=Listing.Status.ACTIVE,
+    )
+
+    images = listing.media.filter(media_type=ListingMedia.MediaType.IMAGE).order_by("uploaded_at")
+    documents = listing.media.filter(media_type=ListingMedia.MediaType.DOCUMENT).order_by("uploaded_at")
+
+    return render(
+        request,
+        "users/opportunity_detail.html",
+        {"listing": listing, "images": images, "documents": documents},
+    )
+
+
+@login_required
+@require_POST
 def listing_delete_view(request, pk):
     listing = get_object_or_404(Listing.objects.prefetch_related("media"), pk=pk, owner=request.user)
 
@@ -625,8 +643,8 @@ def edit_listing_view(request, pk):
     )
 
 
-@require_POST
 @login_required
+@require_POST
 def listing_media_delete_view(request, pk, media_id):
     listing = get_object_or_404(Listing, pk=pk, owner=request.user)
 
@@ -738,3 +756,45 @@ def search_listings_view(request):
             "country_choices": Listing.Country.choices,
         },
     )
+
+from decimal import Decimal, ROUND_HALF_UP
+from django.views.decorators.http import require_GET
+from .pricing import get_return_pct_range
+
+def _money(x: Decimal) -> str:
+    return str(x.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
+
+@require_GET
+@login_required
+def estimate_return_view(request, pk):
+    listing = get_object_or_404(Listing, pk=pk, status=Listing.Status.ACTIVE)
+
+    raw = (request.GET.get("amount") or "").strip()
+    try:
+        amount = Decimal(raw)
+    except Exception:
+        return JsonResponse({"ok": False, "error": "Invalid amount."}, status=400)
+
+    if amount <= 0:
+        return JsonResponse({"ok": False, "error": "Amount must be greater than 0."}, status=400)
+
+    min_pct, max_pct = get_return_pct_range(listing)
+
+    profit_min = amount * (min_pct / Decimal("100"))
+    profit_max = amount * (max_pct / Decimal("100"))
+
+    total_min = amount + profit_min
+    total_max = amount + profit_max
+
+    return JsonResponse({
+        "ok": True,
+        "min_pct": str(min_pct),
+        "max_pct": str(max_pct),
+        "profit_min": _money(profit_min),
+        "profit_max": _money(profit_max),
+        "total_min": _money(total_min),
+        "total_max": _money(total_max),
+        "duration_days": int(listing.duration_days),
+        "return_type": listing.get_return_type_display(),
+    })
+
