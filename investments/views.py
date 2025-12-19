@@ -1,47 +1,33 @@
+from decimal import Decimal, ROUND_HALF_UP
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from users.models import Listing
+from users.pricing import get_return_pct_range
 from .forms import InvestmentPledgeForm
 from .models import Investment
-from .services import calculate_expected_return_pence
 
 
-def get_listing_apr_percent(listing: Listing) -> float:
+def _gbp_to_pence(gbp: Decimal) -> int:
+    return int((gbp * Decimal("100")).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
+
+
+def _calc_expected_total_return(amount_pence: int, pct: Decimal) -> tuple[int, int]:
     """
-    IMPORTANT: Update this to match YOUR Listing model.
-
-    Option A (best): listing has a numeric field like listing.apr_percent
-      return float(listing.apr_percent)
-
-    Option B: listing.return_band is a choice like "8" or "8-10"
-      parse to a single number (e.g. midpoint or lower bound).
+    Treat pct as TOTAL return percent for the opportunity (NOT annualised, NOT pro-rated).
+    Returns (expected_return_pence, expected_total_back_pence).
     """
-    if hasattr(listing, "apr_percent") and listing.apr_percent is not None:
-        return float(listing.apr_percent)
-
-    display = ""
-    try:
-        display = listing.get_return_band_display()
-    except Exception:
-        display = str(getattr(listing, "return_band", "") or "")
-
-    display = display.replace("%", "").strip()
-
-    if "-" in display:
-        left, right = display.split("-", 1)
-        try:
-            return (float(left.strip()) + float(right.strip())) / 2.0
-        except Exception:
-            return 0.0
-
-    try:
-        return float(display)
-    except Exception:
-        return 0.0
+    expected_return = (Decimal(amount_pence) * (pct / Decimal("100"))).quantize(
+        Decimal("1"), rounding=ROUND_HALF_UP
+    )
+    expected_return_pence = int(expected_return)
+    expected_total_back_pence = amount_pence + expected_return_pence
+    return expected_return_pence, expected_total_back_pence
 
 
 @require_POST
@@ -58,13 +44,20 @@ def pledge_investment_view(request, listing_id: int):
         messages.error(request, "Enter a valid amount.")
         return redirect("users:search_listings")
 
-    amount_gbp = form.cleaned_data["amount_gbp"]
-    amount_pence = int(amount_gbp * 100)
-
-    apr_percent = get_listing_apr_percent(listing)
-    if apr_percent <= 0:
-        messages.error(request, "This listing does not have a valid return rate configured.")
+    amount_gbp: Decimal = form.cleaned_data["amount_gbp"]
+    if amount_gbp <= 0:
+        messages.error(request, "Enter a valid amount.")
         return redirect("users:search_listings")
+
+    amount_pence = _gbp_to_pence(amount_gbp)
+
+    try:
+        min_pct, max_pct = get_return_pct_range(listing)
+    except Exception:
+        messages.error(request, "This listing does not have a valid return band configured.")
+        return redirect("users:search_listings")
+
+    mid_pct = (min_pct + max_pct) / Decimal("2")
 
     with transaction.atomic():
         listing = Listing.objects.select_for_update().get(pk=listing.pk)
@@ -72,19 +65,63 @@ def pledge_investment_view(request, listing_id: int):
             messages.error(request, "This listing is no longer available.")
             return redirect("users:search_listings")
 
-        result = calculate_expected_return_pence(
+        # Safety: if your system sets active_until, also block pledging when expired
+        now = timezone.now()
+        if listing.active_until and listing.active_until <= now:
+            messages.error(request, "This listing has expired.")
+            return redirect("users:search_listings")
+
+        expected_return_pence, expected_total_back_pence = _calc_expected_total_return(
             amount_pence=amount_pence,
-            apr_percent=apr_percent,
-            duration_days=int(listing.duration_days),
+            pct=mid_pct,
         )
 
         Investment.objects.create(
             investor=request.user,
             listing=listing,
             amount_pence=amount_pence,
-            expected_return_pence=result.expected_return_pence,
-            expected_total_back_pence=result.expected_total_back_pence,
+            expected_return_pence=expected_return_pence,
+            expected_total_back_pence=expected_total_back_pence,
+            status=Investment.Status.PLEDGED,
         )
 
     messages.success(request, "Pledge created.")
+    return redirect("users:dashboard")
+
+
+@require_POST
+@login_required
+def retract_pledge_view(request, investment_id: int):
+    """
+    Retract (cancel) a pledge only if:
+      - it belongs to the logged-in user
+      - it is currently PLEDGED
+      - the related listing is still ACTIVE
+      - and (if active_until is set) the listing has not expired yet
+    """
+    investment = get_object_or_404(
+        Investment.objects.select_related("listing"),
+        pk=investment_id,
+        investor=request.user,
+    )
+
+    if investment.status != Investment.Status.PLEDGED:
+        messages.error(request, "This pledge cannot be retracted.")
+        return redirect("users:dashboard")
+
+    listing = investment.listing
+    now = timezone.now()
+
+    if listing.status != Listing.Status.ACTIVE:
+        messages.error(request, "You can only retract a pledge while the listing is still active.")
+        return redirect("users:dashboard")
+
+    if listing.active_until and listing.active_until <= now:
+        messages.error(request, "You can only retract a pledge before the listing expires.")
+        return redirect("users:dashboard")
+
+    investment.status = Investment.Status.CANCELLED
+    investment.save(update_fields=["status"])
+
+    messages.success(request, "Pledge retracted.")
     return redirect("users:dashboard")

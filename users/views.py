@@ -1,4 +1,5 @@
 from datetime import timedelta
+from decimal import Decimal, ROUND_HALF_UP
 import logging
 
 import stripe
@@ -25,7 +26,7 @@ from .forms import (
     ListingMediaForm,
 )
 from .models import Listing, ListingMedia
-from .pricing import calculate_listing_price_pence
+from .pricing import calculate_listing_price_pence, get_return_pct_range
 
 logger = logging.getLogger(__name__)
 
@@ -209,6 +210,7 @@ def dashboard_view(request):
     investments = (
         Investment.objects.filter(investor=request.user, status=Investment.Status.PLEDGED)
         .select_related("listing")
+        .prefetch_related("listing__media")
         .order_by("-created_at")
     )
 
@@ -506,6 +508,7 @@ def listing_detail_view(request, pk):
         {"listing": listing, "images": images, "documents": documents},
     )
 
+
 @login_required
 def opportunity_detail_view(request, pk):
     listing = get_object_or_404(
@@ -757,12 +760,10 @@ def search_listings_view(request):
         },
     )
 
-from decimal import Decimal, ROUND_HALF_UP
-from django.views.decorators.http import require_GET
-from .pricing import get_return_pct_range
 
 def _money(x: Decimal) -> str:
     return str(x.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
+
 
 @require_GET
 @login_required
@@ -778,7 +779,10 @@ def estimate_return_view(request, pk):
     if amount <= 0:
         return JsonResponse({"ok": False, "error": "Amount must be greater than 0."}, status=400)
 
-    min_pct, max_pct = get_return_pct_range(listing)
+    try:
+        min_pct, max_pct = get_return_pct_range(listing)
+    except Exception:
+        return JsonResponse({"ok": False, "error": "Return band is not configured correctly."}, status=400)
 
     profit_min = amount * (min_pct / Decimal("100"))
     profit_max = amount * (max_pct / Decimal("100"))
@@ -786,15 +790,16 @@ def estimate_return_view(request, pk):
     total_min = amount + profit_min
     total_max = amount + profit_max
 
-    return JsonResponse({
-        "ok": True,
-        "min_pct": str(min_pct),
-        "max_pct": str(max_pct),
-        "profit_min": _money(profit_min),
-        "profit_max": _money(profit_max),
-        "total_min": _money(total_min),
-        "total_max": _money(total_max),
-        "duration_days": int(listing.duration_days),
-        "return_type": listing.get_return_type_display(),
-    })
-
+    return JsonResponse(
+        {
+            "ok": True,
+            "min_pct": str(min_pct),
+            "max_pct": str(max_pct),
+            "profit_min": _money(profit_min),
+            "profit_max": _money(profit_max),
+            "total_min": _money(total_min),
+            "total_max": _money(total_max),
+            "duration_days": int(listing.duration_days),
+            "return_type": listing.get_return_type_display(),
+        }
+    )
