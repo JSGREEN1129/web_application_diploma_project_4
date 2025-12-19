@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
+
 from .models import Listing
 
 # USER FORMS
@@ -13,7 +14,7 @@ class CustomUserCreationForm(UserCreationForm):
 
     class Meta:
         model = User
-        fields = ('first_name', 'last_name', 'email', 'password1', 'password2')
+        fields = ("first_name", "last_name", "email", "password1", "password2")
 
     def save(self, commit=True):
         """
@@ -21,15 +22,15 @@ class CustomUserCreationForm(UserCreationForm):
         - Prevent duplicate email registrations
         - Assign additional fields to the user before saving
         """
-        email = self.cleaned_data['email']
+        email = self.cleaned_data["email"]
         if User.objects.filter(email=email).exists():
-            raise forms.ValidationError(
-                "A user with this email already exists.")
+            raise forms.ValidationError("A user with this email already exists.")
 
         user = super().save(commit=False)
-        user.first_name = self.cleaned_data['first_name']
-        user.last_name = self.cleaned_data['last_name']
-        user.email = self.cleaned_data['email']
+        user.first_name = self.cleaned_data["first_name"]
+        user.last_name = self.cleaned_data["last_name"]
+        user.email = email
+
         if commit:
             user.save()
 
@@ -37,22 +38,26 @@ class CustomUserCreationForm(UserCreationForm):
 
 
 class CustomAuthenticationForm(AuthenticationForm):
-    username = forms.EmailField(label='Email', widget=forms.EmailInput(
-        attrs={'autofocus': True, 'class': 'form-control'}))
-
-    password = forms.CharField(label='Password',
-                               strip=False, widget=forms.PasswordInput(
-                                   attrs={'class': 'form-control'}))
+    username = forms.EmailField(
+        label="Email",
+        widget=forms.EmailInput(attrs={"autofocus": True, "class": "form-control"}),
+    )
+    password = forms.CharField(
+        label="Password",
+        strip=False,
+        widget=forms.PasswordInput(attrs={"class": "form-control"}),
+    )
 
     def clean_username(self):
         """
         Override to check that an account exists with the given email.
         If not, raise a validation error.
         """
-        username = self.cleaned_data.get('username')
+        username = self.cleaned_data.get("username")
         if not User.objects.filter(email=username).exists():
             raise forms.ValidationError("No account found with this email.")
         return username
+
 
 # LISTINGS FORM
 
@@ -70,9 +75,11 @@ class ListingCreateForm(forms.ModelForm):
     Listing is saved as DRAFT and activated after payment.
     """
 
-    duration_days = forms.ChoiceField(
+    duration_days = forms.TypedChoiceField(
         choices=DURATION_CHOICES,
-        label="Listing duration"
+        coerce=int,
+        label="Listing duration",
+        required=True,
     )
 
     class Meta:
@@ -88,7 +95,6 @@ class ListingCreateForm(forms.ModelForm):
             "return_band",
             "duration_days",
         ]
-
         widgets = {
             "source_use": forms.Select(),
             "target_use": forms.Select(),
@@ -104,14 +110,17 @@ class ListingCreateForm(forms.ModelForm):
         """
         Basic validation for UK postcode outcodes (SW, CF, EH, etc.)
         """
-        value = (self.cleaned_data.get(
-            "postcode_prefix") or "").strip().upper()
-
+        value = (self.cleaned_data.get("postcode_prefix") or "").strip().upper()
         if len(value) < 2:
             raise forms.ValidationError(
                 "Please select a valid postcode prefix (e.g. SW, CF, EH)."
             )
+        return value
 
+    def clean_duration_days(self):
+        value = self.cleaned_data["duration_days"]
+        if value not in {7, 14, 30, 60}:
+            raise forms.ValidationError("Select a valid duration.")
         return value
 
 
@@ -122,18 +131,14 @@ class MultiFileInput(forms.ClearableFileInput):
 class ListingMediaForm(forms.Form):
     images = forms.FileField(
         required=False,
-        widget=MultiFileInput(attrs={
-            "multiple": True,
-            "accept": "image/jpeg,image/png,image/webp"
-        }),
-        label="Property images"
+        widget=MultiFileInput(
+            attrs={"multiple": True, "accept": "image/jpeg,image/png,image/webp"}
+        ),
+        label="Property images",
     )
 
     documents = forms.FileField(
         required=False,
-        widget=MultiFileInput(attrs={
-            "multiple": True,
-            "accept": ".pdf,.doc,.docx"
-        }),
-        label="Plans / documents (PDF, DOC, DOCX)"
+        widget=MultiFileInput(attrs={"multiple": True, "accept": ".pdf,.doc,.docx"}),
+        label="Plans / documents (PDF, DOC, DOCX)",
     )
