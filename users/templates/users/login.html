@@ -5,101 +5,186 @@
 {% block title %}Login – Green Square Capital{% endblock %}
 
 {% block content %}
-<div class="container py-5">
+<section class="py-5">
+  <div class="container">
     <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-4 login-register-container border-primary">
-            {# Tabs for Login and Register #}
-            <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <a class="nav-link active" id="pills-login-tab" data-bs-toggle="pill" href="#pills-login" role="tab"
-                        aria-controls="pills-login" aria-selected="true">SIGN-IN</a>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <a class="nav-link" id="pills-register-tab" data-bs-toggle="pill" href="#pills-register" role="tab"
-                        aria-controls="pills-register" aria-selected="false">SIGN-UP</a>
-                </li>
+      <div class="col-12 col-md-9 col-lg-6 col-xl-5">
+
+        {# Outer modern card #}
+        <div class="card border-0 shadow-sm" style="border-radius: 1.25rem;">
+          <div class="card-body p-4 p-md-5">
+
+            {# Header #}
+            <div class="text-center mb-4">
+              <div class="mb-2">
+                <span class="badge text-bg-success px-3 py-2" style="border-radius: 999px;">
+                  Green Square Capital
+                </span>
+              </div>
+              <p class="text-muted mb-0">
+                Sign in to manage listings and pledges.
+              </p>
+            </div>
+
+            {# Tabs (segmented style) #}
+            <ul class="nav nav-pills nav-fill bg-light p-1 mb-4"
+                id="pills-tab" role="tablist"
+                style="border-radius: 999px;">
+              <li class="nav-item" role="presentation">
+                <a class="nav-link active"
+                   id="pills-login-tab"
+                   data-bs-toggle="pill"
+                   href="#pills-login"
+                   role="tab"
+                   aria-controls="pills-login"
+                   aria-selected="true"
+                   style="border-radius: 999px;">
+                  Sign in
+                </a>
+              </li>
+              <li class="nav-item" role="presentation">
+                <a class="nav-link"
+                   id="pills-register-tab"
+                   data-bs-toggle="pill"
+                   href="#pills-register"
+                   role="tab"
+                   aria-controls="pills-register"
+                   aria-selected="false"
+                   style="border-radius: 999px;">
+                  Create account
+                </a>
+              </li>
             </ul>
 
-            {# Tab Content #}
             <div class="tab-content" id="pills-tabContent">
-                {# Login Form #}
-                <div class="tab-pane fade show active" id="pills-login" role="tabpanel"
-                    aria-labelledby="pills-login-tab">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title text-center mb-4">SIGN-IN</h5>
-                            <form method="POST" action="{% url 'users:login' %}" novalidate>
-                                {% csrf_token %}
 
-                                <div class="mb-3">
-                                    {{ login_form.username.label_tag }}
-                                    {{ login_form.username|add_class:"form-control"|attr:"placeholder:Enter Your Email" }}
-                                    {% if login_form.username.errors %}
-                                    <div class="text-danger small">{{ login_form.username.errors }}</div>
-                                    {% endif %}
-                                </div>
+              {# LOGIN #}
+              <div class="tab-pane fade show active" id="pills-login" role="tabpanel" aria-labelledby="pills-login-tab">
+                <form method="POST" action="{% url 'users:login' %}" novalidate>
+                  {% csrf_token %}
 
-                                <div class="mb-3">
-                                    {{ login_form.password.label_tag }}
-                                    {{ login_form.password|add_class:"form-control"|attr:"placeholder:Enter Your Password" }}
-                                    {% if login_form.password.errors %}
-                                    <div class="text-danger small">{{ login_form.password.errors }}</div>
-                                    {% endif %}
-                                </div>
+                  <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    {{ login_form.username|add_class:"form-control"|attr:"placeholder:you@example.com" }}
+                    {% if login_form.username.errors %}
+                      <div class="text-danger small mt-1">{{ login_form.username.errors }}</div>
+                    {% endif %}
+                  </div>
 
-                                {% if login_form.non_field_errors %}
-                                    <div class="alert alert-danger">
-                                        {{ login_form.non_field_errors }}
-                                    </div>
-                                {% endif %}
-
-                                <button type="submit" name="login_submit" class="btn btn-primary w-100">SIGN-IN</button>
-                            </form>
-                        </div>
+                  <div class="mb-2">
+                    <label class="form-label">Password</label>
+                    <div class="input-group">
+                      {{ login_form.password|add_class:"form-control"|attr:"placeholder:Enter your password"|attr:"id:id_password_login" }}
+                      <button class="btn btn-outline-secondary" type="button" id="toggleLoginPassword">
+                        Show
+                      </button>
                     </div>
-                </div>
+                    {% if login_form.password.errors %}
+                      <div class="text-danger small mt-1">{{ login_form.password.errors }}</div>
+                    {% endif %}
+                  </div>
 
-                {# Register Form #}
-                <div class="tab-pane fade" id="pills-register" role="tabpanel" aria-labelledby="pills-register-tab">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title text-center mb-4">SIGN-UP</h5>
-                            <form method="POST" action="{% url 'users:register' %}" novalidate>
-                                {% csrf_token %}
-
-                                {% for field in register_form %}
-                                <div class="mb-3">
-                                    {{ field.label_tag }}
-
-                                    {# Add placeholder text based on field name #}
-                                    {% if field.name == 'first_name' %}
-                                    {{ field|add_class:"form-control"|attr:"placeholder:Enter your first name" }}
-                                    {% elif field.name == 'last_name' %}
-                                    {{ field|add_class:"form-control"|attr:"placeholder:Enter your last name" }}
-                                    {% elif field.name == 'email' %}
-                                    {{ field|add_class:"form-control"|attr:"placeholder:Enter your email" }}
-                                    {% elif field.name == 'password1' %}
-                                    {{ field|add_class:"form-control"|attr:"placeholder:Enter your password" }}
-                                    {% elif field.name == 'password2' %}
-                                    {{ field|add_class:"form-control"|attr:"placeholder:Confirm your password" }}
-                                    {% else %}
-                                    {{ field|add_class:"form-control" }}
-                                    {% endif %}
-
-                                    {# Field-specific validation errors #}
-                                    {% if field.errors %}
-                                    <div class="text-danger small">{{ field.errors }}</div>
-                                    {% endif %}
-                                </div>
-                                {% endfor %}
-
-                                <button type="submit" name="register_submit" class="btn btn-primary w-100">SIGN-UP</button>
-                            </form>
-                        </div>
+                  {% if login_form.non_field_errors %}
+                    <div class="alert alert-danger mt-3 mb-0">
+                      {{ login_form.non_field_errors }}
                     </div>
-                </div>
+                  {% endif %}
+
+                  <button type="submit" name="login_submit" class="btn btn-success w-100 mt-4">
+                    Sign in
+                  </button>
+
+                  <p class="text-muted small text-center mt-3 mb-0">
+                    Don’t have an account? Switch to <strong>Create account</strong> above.
+                  </p>
+                </form>
+              </div>
+
+              {# REGISTER #}
+              <div class="tab-pane fade" id="pills-register" role="tabpanel" aria-labelledby="pills-register-tab">
+                <form method="POST" action="{% url 'users:register' %}" novalidate>
+                  {% csrf_token %}
+
+                  <div class="row g-3">
+                    {% for field in register_form %}
+                      <div class="col-12 {% if field.name == 'first_name' or field.name == 'last_name' %}col-md-6{% endif %}">
+                        <label class="form-label">{{ field.label }}</label>
+
+                        {% if field.name == 'first_name' %}
+                          {{ field|add_class:"form-control"|attr:"placeholder:First name" }}
+                        {% elif field.name == 'last_name' %}
+                          {{ field|add_class:"form-control"|attr:"placeholder:Last name" }}
+                        {% elif field.name == 'email' %}
+                          {{ field|add_class:"form-control"|attr:"placeholder:you@example.com" }}
+                        {% elif field.name == 'password1' %}
+                          {{ field|add_class:"form-control"|attr:"placeholder:Create a password"|attr:"id:id_password_register_1" }}
+                        {% elif field.name == 'password2' %}
+                          {{ field|add_class:"form-control"|attr:"placeholder:Confirm password"|attr:"id:id_password_register_2" }}
+                        {% else %}
+                          {{ field|add_class:"form-control" }}
+                        {% endif %}
+
+                        {% if field.errors %}
+                          <div class="text-danger small mt-1">{{ field.errors }}</div>
+                        {% endif %}
+                      </div>
+                    {% endfor %}
+                  </div>
+
+                  <div class="d-flex gap-2 mt-3">
+                    <button class="btn btn-outline-secondary w-50" type="button" id="toggleRegisterPasswords">
+                      Show passwords
+                    </button>
+                    <button type="submit" name="register_submit" class="btn btn-success w-50">
+                      Create account
+                    </button>
+                  </div>
+
+                  <p class="text-muted small text-center mt-3 mb-0">
+                    By creating an account, you agree to the platform terms.
+                  </p>
+                </form>
+              </div>
+
             </div>
+
+          </div>
         </div>
+
+        <p class="text-center text-muted small mt-3 mb-0">
+          © {{ now|default_if_none:"" }} Green Square Capital
+        </p>
+
+      </div>
     </div>
-</div>
+  </div>
+</section>
+
+<script>
+(function () {
+  // Login password toggle
+  const loginPw = document.getElementById("id_password_login");
+  const loginBtn = document.getElementById("toggleLoginPassword");
+  if (loginPw && loginBtn) {
+    loginBtn.addEventListener("click", function () {
+      const isPw = loginPw.getAttribute("type") === "password";
+      loginPw.setAttribute("type", isPw ? "text" : "password");
+      loginBtn.textContent = isPw ? "Hide" : "Show";
+    });
+  }
+
+  // Register password toggles (both)
+  const regPw1 = document.getElementById("id_password_register_1");
+  const regPw2 = document.getElementById("id_password_register_2");
+  const regBtn = document.getElementById("toggleRegisterPasswords");
+  if (regPw1 && regPw2 && regBtn) {
+    regBtn.addEventListener("click", function () {
+      const isPw = regPw1.getAttribute("type") === "password";
+      regPw1.setAttribute("type", isPw ? "text" : "password");
+      regPw2.setAttribute("type", isPw ? "text" : "password");
+      regBtn.textContent = isPw ? "Hide passwords" : "Show passwords";
+    });
+  }
+})();
+</script>
 {% endblock %}

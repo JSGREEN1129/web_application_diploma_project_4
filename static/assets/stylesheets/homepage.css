@@ -1,7 +1,122 @@
-/* Background image for green hero section */
+
+:root{
+  --gsc-radius: 1.25rem;
+  --gsc-radius-sm: .9rem;
+  --gsc-shadow: 0 .75rem 2rem rgba(0,0,0,.08);
+  --gsc-shadow-sm: 0 .35rem 1rem rgba(0,0,0,.08);
+}
+
+body {
+  background-color: #f7f8fa;
+}
+
+
+.gsc-page-header {
+  background:
+    radial-gradient(1200px 600px at 10% 10%, rgba(25,135,84,.20), transparent 60%),
+    linear-gradient(135deg, #0b2e1e 0%, #0f5132 45%, #064024 100%);
+  color: #fff;
+  border-radius: calc(var(--gsc-radius) + .25rem);
+}
+
 .gsc-hero-bg {
-    background: url('/static/images/gsc_homepage_greyscale_green_overlay.png');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
+  background: url('/static/images/gsc_homepage_greyscale_green_overlay.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.gsc-hero {
+  background:
+    radial-gradient(1200px 600px at 10% 10%, rgba(25,135,84,.35), transparent 60%),
+    radial-gradient(900px 500px at 90% 30%, rgba(13,110,253,.18), transparent 60%),
+    linear-gradient(135deg, #0b2e1e 0%, #0f5132 45%, #064024 100%);
+}
+
+.gsc-glass {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+  border-radius: 1rem;
+}
+
+.gsc-card {
+  border: 0;
+  border-radius: var(--gsc-radius);
+  box-shadow: var(--gsc-shadow-sm);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.gsc-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--gsc-shadow);
+}
+
+.gsc-section {
+  padding: 3rem 0;
+}
+
+.gsc-soft {
+  background: rgba(255,255,255,.8);
+  backdrop-filter: blur(8px);
+}
+
+
+.form-control, .form-select {
+  border-radius: var(--gsc-radius-sm);
+  padding: .75rem 1rem;
+}
+
+.btn {
+  border-radius: var(--gsc-radius-sm);
+}
+
+.btn-lg {
+  padding: .85rem 1.2rem;
+}
+
+.badge {
+  border-radius: 999px;
+}
+
+.gsc-project-card {
+  position: relative;
+  border-radius: var(--gsc-radius);
+  overflow: hidden;
+  min-height: 260px;
+  background-image: var(--bg-image);
+  background-size: cover;
+  background-position: center;
+  transform: translateY(0);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.gsc-project-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.45) 0%,
+    rgba(25, 135, 84, 0.28) 55%,
+    rgba(25, 135, 84, 0.22) 100%
+  );
+}
+
+.gsc-project-content {
+  position: relative;
+  z-index: 1;
+  color: #fff;
+}
+
+.gsc-project-content > .gsc-project-panel {
+  background: rgba(255,255,255,.12);
+  backdrop-filter: blur(6px);
+  border-radius: 1rem;
+  padding: .9rem;
+  border: 1px solid rgba(255,255,255,.18);
+}
+
+.gsc-project-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, 0.15);
 }

@@ -7,42 +7,66 @@
 {% block content %}
 <div class="container py-5">
 
-    <h2 class="mb-3">Current Investments</h2>
-    <p class="text-muted mb-3">
-        A snapshot of your pledged investments. Scroll horizontally to view more.
-    </p>
+    {# --- Page header --- #}
+    <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
+        <div>
+            <span class="badge text-bg-success px-3 py-2 rounded-pill">Green Square Capital</span>
+            <h2 class="h4 fw-semibold mb-1 mt-3">Dashboard</h2>
+            <p class="text-muted small mb-0">A quick overview of your investments and listings.</p>
+        </div>
+    </div>
 
-    <div class="dashboard-scroll mb-5">
+    {# --- Current Investments --- #}
+    <div class="d-flex align-items-end justify-content-between mb-2">
+        <div>
+            <h3 class="h5 fw-semibold mb-1">Current Investments</h3>
+            <p class="text-muted small mb-0">
+                A snapshot of your pledged investments. Scroll horizontally to view more.
+            </p>
+        </div>
+    </div>
+
+    <div class="dashboard-scroll mb-5 mt-3">
         <div class="d-flex flex-nowrap gap-3">
             {% if investments %}
                 {% for inv in investments %}
-                    <div class="card dashboard-card flex-shrink-0">
-                        <div class="card-body">
+                    <div class="card dashboard-card flex-shrink-0 border-0 shadow-sm rounded-xxl">
+                        <div class="card-body p-4">
 
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <h5 class="card-title mb-0">
-                                    {{ inv.listing.source_use|capfirst }} → {{ inv.listing.target_use|capfirst }}
-                                </h5>
-                                <span class="badge text-bg-success">Pledged</span>
+                            <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
+                                <div class="min-w-0">
+                                    <h5 class="card-title mb-1 fw-semibold text-truncate">
+                                        {{ inv.listing.source_use|capfirst }} → {{ inv.listing.target_use|capfirst }}
+                                    </h5>
+                                    <p class="text-muted small mb-0 text-truncate">
+                                        {{ inv.listing.country|capfirst }} • {{ inv.listing.county }} • {{ inv.listing.postcode_prefix }}
+                                    </p>
+                                </div>
+                                <span class="badge text-bg-success rounded-pill px-3">Pledged</span>
                             </div>
 
-                            <p class="card-subtitle text-muted mb-2">
-                                {{ inv.listing.country|capfirst }} • {{ inv.listing.county }} • {{ inv.listing.postcode_prefix }}
-                            </p>
+                            <div class="rounded-4 bg-light p-3 mb-3">
+                                <div class="d-flex justify-content-between small">
+                                    <span class="text-muted">Pledged</span>
+                                    <span class="fw-semibold">£{{ inv.amount_gbp }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between small mt-2">
+                                    <span class="text-muted">Est. return</span>
+                                    <span class="fw-semibold">£{{ inv.expected_return_gbp }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between small mt-2">
+                                    <span class="text-muted">Est. total back</span>
+                                    <span class="fw-semibold">£{{ inv.expected_total_back_gbp }}</span>
+                                </div>
+                            </div>
 
-                            <p class="card-text small mb-2">
-                                <strong>Pledged:</strong> £{{ inv.amount_gbp }}<br>
-                                <strong>Est. return:</strong> £{{ inv.expected_return_gbp }}<br>
-                                <strong>Est. total back:</strong> £{{ inv.expected_total_back_gbp }}
-                            </p>
-
-                            <p class="card-text small text-muted mb-3">
+                            <p class="small text-muted mb-3">
                                 {{ inv.listing.get_return_type_display }} ({{ inv.listing.get_return_band_display }}) •
                                 {{ inv.listing.duration_days }} days<br>
                                 Pledged: {{ inv.created_at|date:"d M Y" }}
                             </p>
 
-                            <a href="{% url 'users:opportunity_detail' inv.listing.pk %}" class="btn btn-sm btn-outline-primary">
+                            <a href="{% url 'users:opportunity_detail' inv.listing.pk %}" class="btn btn-sm btn-outline-secondary w-100">
                                 View Opportunity
                             </a>
 
@@ -50,10 +74,10 @@
                     </div>
                 {% endfor %}
             {% else %}
-                <div class="card dashboard-card flex-shrink-0">
-                    <div class="card-body d-flex flex-column justify-content-center">
-                        <h5 class="card-title">No investments yet</h5>
-                        <p class="card-text text-muted mb-0">
+                <div class="card dashboard-card flex-shrink-0 border-0 shadow-sm rounded-xxl">
+                    <div class="card-body p-4 d-flex flex-column justify-content-center">
+                        <h5 class="card-title fw-semibold mb-1">No investments yet</h5>
+                        <p class="text-muted small mb-0">
                             When you pledge into opportunities, they will appear here.
                         </p>
                     </div>
@@ -62,77 +86,93 @@
         </div>
     </div>
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="mb-0">Your Listings</h2>
-        <a href="{% url 'users:create_listing' %}" class="btn btn-sm btn-primary">
+    {# --- Your Listings --- #}
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-2">
+        <div>
+            <h3 class="h5 fw-semibold mb-1">Your Listings</h3>
+            <p class="text-muted small mb-0">
+                Draft listings are saved but not active until payment is complete.
+            </p>
+        </div>
+        <a href="{% url 'users:create_listing' %}" class="btn btn-sm btn-success px-3">
             + Create Listing
         </a>
     </div>
 
-    <p class="text-muted mb-3">
-        Draft listings are saved but not active until payment is complete.
-    </p>
-
-    <div class="dashboard-scroll">
+    <div class="dashboard-scroll mt-3">
         <div class="d-flex flex-nowrap gap-3">
             {% if listings %}
                 {% for listing in listings %}
-                    <div class="card dashboard-card flex-shrink-0">
-                        <div class="card-body">
+                    <div class="card dashboard-card flex-shrink-0 border-0 shadow-sm rounded-xxl">
+                        <div class="card-body p-4">
 
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <h5 class="card-title mb-0">
-                                    {{ listing.source_use|capfirst }} → {{ listing.target_use|capfirst }}
-                                </h5>
+                            <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
+                                <div class="min-w-0">
+                                    <h5 class="card-title mb-1 fw-semibold text-truncate">
+                                        {{ listing.source_use|capfirst }} → {{ listing.target_use|capfirst }}
+                                    </h5>
+                                    <p class="text-muted small mb-0 text-truncate">
+                                        {{ listing.country|capfirst }} • {{ listing.county }} • {{ listing.postcode_prefix }}
+                                    </p>
+                                </div>
 
                                 {% if listing.status == "draft" %}
-                                    <span class="badge text-bg-secondary">Draft</span>
+                                    <span class="badge text-bg-secondary rounded-pill px-3">Draft</span>
                                 {% elif listing.status == "pending_payment" %}
-                                    <span class="badge text-bg-warning">Pending payment</span>
+                                    <span class="badge text-bg-warning rounded-pill px-3">Pending payment</span>
                                 {% elif listing.status == "active" %}
-                                    <span class="badge text-bg-success">Active</span>
+                                    <span class="badge text-bg-success rounded-pill px-3">Active</span>
                                 {% elif listing.status == "expired" %}
-                                    <span class="badge text-bg-dark">Expired</span>
+                                    <span class="badge text-bg-dark rounded-pill px-3">Expired</span>
                                 {% else %}
-                                    <span class="badge text-bg-light">Unknown</span>
+                                    <span class="badge text-bg-light rounded-pill px-3">Unknown</span>
                                 {% endif %}
                             </div>
 
-                            <p class="card-subtitle text-muted mb-2">
-                                {{ listing.country|capfirst }} • {{ listing.county }} • {{ listing.postcode_prefix }}
-                            </p>
+                            <div class="d-flex justify-content-between align-items-center small text-muted mb-3">
+                                <span>{{ listing.media.count }} file{{ listing.media.count|pluralize }} uploaded</span>
+                                <span class="badge bg-light text-dark border rounded-pill px-3">
+                                    {{ listing.get_funding_band_display }}
+                                </span>
+                            </div>
 
-                            <p class="card-text small text-muted mb-2">
-                                {{ listing.media.count }} file{{ listing.media.count|pluralize }} uploaded
-                            </p>
+                            <div class="rounded-4 bg-light p-3 mb-3">
+                                <div class="d-flex justify-content-between small">
+                                    <span class="text-muted">Return Type</span>
+                                    <span class="fw-semibold">{{ listing.get_return_type_display }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between small mt-2">
+                                    <span class="text-muted">Potential Return</span>
+                                    <span class="fw-semibold">{{ listing.get_return_band_display }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between small mt-2">
+                                    <span class="text-muted">Duration</span>
+                                    <span class="fw-semibold">{{ listing.duration_days }} days</span>
+                                </div>
+                            </div>
 
-                            <p class="card-text small mb-2">
-                                Funding: {{ listing.get_funding_band_display }}<br>
-                                Return Type: {{ listing.get_return_type_display }}<br>
-                                Potential Return: {{ listing.get_return_band_display }}
-                            </p>
-
-                            <p class="card-text small text-muted mb-3">
-                                Duration: {{ listing.duration_days }} days
+                            <p class="small text-muted mb-3">
                                 {% if listing.active_until %}
-                                    • Ends: {{ listing.active_until|date:"d M Y" }}
+                                    Ends: {{ listing.active_until|date:"d M Y" }}
+                                {% else %}
+                                    &nbsp;
                                 {% endif %}
                             </p>
 
                             {% if listing.status == "draft" or listing.status == "pending_payment" %}
                                 <div class="d-flex gap-2 flex-wrap">
-                                    <a href="{% url 'users:listing_detail' listing.pk %}" class="btn btn-sm btn-outline-primary">
+                                    <a href="{% url 'users:listing_detail' listing.pk %}" class="btn btn-sm btn-outline-secondary flex-grow-1">
                                         View Draft
                                     </a>
-                                    <a href="{% url 'users:listing_edit' listing.pk %}" class="btn btn-sm btn-primary">
+                                    <a href="{% url 'users:listing_edit' listing.pk %}" class="btn btn-sm btn-success flex-grow-1">
                                         Edit
                                     </a>
-                                    <a href="{% url 'users:listing_checkout' listing.pk %}" class="btn btn-sm btn-success">
+                                    <a href="{% url 'users:listing_checkout' listing.pk %}" class="btn btn-sm btn-success flex-grow-1">
                                         Pay
                                     </a>
                                 </div>
                             {% else %}
-                                <a href="{% url 'users:listing_detail' listing.pk %}" class="btn btn-sm btn-outline-primary">
+                                <a href="{% url 'users:listing_detail' listing.pk %}" class="btn btn-sm btn-outline-secondary w-100">
                                     View Listing
                                 </a>
                             {% endif %}
@@ -141,13 +181,13 @@
                     </div>
                 {% endfor %}
             {% else %}
-                <div class="card dashboard-card flex-shrink-0">
-                    <div class="card-body d-flex flex-column justify-content-center">
-                        <h5 class="card-title">No listings yet</h5>
-                        <p class="card-text text-muted mb-2">
+                <div class="card dashboard-card flex-shrink-0 border-0 shadow-sm rounded-xxl">
+                    <div class="card-body p-4 d-flex flex-column justify-content-center">
+                        <h5 class="card-title fw-semibold mb-1">No listings yet</h5>
+                        <p class="text-muted small mb-3">
                             Create a listing to start offering new opportunities.
                         </p>
-                        <a href="{% url 'users:create_listing' %}" class="btn btn-sm btn-primary">
+                        <a href="{% url 'users:create_listing' %}" class="btn btn-sm btn-success w-100">
                             Create your first listing
                         </a>
                     </div>
@@ -161,4 +201,15 @@
 
 {% block extra_js %}
 <script src="{% static 'js/click_hold_drag_scroll.js' %}"></script>
+
+<style>
+  .rounded-xxl { border-radius: 1.25rem !important; }
+
+  .min-w-0 { min-width: 0; }
+
+  .dashboard-scroll .card.dashboard-card { width: 340px; }
+  @media (min-width: 768px){
+    .dashboard-scroll .card.dashboard-card { width: 380px; }
+  }
+</style>
 {% endblock %}
