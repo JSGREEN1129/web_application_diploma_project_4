@@ -13,7 +13,6 @@
         {{ listing.country|capfirst }} • {{ listing.county }} • {{ listing.postcode_prefix }}
       </p>
 
-      {# ✅ NEW: show listing owner (posted by) #}
       {% if listing.owner %}
         <p class="text-muted small mb-0">
           Posted by {{ listing.owner.get_full_name|default:listing.owner.first_name|default:listing.owner.email }}
@@ -41,10 +40,12 @@
   {# --- Content grid --- #}
   <div class="row g-4 align-items-stretch">
 
-    {# LEFT: Summary fills full height of right column on lg+ #}
+    {# LEFT: Summary + Pledge #}
     <div class="col-12 col-lg-4 d-flex">
       <div class="card border-0 shadow-sm rounded-xxl h-100 w-100">
         <div class="card-body p-4 p-md-5 d-flex flex-column">
+
+          {# Summary #}
           <div class="d-flex align-items-center justify-content-between mb-3">
             <div>
               <h2 class="h5 fw-semibold mb-1">Summary</h2>
@@ -90,6 +91,43 @@
             {% endif %}
           </div>
 
+          <div class="mt-4">
+            <div class="rounded-4 bg-light p-3 p-md-4">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <div class="fw-semibold">Pledge</div>
+                <span class="badge bg-white text-dark border rounded-pill px-3">Invest</span>
+              </div>
+              <p class="text-muted small mb-3">
+                Enter an amount to see an estimated return, then pledge instantly.
+              </p>
+
+              <form method="post" action="{% url 'investments:pledge' listing.pk %}">
+                {% csrf_token %}
+
+                <label class="form-label small fw-semibold mb-2">Pledge amount</label>
+                <div class="input-group input-group-sm">
+                  <span class="input-group-text">£</span>
+                  <input
+                    type="number"
+                    name="amount_gbp"
+                    class="form-control js-pledge-amount"
+                    step="0.01"
+                    min="1"
+                    placeholder="Amount"
+                    required
+                    data-listing-id="{{ listing.id }}"
+                    data-estimate-url="{% url 'users:estimate_return' listing.pk %}"
+                  >
+                  <button type="submit" class="btn btn-success">Pledge</button>
+                </div>
+
+                <div class="mt-2 text-muted small js-return-estimate" data-listing-id="{{ listing.id }}">
+                  Expected return will be calculated based on this listing’s return and duration.
+                </div>
+              </form>
+            </div>
+          </div>
+
           <div class="mt-auto pt-4">
             <div class="border-top pt-3">
               <a href="{% url 'users:search_listings' %}" class="btn btn-outline-secondary w-100 rounded-pill">
@@ -97,11 +135,12 @@
               </a>
             </div>
           </div>
+
         </div>
       </div>
     </div>
 
-    {# RIGHT: Images + Documents stack and define total column height #}
+    {# RIGHT: Images + Documents #}
     <div class="col-12 col-lg-8 d-flex flex-column gap-4">
 
       {# --- Images --- #}
@@ -172,6 +211,70 @@
   </div>
 
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  const input = document.querySelector(".js-pledge-amount");
+  if (!input) return;
+
+  function setEstimate(listingId, text) {
+    const box = document.querySelector(`.js-return-estimate[data-listing-id="${listingId}"]`);
+    if (box) box.textContent = text;
+  }
+
+  async function fetchEstimate(url, amount) {
+    const fullUrl = url + "?amount=" + encodeURIComponent(amount);
+    const res = await fetch(fullUrl, { headers: { "X-Requested-With": "XMLHttpRequest" } });
+    return await res.json();
+  }
+
+  let timer = null;
+
+  input.addEventListener("input", () => {
+    const listingId = input.dataset.listingId;
+    const estimateUrl = input.dataset.estimateUrl || "";
+    const val = (input.value || "").trim();
+
+    clearTimeout(timer);
+
+    timer = setTimeout(async () => {
+      if (!val) {
+        setEstimate(listingId, "Expected return will be calculated based on this listing’s return and duration.");
+        return;
+      }
+
+      if (!/^\d+(\.\d{1,2})?$/.test(val)) {
+        setEstimate(listingId, "Enter a valid amount (e.g. 1000 or 1000.00).");
+        return;
+      }
+
+      if (!estimateUrl) {
+        setEstimate(listingId, "Return estimate is not available.");
+        return;
+      }
+
+      try {
+        const data = await fetchEstimate(estimateUrl, val);
+
+        if (!data.ok) {
+          setEstimate(listingId, data.error || "Could not calculate return.");
+          return;
+        }
+
+        setEstimate(
+          listingId,
+          `Estimated return: £${data.profit_min}–£${data.profit_max} (${data.min_pct}%–${data.max_pct}%). ` +
+          `Estimated total back: £${data.total_min}–£${data.total_max}.`
+        );
+      } catch (e) {
+        setEstimate(listingId, "Could not calculate return right now.");
+      }
+    }, 250);
+  });
+})();
+</script>
 
 <style>
   .rounded-xxl { border-radius: 1.25rem !important; }

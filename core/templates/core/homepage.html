@@ -19,12 +19,12 @@
         </h1>
 
         <p class="lead text-white mb-4">
-          Browse vetted opportunities, pledge with confidence, and track expected returns — all in one
-          secure, transparent platform.
+          Browse vetted opportunities, pledge with confidence, and track expected returns, all in one
+          secure and transparent platform.
         </p>
 
         <div class="d-flex flex-wrap gap-2">
-          <a href="{% url 'users:search_listings' %}" class="btn btn-success btn-lg shadow-sm">
+          <a href="{% url 'users:search_listings' %}" class="btn btn-outline-light btn-lg">
             Explore opportunities
           </a>
           <a href="{% url 'users:register' %}" class="btn btn-outline-light btn-lg">
@@ -65,22 +65,254 @@
             </div>
           </div>
         </div>
-        <!-- /Glass panels -->
       </div>
+    </div>
+  </div>
+
+  <div class="gsc-hero-divider" aria-hidden="true"></div>
+</section>
+
+<!-- STATS STRIP -->
+<section class="gsc-stats-strip py-4 py-lg-5"
+  style="background: linear-gradient(135deg, #0f6f45 25%, #0f6f45 75%) !important;">
+  <div class="container">
+    <div class="row g-3 text-center">
+
+      <div class="col-6 col-lg-3">
+        <div class="gsc-stat">
+          <div class="h3 mb-0 text-white fw-semibold">Fast</div>
+          <div class="small text-white-50">Pledge flow</div>
+        </div>
+      </div>
+
+      <div class="col-6 col-lg-3">
+        <div class="gsc-stat">
+          <div class="h3 mb-0 text-white fw-semibold">Clear</div>
+          <div class="small text-white-50">Return bands</div>
+        </div>
+      </div>
+
+      <div class="col-6 col-lg-3">
+        <div class="gsc-stat">
+          <div class="h3 mb-0 text-white fw-semibold">Secure</div>
+          <div class="small text-white-50">Platform processes</div>
+        </div>
+      </div>
+
+      <div class="col-6 col-lg-3">
+        <div class="gsc-stat">
+          <div class="h3 mb-0 text-white fw-semibold">UK</div>
+          <div class="small text-white-50">Location-led search</div>
+        </div>
+      </div>
+
     </div>
   </div>
 </section>
 
-<!-- SUCCESSFUL PROJECTS -->
+<!-- HOW IT WORKS -->
 <section class="py-5 py-lg-6 bg-body-tertiary">
+  <div class="container">
+
+    <div class="text-center mb-4 mb-lg-5">
+      <h2 class="h2 mt-3 text-success mb-2">Invest in 3 simple steps</h2>
+      <p class="text-muted mb-0">A streamlined process designed for clarity and confidence.</p>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-12 col-md-4">
+        <div class="card border-success shadow-sm rounded-xxl h-100">
+          <div class="card-body p-4">
+            <div class="gsc-icon-bubble mb-3">1</div>
+            <h3 class="h5 fw-semibold text-success mb-2">Browse opportunities</h3>
+            <p class="text-muted mb-0">
+              Filter by location, funding band, and return profile to find opportunities that match your strategy.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-4">
+        <div class="card border-success shadow-sm rounded-xxl h-100">
+          <div class="card-body p-4">
+            <div class="gsc-icon-bubble mb-3">2</div>
+            <h3 class="h5 fw-semibold text-success mb-2">Pledge in minutes</h3>
+            <p class="text-muted mb-0">
+              Choose an amount, view expected return ranges, and pledge directly from the listing.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-4">
+        <div class="card border-success shadow-sm rounded-xxl h-100">
+          <div class="card-body p-4">
+            <div class="gsc-icon-bubble mb-3">3</div>
+            <h3 class="h5 fw-semibold text-success mb-2">Track & manage</h3>
+            <p class="text-muted mb-0">
+              Monitor pledges and listing progress from your dashboard with a clean, transparent view.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="text-center mt-4 mt-lg-5">
+      <a href="{% url 'users:search_listings' %}" class="btn border-success btn-white text-success btn-lg">
+        Browse live opportunities
+      </a>
+    </div>
+
+  </div>
+</section>
+
+<!-- FEATURED OPPORTUNITIES -->
+<section class="py-5 py-lg-6 bg-white">
   <div class="container">
 
     <div class="d-flex flex-column flex-md-row align-items-md-end justify-content-between gap-2 mb-4">
       <div>
-        <h2 class="h3 mb-1">Successful Projects</h2>
+        <span class="badge bg-success text-white border rounded-pill px-3 py-2">Featured</span>
+        <h2 class="h3 mt-3 text-success mb-1">Opportunities live right now</h2>
+        <p class="text-muted mb-0">A quick snapshot — view all to see the full market.</p>
+      </div>
+      <a href="{% url 'users:search_listings' %}" class="btn border-success btn-white text-success">
+        View all opportunities
+      </a>
+    </div>
+
+    {% if featured_listings %}
+      <div class="row g-4">
+        {% for listing in featured_listings %}
+          <div class="col-12 col-md-6 col-lg-4">
+            <div class="card border border-success shadow-sm rounded-xxl h-100">
+              <div class="card-body p-4 d-flex flex-column">
+
+                <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
+                  <div class="min-w-0">
+                    <h3 class="h5 fw-semibold mb-1 text-truncate">
+                      {{ listing.source_use|capfirst }} → {{ listing.target_use|capfirst }}
+                    </h3>
+                    <p class="text-muted small mb-0 text-truncate">
+                      {{ listing.country|capfirst }} • {{ listing.county }} • {{ listing.postcode_prefix }}
+                    </p>
+                  </div>
+                  <span class="badge text-bg-success rounded-pill px-3">Active</span>
+                </div>
+
+                <div class="rounded-4 bg-light p-3 my-3">
+                  <div class="d-flex justify-content-between small">
+                    <span class="text-muted">Funding</span>
+                    <span class="fw-semibold">{{ listing.get_funding_band_display }}</span>
+                  </div>
+                  <div class="d-flex justify-content-between small mt-2">
+                    <span class="text-muted">Return Type</span>
+                    <span class="fw-semibold">{{ listing.get_return_type_display }}</span>
+                  </div>
+                  <div class="d-flex justify-content-between small mt-2">
+                    <span class="text-muted">Potential Return</span>
+                    <span class="fw-semibold">{{ listing.get_return_band_display }}</span>
+                  </div>
+                </div>
+
+                <div class="mt-auto">
+                  <a class="btn border-success btn-white text-success"
+                     href="{% url 'users:opportunity_detail' listing.pk %}">
+                    View listing
+                  </a>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="card border-success shadow-sm rounded-xxl">
+        <div class="card-body p-4 p-md-5">
+          <h3 class="h5 fw-semibold text-success mb-1">New opportunities added regularly</h3>
+          <p class="text-muted mb-0">
+            Browse live opportunities to see what’s available now.
+          </p>
+          <div class="mt-3">
+            <a href="{% url 'users:search_listings' %}" class="btn border-success btn-white text-success">
+              Explore opportunities
+            </a>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+  </div>
+</section>
+
+<!-- WHY GSC -->
+<section class="py-5 py-lg-6 bg-body-tertiary">
+  <div class="container">
+
+    <div class="text-center mb-4 mb-lg-5">
+      <h2 class="h2 mt-3 text-success mb-2">Built for clarity and confidence</h2>
+      <p class="text-muted mb-0">A platform experience that keeps investing straightforward.</p>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-12 col-md-4">
+        <div class="card border-success shadow-sm rounded-xxl h-100">
+          <div class="card-body p-4">
+            <h3 class="h5 fw-semibold text-success mb-2">Clear return bands</h3>
+            <p class="text-muted mb-0">Understand potential outcomes quickly with consistent return profiles.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-md-4">
+        <div class="card border-success shadow-sm rounded-xxl h-100">
+          <div class="card-body p-4">
+            <h3 class="h5 fw-semibold text-success mb-2">Location-led search</h3>
+            <p class="text-muted mb-0">Find opportunities by country, county, and postcode prefix—fast.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-md-4">
+        <div class="card border-success shadow-sm rounded-xxl h-100">
+          <div class="card-body p-4">
+            <h3 class="h5 fw-semibold text-success mb-2">Simple pledge flow</h3>
+            <p class="text-muted mb-0">Pledge directly from results with an experience that stays friction-free.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA band inside section -->
+    <div class="gsc-cta-band mt-4 mt-lg-5">
+      <div class="row align-items-center g-3">
+        <div class="col-12 col-lg-8">
+          <h3 class="h4 mb-1 text-white">Ready to explore live opportunities?</h3>
+          <p class="mb-0 text-white">Search by location and return profile and pledge directly from listings.</p>
+        </div>
+        <div class="col-12 col-lg-4 d-grid d-lg-flex justify-content-lg-end gap-3">
+          <a href="{% url 'users:search_listings' %}" class="btn btn-outline-light btn-lg">
+            Explore opportunities
+          </a>
+          <a href="{% url 'users:register' %}" class="btn btn-outline-light btn-lg">
+            List a project
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- SUCCESSFUL PROJECTS -->
+<section class="py-5 py-lg-6 bg-white">
+  <div class="container">
+
+    <div class="d-flex flex-column flex-md-row align-items-md-end justify-content-between gap-2 mb-4">
+      <div>
+        <h2 class="h3 text-success mb-1">Successful Projects</h2>
         <p class="text-muted mb-0">Examples of completed projects funded through Green Square Capital</p>
       </div>
-      <a href="{% url 'users:search_listings' %}" class="btn btn-outline-success">
+      <a href="{% url 'users:search_listings' %}" class="btn border-success btn-white text-success">
         View live opportunities
       </a>
     </div>
@@ -96,17 +328,17 @@
               <span class="badge text-bg-success bg-opacity-75 rounded-pill">Completed</span>
             </div>
 
-            <h3 class="h5 fw-semibold text-white mb-2">
+            <h3 class="h5 fw-semibold mb-2">
               Old Cotton Factory Works, Manchester
             </h3>
 
-            <p class="text-white-50 mb-0">
+            <p class="mb-0">
               A former commercial building transformed into four modern, refurbished residential flats —
               turning underutilised space into high-quality rental accommodation.
             </p>
 
             <div class="mt-auto pt-3">
-              <span class="text-white-50 small">117 Green Street • Manchester</span>
+              <span class="text-white small">117 Green Street • Manchester</span>
             </div>
           </div>
         </article>
@@ -121,17 +353,17 @@
               <span class="badge text-bg-success bg-opacity-75 rounded-pill">Completed</span>
             </div>
 
-            <h3 class="h5 fw-semibold text-white mb-2">
+            <h3 class="h5 fw-semibold mb-2">
               Bedford Police Station, Bristol
             </h3>
 
-            <p class="text-white-50 mb-0">
+            <p class="mb-0">
               A former police station converted into residential flats with an exclusive residents’ gym —
               improving value and long-term rental income.
             </p>
 
             <div class="mt-auto pt-3">
-              <span class="text-white-50 small">99b Walkway • Bristol</span>
+              <span class="text-white small">99b Walkaway • Bristol</span>
             </div>
           </div>
         </article>
@@ -146,17 +378,17 @@
               <span class="badge text-bg-success bg-opacity-75 rounded-pill">Completed</span>
             </div>
 
-            <h3 class="h5 fw-semibold text-white mb-2">
+            <h3 class="h5 fw-semibold mb-2">
               The Willow House, Leeds
             </h3>
 
-            <p class="text-white-50 mb-0">
+            <p class="mb-0">
               A derelict property renovated into a comfortable family home — increasing market value and
               enabling stable rental potential.
             </p>
 
             <div class="mt-auto pt-3">
-              <span class="text-white-50 small">22 Meadow Lane • Leeds</span>
+              <span class="text-white small">22 Meadow Lane • Leeds</span>
             </div>
           </div>
         </article>
@@ -171,17 +403,17 @@
               <span class="badge text-bg-success bg-opacity-75 rounded-pill">Completed</span>
             </div>
 
-            <h3 class="h5 fw-semibold text-white mb-2">
+            <h3 class="h5 fw-semibold mb-2">
               Hawthorne Manor, Oxford
             </h3>
 
-            <p class="text-white-50 mb-0">
+            <p class="mb-0">
               A historic manor converted into modern serviced offices — preserving character while creating
               consistent commercial income.
             </p>
 
             <div class="mt-auto pt-3">
-              <span class="text-white-50 small">15 Kingsway • Oxford</span>
+              <span class="text-white small">15 Kingsway • Oxford</span>
             </div>
           </div>
         </article>
@@ -190,5 +422,86 @@
     </div>
   </div>
 </section>
+
+<!-- FINAL CTA -->
+<section class="py-5 py-lg-6 bg-body-tertiary">
+  <div class="container">
+    <div class="card border-success shadow-sm rounded-xxl overflow-hidden">
+      <div class="card-body p-4 p-md-5">
+        <div class="row align-items-center g-4">
+          <div class="col-12 col-lg-8">
+            <h2 class="h3 mt-3 text-success mb-2">Join Green Square Capital today</h2>
+            <p class="text-muted mb-0">
+              Create your account to browse opportunities, pledge, and manage activity in your dashboard.
+            </p>
+          </div>
+          <div class="col-12 col-lg-4 d-grid gap-2">
+            <a href="{% url 'users:register' %}" class="btn btn-outline-success btn-lg">
+              Create an account
+            </a>
+            <a href="{% url 'users:search_listings' %}" class="btn btn-outline-success btn-lg">
+              Browse opportunities
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .rounded-xxl { border-radius: 1.25rem !important; }
+  .min-w-0 { min-width: 0; }
+
+  .gsc-hero{
+    background:
+      radial-gradient(1200px 600px at 20% 20%, rgba(25,135,84,0.35), transparent 60%),
+      radial-gradient(900px 500px at 80% 30%, rgba(0,0,0,0.35), transparent 60%),
+      linear-gradient(135deg, #0b2b1f 0%, #0f3b2a 40%, #0b2b1f 100%);
+  }
+  .gsc-hero-divider{
+    height: 36px;
+    background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, #0f6f45 100%);
+  }
+
+  .gsc-glass{
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 1.25rem;
+  }
+
+  .gsc-icon-bubble{
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(25,135,84,0.12);
+    color: #198754;
+    font-weight: 700;
+  }
+
+  .gsc-cta-band{
+    border-radius: 1.25rem;
+    padding: 1.25rem;
+    background: #0f6f45
+  }
+
+  .gsc-project-card{
+    border-radius: 1.75rem;
+    color: white;
+    position: relative;
+    overflow: hidden;
+    background-image:
+      linear-gradient(0deg, rgba(0,0,0,0.90), rgba(0,0,0,0.7)),
+      var(--bg-image);
+    background-size: cover;
+    background-position: center;
+    min-height: 260px;
+  }
+</style>
 
 {% endblock %}
