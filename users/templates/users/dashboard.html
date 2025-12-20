@@ -16,6 +16,47 @@
         </div>
     </div>
 
+    {# --- Dashboard summary --- #}
+    <div class="row g-3 mb-5">
+        <div class="col-6 col-lg-3">
+            <div class="card border-0 shadow-sm rounded-xxl bg-success text-white">
+                <div class="card-body p-3">
+                    <div class="small text-white-50">Total pledged</div>
+                    <div class="h4 fw-semibold mb-0">£{{ total_pledged }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-lg-3">
+            <div class="card border-0 shadow-sm rounded-xxl bg-success text-white">
+                <div class="card-body p-3">
+                    <div class="small text-white-50">Active investments</div>
+                    <div class="h4 fw-semibold mb-0">{{ active_investments }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-lg-3">
+            <div class="card border-0 shadow-sm rounded-xxl bg-success text-white">
+                <div class="card-body p-3">
+                    <div class="small text-white-50">Your Active listings</div>
+                    <div class="h4 fw-semibold mb-0">{{ active_listings }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-lg-3">
+            <div class="card border-0 shadow-sm rounded-xxl bg-success text-white">
+                <div class="card-body p-3">
+                    <div class="small text-white-50">Draft listings</div>
+                    <div class="h4 fw-semibold mb-0">
+                        {{ draft_waiting_payment }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {# --- Current Investments --- #}
     <div class="d-flex align-items-end justify-content-between mb-2">
         <div>
@@ -29,59 +70,61 @@
     <div class="dashboard-scroll mb-5 mt-3">
         <div class="d-flex flex-nowrap gap-3">
             {% if investments %}
-                {% for inv in investments %}
-                    <div class="card dashboard-card flex-shrink-0 border-0 shadow-sm rounded-xxl">
-                        <div class="card-body p-4">
+            {% for inv in investments %}
+            <div class="card dashboard-card flex-shrink-0 border-success shadow-sm rounded-xxl">
+                <div class="card-body p-4">
 
-                            <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
-                                <div class="min-w-0">
-                                    <h5 class="card-title mb-1 fw-semibold text-truncate">
-                                        {{ inv.listing.source_use|capfirst }} → {{ inv.listing.target_use|capfirst }}
-                                    </h5>
-                                    <p class="text-muted small mb-0 text-truncate">
-                                        {{ inv.listing.country|capfirst }} • {{ inv.listing.county }} • {{ inv.listing.postcode_prefix }}
-                                    </p>
-                                </div>
-                                <span class="badge text-bg-success rounded-pill px-3">Pledged</span>
-                            </div>
-
-                            <div class="rounded-4 bg-light p-3 mb-3">
-                                <div class="d-flex justify-content-between small">
-                                    <span class="text-muted">Pledged</span>
-                                    <span class="fw-semibold">£{{ inv.amount_gbp }}</span>
-                                </div>
-                                <div class="d-flex justify-content-between small mt-2">
-                                    <span class="text-muted">Est. return</span>
-                                    <span class="fw-semibold">£{{ inv.expected_return_gbp }}</span>
-                                </div>
-                                <div class="d-flex justify-content-between small mt-2">
-                                    <span class="text-muted">Est. total back</span>
-                                    <span class="fw-semibold">£{{ inv.expected_total_back_gbp }}</span>
-                                </div>
-                            </div>
-
-                            <p class="small text-muted mb-3">
-                                {{ inv.listing.get_return_type_display }} ({{ inv.listing.get_return_band_display }}) •
-                                {{ inv.listing.duration_days }} days<br>
-                                Pledged: {{ inv.created_at|date:"d M Y" }}
+                    <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
+                        <div class="min-w-0">
+                            <h5 class="card-title mb-1 fw-semibold text-truncate">
+                                {{ inv.listing.source_use|capfirst }} → {{ inv.listing.target_use|capfirst }}
+                            </h5>
+                            <p class="text-muted small mb-0 text-truncate">
+                                {{ inv.listing.country|capfirst }} • {{ inv.listing.county }} • {{
+                                inv.listing.postcode_prefix }}
                             </p>
+                        </div>
+                        <span class="badge text-bg-success rounded-pill px-3">Pledged</span>
+                    </div>
 
-                            <a href="{% url 'users:opportunity_detail' inv.listing.pk %}" class="btn btn-sm btn-outline-secondary w-100">
-                                View Opportunity
-                            </a>
-
+                    <div class="rounded-4 bg-light p-3 mb-3">
+                        <div class="d-flex justify-content-between small">
+                            <span class="text-muted">Pledged</span>
+                            <span class="fw-semibold">£{{ inv.amount_gbp }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between small mt-2">
+                            <span class="text-muted">Est. return</span>
+                            <span class="fw-semibold">£{{ inv.expected_return_gbp }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between small mt-2">
+                            <span class="text-muted">Est. total back</span>
+                            <span class="fw-semibold">£{{ inv.expected_total_back_gbp }}</span>
                         </div>
                     </div>
-                {% endfor %}
-            {% else %}
-                <div class="card dashboard-card flex-shrink-0 border-0 shadow-sm rounded-xxl">
-                    <div class="card-body p-4 d-flex flex-column justify-content-center">
-                        <h5 class="card-title fw-semibold mb-1">No investments yet</h5>
-                        <p class="text-muted small mb-0">
-                            When you pledge into opportunities, they will appear here.
-                        </p>
-                    </div>
+
+                    <p class="small text-muted mb-3">
+                        {{ inv.listing.get_return_type_display }} ({{ inv.listing.get_return_band_display }}) •
+                        {{ inv.listing.duration_days }} days<br>
+                        Pledged: {{ inv.created_at|date:"d M Y" }}
+                    </p>
+
+                    <a href="{% url 'users:opportunity_detail' inv.listing.pk %}"
+                        class="btn btn-sm btn-outline-secondary w-100">
+                        View Opportunity
+                    </a>
+
                 </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="card dashboard-card flex-shrink-0 border-0 shadow-sm rounded-xxl">
+                <div class="card-body p-4 d-flex flex-column justify-content-center">
+                    <h5 class="card-title fw-semibold mb-1">No investments yet</h5>
+                    <p class="text-muted small mb-0">
+                        When you pledge into opportunities, they will appear here.
+                    </p>
+                </div>
+            </div>
             {% endif %}
         </div>
     </div>
@@ -102,96 +145,99 @@
     <div class="dashboard-scroll mt-3">
         <div class="d-flex flex-nowrap gap-3">
             {% if listings %}
-                {% for listing in listings %}
-                    <div class="card dashboard-card flex-shrink-0 border-0 shadow-sm rounded-xxl">
-                        <div class="card-body p-4">
+            {% for listing in listings %}
+            <div class="card dashboard-card flex-shrink-0 border-success shadow-sm rounded-xxl">
+                <div class="card-body p-4">
 
-                            <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
-                                <div class="min-w-0">
-                                    <h5 class="card-title mb-1 fw-semibold text-truncate">
-                                        {{ listing.source_use|capfirst }} → {{ listing.target_use|capfirst }}
-                                    </h5>
-                                    <p class="text-muted small mb-0 text-truncate">
-                                        {{ listing.country|capfirst }} • {{ listing.county }} • {{ listing.postcode_prefix }}
-                                    </p>
-                                </div>
-
-                                {% if listing.status == "draft" %}
-                                    <span class="badge text-bg-secondary rounded-pill px-3">Draft</span>
-                                {% elif listing.status == "pending_payment" %}
-                                    <span class="badge text-bg-warning rounded-pill px-3">Pending payment</span>
-                                {% elif listing.status == "active" %}
-                                    <span class="badge text-bg-success rounded-pill px-3">Active</span>
-                                {% elif listing.status == "expired" %}
-                                    <span class="badge text-bg-dark rounded-pill px-3">Expired</span>
-                                {% else %}
-                                    <span class="badge text-bg-light rounded-pill px-3">Unknown</span>
-                                {% endif %}
-                            </div>
-
-                            <div class="d-flex justify-content-between align-items-center small text-muted mb-3">
-                                <span>{{ listing.media.count }} file{{ listing.media.count|pluralize }} uploaded</span>
-                                <span class="badge bg-light text-dark border rounded-pill px-3">
-                                    {{ listing.get_funding_band_display }}
-                                </span>
-                            </div>
-
-                            <div class="rounded-4 bg-light p-3 mb-3">
-                                <div class="d-flex justify-content-between small">
-                                    <span class="text-muted">Return Type</span>
-                                    <span class="fw-semibold">{{ listing.get_return_type_display }}</span>
-                                </div>
-                                <div class="d-flex justify-content-between small mt-2">
-                                    <span class="text-muted">Potential Return</span>
-                                    <span class="fw-semibold">{{ listing.get_return_band_display }}</span>
-                                </div>
-                                <div class="d-flex justify-content-between small mt-2">
-                                    <span class="text-muted">Duration</span>
-                                    <span class="fw-semibold">{{ listing.duration_days }} days</span>
-                                </div>
-                            </div>
-
-                            <p class="small text-muted mb-3">
-                                {% if listing.active_until %}
-                                    Ends: {{ listing.active_until|date:"d M Y" }}
-                                {% else %}
-                                    &nbsp;
-                                {% endif %}
+                    <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
+                        <div class="min-w-0">
+                            <h5 class="card-title mb-1 fw-semibold text-truncate">
+                                {{ listing.source_use|capfirst }} → {{ listing.target_use|capfirst }}
+                            </h5>
+                            <p class="text-muted small mb-0 text-truncate">
+                                {{ listing.country|capfirst }} • {{ listing.county }} • {{ listing.postcode_prefix }}
                             </p>
+                        </div>
 
-                            {% if listing.status == "draft" or listing.status == "pending_payment" %}
-                                <div class="d-flex gap-2 flex-wrap">
-                                    <a href="{% url 'users:listing_detail' listing.pk %}" class="btn btn-sm btn-outline-secondary flex-grow-1">
-                                        View Draft
-                                    </a>
-                                    <a href="{% url 'users:listing_edit' listing.pk %}" class="btn btn-sm btn-success flex-grow-1">
-                                        Edit
-                                    </a>
-                                    <a href="{% url 'users:listing_checkout' listing.pk %}" class="btn btn-sm btn-success flex-grow-1">
-                                        Pay
-                                    </a>
-                                </div>
-                            {% else %}
-                                <a href="{% url 'users:listing_detail' listing.pk %}" class="btn btn-sm btn-outline-secondary w-100">
-                                    View Listing
-                                </a>
-                            {% endif %}
+                        {% if listing.status == "draft" %}
+                        <span class="badge text-bg-secondary rounded-pill px-3">Draft</span>
+                        {% elif listing.status == "pending_payment" %}
+                        <span class="badge text-bg-warning rounded-pill px-3">Pending payment</span>
+                        {% elif listing.status == "active" %}
+                        <span class="badge text-bg-success rounded-pill px-3">Active</span>
+                        {% elif listing.status == "expired" %}
+                        <span class="badge text-bg-dark rounded-pill px-3">Expired</span>
+                        {% else %}
+                        <span class="badge text-bg-light rounded-pill px-3">Unknown</span>
+                        {% endif %}
+                    </div>
 
+                    <div class="d-flex justify-content-between align-items-center small text-muted mb-3">
+                        <span>{{ listing.media.count }} file{{ listing.media.count|pluralize }} uploaded</span>
+                        <span class="badge bg-light text-dark border rounded-pill px-3">
+                            {{ listing.get_funding_band_display }}
+                        </span>
+                    </div>
+
+                    <div class="rounded-4 bg-light p-3 mb-3">
+                        <div class="d-flex justify-content-between small">
+                            <span class="text-muted">Return Type</span>
+                            <span class="fw-semibold">{{ listing.get_return_type_display }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between small mt-2">
+                            <span class="text-muted">Potential Return</span>
+                            <span class="fw-semibold">{{ listing.get_return_band_display }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between small mt-2">
+                            <span class="text-muted">Duration</span>
+                            <span class="fw-semibold">{{ listing.duration_days }} days</span>
                         </div>
                     </div>
-                {% endfor %}
-            {% else %}
-                <div class="card dashboard-card flex-shrink-0 border-0 shadow-sm rounded-xxl">
-                    <div class="card-body p-4 d-flex flex-column justify-content-center">
-                        <h5 class="card-title fw-semibold mb-1">No listings yet</h5>
-                        <p class="text-muted small mb-3">
-                            Create a listing to start offering new opportunities.
-                        </p>
-                        <a href="{% url 'users:create_listing' %}" class="btn btn-sm btn-success w-100">
-                            Create your first listing
+
+                    <p class="small text-muted mb-3">
+                        {% if listing.active_until %}
+                        Ends: {{ listing.active_until|date:"d M Y" }}
+                        {% else %}
+                        &nbsp;
+                        {% endif %}
+                    </p>
+
+                    {% if listing.status == "draft" or listing.status == "pending_payment" %}
+                    <div class="d-flex gap-2 flex-wrap">
+                        <a href="{% url 'users:listing_detail' listing.pk %}"
+                            class="btn btn-sm btn-outline-secondary flex-grow-1">
+                            View Draft
+                        </a>
+                        <a href="{% url 'users:listing_edit' listing.pk %}" class="btn btn-sm btn-success flex-grow-1">
+                            Edit
+                        </a>
+                        <a href="{% url 'users:listing_checkout' listing.pk %}"
+                            class="btn btn-sm btn-success flex-grow-1">
+                            Pay
                         </a>
                     </div>
+                    {% else %}
+                    <a href="{% url 'users:listing_detail' listing.pk %}"
+                        class="btn btn-sm btn-outline-secondary w-100">
+                        View Listing
+                    </a>
+                    {% endif %}
+
                 </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="card dashboard-card flex-shrink-0 border-0 shadow-sm rounded-xxl">
+                <div class="card-body p-4 d-flex flex-column justify-content-center">
+                    <h5 class="card-title fw-semibold mb-1">No listings yet</h5>
+                    <p class="text-muted small mb-3">
+                        Create a listing to start offering new opportunities.
+                    </p>
+                    <a href="{% url 'users:create_listing' %}" class="btn btn-sm btn-success w-100">
+                        Create your first listing
+                    </a>
+                </div>
+            </div>
             {% endif %}
         </div>
     </div>
@@ -203,13 +249,22 @@
 <script src="{% static 'js/click_hold_drag_scroll.js' %}"></script>
 
 <style>
-  .rounded-xxl { border-radius: 1.25rem !important; }
+    .rounded-xxl {
+        border-radius: 1.25rem !important;
+    }
 
-  .min-w-0 { min-width: 0; }
+    .min-w-0 {
+        min-width: 0;
+    }
 
-  .dashboard-scroll .card.dashboard-card { width: 340px; }
-  @media (min-width: 768px){
-    .dashboard-scroll .card.dashboard-card { width: 380px; }
-  }
+    .dashboard-scroll .card.dashboard-card {
+        width: 340px;
+    }
+
+    @media (min-width: 768px) {
+        .dashboard-scroll .card.dashboard-card {
+            width: 380px;
+        }
+    }
 </style>
 {% endblock %}

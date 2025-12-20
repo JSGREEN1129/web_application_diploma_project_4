@@ -10,7 +10,8 @@ from django.contrib.auth import login, logout, authenticate, get_user_model
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Sum
+from django.db.models.functions import Coalesce
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
@@ -133,6 +134,34 @@ def _activate_listing_from_paid_session(*, listing: Listing, session: dict) -> b
     return True
 
 
+def _listing_ready_for_activation(listing: Listing) -> bool:
+    """
+    Server-side enforcement for Step 6 activation.
+    If you decide any of these should be optional, remove them here.
+    """
+    required_fields = [
+        listing.project_name,
+        listing.source_use,
+        listing.target_use,
+        listing.funding_band,
+        listing.return_type,
+        listing.return_band,
+        listing.duration_days,
+        listing.country,
+        listing.county,
+        listing.postcode_prefix,
+    ]
+
+    if any(v in (None, "", []) for v in required_fields):
+        return False
+
+    # Require at least one upload (image or document)
+    if not listing.media.exists():
+        return False
+
+    return True
+
+
 @never_cache
 def login_view(request):
     login_form = CustomAuthenticationForm(request, data=request.POST or None)
@@ -214,24 +243,53 @@ def dashboard_view(request):
         .order_by("-created_at")
     )
 
+    total_pledged_pence = investments.aggregate(
+        total=Coalesce(Sum("amount_pence"), 0)
+    )["total"] or 0
+
+    total_pledged_gbp = (Decimal(total_pledged_pence) / Decimal("100")).quantize(Decimal("0.01"))
+
+    active_investments = investments.values("listing_id").distinct().count()
+
+    active_listings = listings.filter(status=Listing.Status.ACTIVE).count()
+
+    draft_waiting_payment = listings.filter(
+        status__in=[Listing.Status.DRAFT, Listing.Status.PENDING_PAYMENT]
+    ).count()
+
     return render(
         request,
         "users/dashboard.html",
-        {"listings": listings, "investments": investments},
+        {
+            "listings": listings,
+            "investments": investments,
+            "total_pledged": total_pledged_gbp,
+            "active_investments": active_investments,
+            "active_listings": active_listings,
+            "draft_waiting_payment": draft_waiting_payment,
+        },
     )
 
 
 @login_required
 def create_listing_view(request):
+    """
+    Supports two submit actions:
+    - action=save_draft  -> saves partial listing (no strict form validation)
+    - action=activate    -> requires full validation, then proceeds to activation (Stripe checkout)
+    """
     if request.method == "POST":
+        action = (request.POST.get("action") or "save_draft").strip()
+
         form = ListingCreateForm(request.POST)
         media_form = ListingMediaForm()
 
-        if form.is_valid():
-            images = request.FILES.getlist("images")
-            documents = request.FILES.getlist("documents")
+        images = request.FILES.getlist("images")
+        documents = request.FILES.getlist("documents")
 
-            try:
+        # Validate uploads only if provided (for BOTH draft and activation)
+        try:
+            if images:
                 validate_uploaded_files(
                     images,
                     allowed_exts=ALLOWED_IMAGE_EXTENSIONS,
@@ -240,6 +298,7 @@ def create_listing_view(request):
                     label="Images",
                     allowed_exts_label="JPG, PNG or WEBP",
                 )
+            if documents:
                 validate_uploaded_files(
                     documents,
                     allowed_exts=ALLOWED_DOCUMENT_EXTENSIONS,
@@ -248,8 +307,64 @@ def create_listing_view(request):
                     label="Documents",
                     allowed_exts_label="PDF, DOC or DOCX",
                 )
-            except ValueError as e:
-                messages.error(request, str(e))
+        except ValueError as e:
+            messages.error(request, str(e))
+            return render(
+                request,
+                "users/create_listing.html",
+                {"form": form, "media_form": media_form},
+            )
+
+        # -------------------------
+        # SAVE AS DRAFT (no full validation)
+        # -------------------------
+        if action == "save_draft":
+            listing = Listing(owner=request.user, status=Listing.Status.DRAFT)
+
+            # Fill what we can from POST without enforcing form validation
+            for field_name in form.fields.keys():
+                if hasattr(listing, field_name):
+                    raw = (request.POST.get(field_name) or "").strip()
+                    setattr(listing, field_name, raw if raw != "" else None)
+
+            try:
+                listing.save()
+            except Exception:
+                messages.error(
+                    request,
+                    "Could not save draft. Some fields are required by the database. "
+                    "If you want drafts to save incomplete, make those fields nullable/blank for draft state."
+                )
+                return render(
+                    request,
+                    "users/create_listing.html",
+                    {"form": form, "media_form": media_form},
+                )
+
+            # Save media (optional)
+            for image in images:
+                ListingMedia.objects.create(
+                    listing=listing,
+                    file=image,
+                    media_type=ListingMedia.MediaType.IMAGE,
+                )
+
+            for doc in documents:
+                ListingMedia.objects.create(
+                    listing=listing,
+                    file=doc,
+                    media_type=ListingMedia.MediaType.DOCUMENT,
+                )
+
+            messages.success(request, "Draft saved. You can edit it anytime from the dashboard.")
+            return redirect("users:dashboard")
+
+        # -------------------------
+        # ACTIVATE (strict validation)
+        # -------------------------
+        if action == "activate":
+            if not form.is_valid():
+                messages.error(request, "Please complete the required fields before activating.")
                 return render(
                     request,
                     "users/create_listing.html",
@@ -275,18 +390,44 @@ def create_listing_view(request):
                     media_type=ListingMedia.MediaType.DOCUMENT,
                 )
 
-            messages.success(request, "Draft saved. Redirecting you to payment...")
-            return redirect("users:listing_checkout", pk=listing.pk)
+            return redirect("users:activate_listing", pk=listing.pk)
 
-    else:
-        form = ListingCreateForm()
-        media_form = ListingMediaForm()
+        # Fallback
+        messages.error(request, "Unknown action.")
+        return render(
+            request,
+            "users/create_listing.html",
+            {"form": form, "media_form": media_form},
+        )
 
+    # GET
+    form = ListingCreateForm()
+    media_form = ListingMediaForm()
     return render(
         request,
         "users/create_listing.html",
         {"form": form, "media_form": media_form},
     )
+
+
+@login_required
+def activate_listing_view(request, pk):
+    """
+    Step 6 activation endpoint.
+    Enforces completion and then sends user to Stripe checkout using existing flow.
+    """
+    listing = get_object_or_404(Listing.objects.prefetch_related("media"), pk=pk, owner=request.user)
+
+    if listing.status != Listing.Status.DRAFT:
+        messages.error(request, "Only draft listings can be activated.")
+        return redirect("users:listing_detail", pk=listing.pk)
+
+    if not _listing_ready_for_activation(listing):
+        messages.error(request, "Complete Steps 1–5 (including at least one upload) before activating.")
+        return redirect("users:listing_edit", pk=listing.pk)
+
+    # Reuse existing Stripe checkout flow
+    return start_listing_checkout_view(request, pk=listing.pk)
 
 
 @login_required

@@ -46,25 +46,72 @@ class Listing(models.Model):
         related_name="listings",
     )
 
+    # Optional (you already had this correct)
     project_name = models.CharField(
-    max_length=120,
-    blank=True,
-    default="",
-    help_text="Optional project name shown in dashboards and opportunities (e.g. Old Police Station).",
+        max_length=120,
+        blank=True,
+        default="",
+        help_text="Optional project name shown in dashboards and opportunities (e.g. Old Police Station).",
     )
 
-    source_use = models.CharField(max_length=20, choices=UseType.choices)
-    target_use = models.CharField(max_length=20, choices=UseType.choices)
+    # -------------------------
+    # IMPORTANT CHANGE:
+    # These fields must allow null/blank so that "Save as draft anytime" works.
+    # Activation/payment logic should enforce completeness later (in views).
+    # -------------------------
+    source_use = models.CharField(
+        max_length=20,
+        choices=UseType.choices,
+        blank=True,
+        null=True,
+    )
+    target_use = models.CharField(
+        max_length=20,
+        choices=UseType.choices,
+        blank=True,
+        null=True,
+    )
 
-    country = models.CharField(max_length=20, choices=Country.choices)
-    county = models.CharField(max_length=64)
-    postcode_prefix = models.CharField(max_length=10)
+    country = models.CharField(
+        max_length=20,
+        choices=Country.choices,
+        blank=True,
+        null=True,
+    )
+    county = models.CharField(
+        max_length=64,
+        blank=True,
+        null=True,
+    )
+    postcode_prefix = models.CharField(
+        max_length=10,
+        blank=True,
+        null=True,
+    )
 
-    funding_band = models.CharField(max_length=20, choices=FundingBand.choices)
-    return_type = models.CharField(max_length=30, choices=ReturnType.choices)
-    return_band = models.CharField(max_length=20, choices=ReturnBand.choices)
+    funding_band = models.CharField(
+        max_length=20,
+        choices=FundingBand.choices,
+        blank=True,
+        null=True,
+    )
+    return_type = models.CharField(
+        max_length=30,
+        choices=ReturnType.choices,
+        blank=True,
+        null=True,
+    )
+    return_band = models.CharField(
+        max_length=20,
+        choices=ReturnBand.choices,
+        blank=True,
+        null=True,
+    )
 
-    duration_days = models.PositiveIntegerField()
+    duration_days = models.PositiveIntegerField(
+        blank=True,
+        null=True,
+    )
 
     price_per_day_pence = models.PositiveIntegerField(default=199)
 
@@ -95,13 +142,26 @@ class Listing(models.Model):
     )
 
     def total_price_pence(self) -> int:
-        return self.duration_days * self.price_per_day_pence
+        """
+        For drafts, duration_days may be None. Keep this safe.
+        """
+        if not self.duration_days:
+            return 0
+        return int(self.duration_days) * int(self.price_per_day_pence)
 
     def activate(self):
+        """
+        Safety guard: prevent activating an incomplete draft.
+        Your views should already enforce completion before calling activate(),
+        but this avoids accidental activation in other code paths.
+        """
+        if not self.duration_days:
+            raise ValueError("Cannot activate listing without duration_days.")
+
         now = timezone.now()
         self.status = self.Status.ACTIVE
         self.active_from = now
-        self.active_until = now + timezone.timedelta(days=self.duration_days)
+        self.active_until = now + timezone.timedelta(days=int(self.duration_days))
         self.save(update_fields=["status", "active_from", "active_until"])
 
 

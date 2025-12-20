@@ -11,13 +11,81 @@
       {# --- Header --- #}
       <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
         <div>
-          <span class="badge text-bg-success px-3 py-2 rounded-pill">Green Square Capital</span>
-          <h1 class="h4 fw-semibold mb-1 mt-3">Create Listing</h1>
+          <h1 class="h4 fw-semibold mb-1 mt-3 text-success">Create Listing</h1>
           <p class="text-muted small mb-0">Build an opportunity draft. You can edit it before going live.</p>
         </div>
         <a href="{% url 'users:dashboard' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
           Back to dashboard
         </a>
+      </div>
+
+      {# --- Stepper --- #}
+      <div class="card border-0 shadow-sm rounded-xxl mb-4">
+        <div class="card-body p-3 p-md-4">
+          <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
+
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+              <span class="badge rounded-pill px-3 py-2 {% if form.project_name.value %}bg-success text-white{% else %}bg-light text-dark border{% endif %}">
+                1. Project details
+              </span>
+
+              <span class="text-muted small">→</span>
+
+              <span class="badge rounded-pill px-3 py-2 {% if form.source_use.value and form.target_use.value %}bg-success text-white{% else %}bg-light text-dark border{% endif %}">
+                2. Project type
+              </span>
+
+              <span class="text-muted small">→</span>
+
+              <span class="badge rounded-pill px-3 py-2 {% if form.funding_band.value and form.return_type.value and form.return_band.value and form.duration_days.value %}bg-success text-white{% else %}bg-light text-dark border{% endif %}">
+                3. Funding & returns
+              </span>
+
+              <span class="text-muted small">→</span>
+
+              <span class="badge rounded-pill px-3 py-2 {% if form.country.value and form.county.value and form.postcode_prefix.value %}bg-success text-white{% else %}bg-light text-dark border{% endif %}">
+                4. Location
+              </span>
+
+              <span class="text-muted small">→</span>
+
+              <span class="badge rounded-pill px-3 py-2 {% if media_form.images.value or media_form.documents.value %}bg-success text-white{% else %}bg-light text-dark border{% endif %}">
+                5. Media uploads
+              </span>
+
+              <span class="text-muted small">→</span>
+
+              {# Step 6: done only if steps 1–5 done (no parentheses) #}
+              {% if form.project_name.value and form.source_use.value and form.target_use.value and form.funding_band.value and form.return_type.value and form.return_band.value and form.duration_days.value and form.country.value and form.county.value and form.postcode_prefix.value %}
+                {% if media_form.images.value or media_form.documents.value %}
+                  <span class="badge rounded-pill px-3 py-2 bg-success text-white">
+                    6. Activate listing
+                  </span>
+                {% else %}
+                  <span class="badge rounded-pill px-3 py-2 bg-light text-dark border">
+                    6. Activate listing
+                  </span>
+                {% endif %}
+              {% else %}
+                <span class="badge rounded-pill px-3 py-2 bg-light text-dark border">
+                  6. Activate listing
+                </span>
+              {% endif %}
+            </div>
+
+            <span class="text-muted small">Draft can be saved anytime</span>
+          </div>
+
+          {% if form.project_name.value and form.source_use.value and form.target_use.value and form.funding_band.value and form.return_type.value and form.return_band.value and form.duration_days.value and form.country.value and form.county.value and form.postcode_prefix.value %}
+            {% if media_form.images.value or media_form.documents.value %}
+              <div class="mt-2 text-success small">Steps 1–5 complete — activation is available.</div>
+            {% else %}
+              <div class="mt-2 text-muted small">Upload media to complete Step 5 and enable activation.</div>
+            {% endif %}
+          {% else %}
+            <div class="mt-2 text-muted small">Complete steps 1–5 to enable activation. You can save a draft at any time.</div>
+          {% endif %}
+        </div>
       </div>
 
       <form method="post" enctype="multipart/form-data" novalidate>
@@ -41,11 +109,17 @@
           {# LEFT COLUMN #}
           <div class="col-12 col-lg-6">
 
-            <div class="card border-0 shadow-sm rounded-xxl mb-4">
+            {# --- Step 1: Project details --- #}
+            <div class="card gsc-form-card border border-success shadow-sm rounded-xxl mb-4">
               <div class="card-body p-4 p-md-5">
-                <div class="mb-3">
-                  <h2 class="h5 fw-semibold mb-1">Project details</h2>
-                  <p class="text-muted small mb-0">Give your listing a clear name investors will recognise.</p>
+                <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
+                  <div>
+                    <h2 class="h5 fw-semibold text-success mb-1">Project details</h2>
+                    <p class="text-muted small mb-0">Give your listing a clear name investors will recognise.</p>
+                  </div>
+                  <span class="badge rounded-pill px-3 {% if form.project_name.value %}bg-success text-white{% else %}bg-light text-dark border{% endif %}">
+                    Step 1
+                  </span>
                 </div>
 
                 <div class="mb-0">
@@ -59,12 +133,17 @@
               </div>
             </div>
 
-            {# --- Project Type --- #}
-            <div class="card border-0 shadow-sm rounded-xxl mb-4">
+            {# --- Step 2: Project Type --- #}
+            <div class="card gsc-form-card border border-success shadow-sm rounded-xxl mb-4">
               <div class="card-body p-4 p-md-5">
-                <div class="mb-3">
-                  <h2 class="h5 fw-semibold mb-1">Project Type</h2>
-                  <p class="text-muted small mb-0">Choose what the asset is moving from and to.</p>
+                <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
+                  <div>
+                    <h2 class="h5 fw-semibold text-success mb-1">Project Type</h2>
+                    <p class="text-muted small mb-0">Choose what the asset is moving from and to.</p>
+                  </div>
+                  <span class="badge rounded-pill px-3 {% if form.source_use.value and form.target_use.value %}bg-success text-white{% else %}bg-light text-dark border{% endif %}">
+                    Step 2
+                  </span>
                 </div>
 
                 <div class="row g-3">
@@ -86,15 +165,17 @@
               </div>
             </div>
 
-            {# --- Funding & Returns (SWAPPED to left) --- #}
-            <div class="card border-0 shadow-sm rounded-xxl">
+            {# --- Step 3: Funding & Returns --- #}
+            <div class="card gsc-form-card border border-success shadow-sm rounded-xxl">
               <div class="card-body p-4 p-md-5">
-                <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
                   <div>
-                    <h2 class="h5 fw-semibold mb-1">Funding & Returns</h2>
+                    <h2 class="h5 fw-semibold text-success mb-1">Funding & Returns</h2>
                     <p class="text-muted small mb-0">Set investor expectations and listing duration.</p>
                   </div>
-                  <span class="badge bg-light text-dark border rounded-pill px-3">Step 3</span>
+                  <span class="badge rounded-pill px-3 {% if form.funding_band.value and form.return_type.value and form.return_band.value and form.duration_days.value %}bg-success text-white{% else %}bg-light text-dark border{% endif %}">
+                    Step 3
+                  </span>
                 </div>
 
                 <div class="row g-3">
@@ -142,15 +223,17 @@
           {# RIGHT COLUMN #}
           <div class="col-12 col-lg-6">
 
-            {# --- Location (SWAPPED to right) --- #}
-            <div class="card border-0 shadow-sm rounded-xxl mb-4">
+            {# --- Step 4: Location --- #}
+            <div class="card gsc-form-card border border-success shadow-sm rounded-xxl mb-4">
               <div class="card-body p-4 p-md-5">
-                <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
                   <div>
-                    <h2 class="h5 fw-semibold mb-1">Location</h2>
+                    <h2 class="h5 fw-semibold text-success mb-1">Location</h2>
                     <p class="text-muted small mb-0">Narrow down to a postcode prefix for matching investors.</p>
                   </div>
-                  <span class="badge bg-light text-dark border rounded-pill px-3">Step 2</span>
+                  <span class="badge rounded-pill px-3 {% if form.project_name.value %}bg-success text-white{% else %}bg-light text-dark border{% endif %}">
+                    Step 4
+                  </span>
                 </div>
 
                 <div class="row g-3">
@@ -190,15 +273,17 @@
               </div>
             </div>
 
-            {# --- Media uploads --- #}
-            <div class="card border-0 shadow-sm rounded-xxl">
+            {# --- Step 5: Media uploads --- #}
+            <div class="card gsc-form-card border border-success shadow-sm rounded-xxl">
               <div class="card-body p-4 p-md-5">
-                <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
                   <div>
-                    <h2 class="h5 fw-semibold mb-1">Media uploads</h2>
+                    <h2 class="h5 fw-semibold text-success mb-1">Media uploads</h2>
                     <p class="text-muted small mb-0">Add images and documents to support your opportunity.</p>
                   </div>
-                  <span class="badge bg-light text-dark border rounded-pill px-3">Optional</span>
+                  <span class="badge rounded-pill px-3 {% if media_form.images.value or media_form.documents.value %}bg-success text-white{% else %}bg-light text-dark border{% endif %}">
+                    Step 5
+                  </span>
                 </div>
 
                 <div class="row g-4">
@@ -234,17 +319,76 @@
 
           </div>
 
-          {# FULL-WIDTH CTA ROW (unchanged) #}
+          {# --- Step 6: FULL-WIDTH CTA (spans both columns) --- #}
           <div class="col-12">
-            <div class="card border-0 shadow-sm rounded-xxl">
-              <div class="card-body p-3 p-md-4 d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-3">
-                <div>
-                  <div class="fw-semibold">Save draft & continue</div>
-                  <div class="text-muted small">You can review and edit before payment and publishing.</div>
+            <div class="card gsc-cta-card border border-success shadow-sm rounded-xxl">
+              <div class="card-body p-4 p-md-5 text-center d-flex flex-column justify-content-center"
+                   style="min-height: 170px;">
+
+                {# Step 6 pill changes only when steps 1–5 complete #}
+                {% if form.project_name.value and form.source_use.value and form.target_use.value and form.funding_band.value and form.return_type.value and form.return_band.value and form.duration_days.value and form.country.value and form.county.value and form.postcode_prefix.value %}
+                  {% if media_form.images.value or media_form.documents.value %}
+                    <div class="d-flex justify-content-center mb-3">
+                      <span class="badge rounded-pill px-3 bg-success text-white">Step 6 • Activate listing</span>
+                    </div>
+                  {% else %}
+                    <div class="d-flex justify-content-center mb-3">
+                      <span class="badge rounded-pill px-3 bg-light text-dark border">Step 6 • Activate listing</span>
+                    </div>
+                  {% endif %}
+                {% else %}
+                  <div class="d-flex justify-content-center mb-3">
+                    <span class="badge rounded-pill px-3 bg-light text-dark border">Step 6 • Activate listing</span>
+                  </div>
+                {% endif %}
+
+                <div class="d-flex flex-column flex-md-row gap-2 justify-content-center align-items-stretch align-items-md-center">
+                  <button type="submit"
+                          name="action"
+                          value="save_draft"
+                          class="btn btn-outline-success px-4">
+                    Save as draft
+                  </button>
+
+                  {# Activate enabled only if steps 1–5 complete #}
+                  {% if form.project_name.value and form.source_use.value and form.target_use.value and form.funding_band.value and form.return_type.value and form.return_band.value and form.duration_days.value and form.country.value and form.county.value and form.postcode_prefix.value %}
+                    {% if media_form.images.value or media_form.documents.value %}
+                      <button type="submit"
+                              name="action"
+                              value="activate"
+                              class="btn btn-success px-4">
+                        Activate listing
+                      </button>
+                    {% else %}
+                      <button type="button"
+                              class="btn btn-success px-4"
+                              disabled>
+                        Activate listing
+                      </button>
+                    {% endif %}
+                  {% else %}
+                    <button type="button"
+                            class="btn btn-success px-4"
+                            disabled>
+                      Activate listing
+                    </button>
+                  {% endif %}
                 </div>
-                <button type="submit" class="btn btn-success w-100 w-md-auto px-4">
-                  Save draft & continue
-                </button>
+
+                <p class="text-muted small mt-3 mb-0">
+                  You will be able to edit your draft from the dashboard view.
+                </p>
+
+                {% if form.project_name.value and form.source_use.value and form.target_use.value and form.funding_band.value and form.return_type.value and form.return_band.value and form.duration_days.value and form.country.value and form.county.value and form.postcode_prefix.value %}
+                  {% if media_form.images.value or media_form.documents.value %}
+                    <p class="text-success small mt-2 mb-0">All steps complete — activation is ready.</p>
+                  {% else %}
+                    <p class="text-muted small mt-2 mb-0">Upload at least one image or document to complete Step 5.</p>
+                  {% endif %}
+                {% else %}
+                  <p class="text-muted small mt-2 mb-0">Complete Steps 1–5 to enable activation.</p>
+                {% endif %}
+
               </div>
             </div>
           </div>
@@ -310,5 +454,36 @@
 
 <style>
   .rounded-xxl { border-radius: 1.25rem !important; }
+
+  .gsc-form-card {
+    position: relative;
+    overflow: hidden;
+  }
+  .gsc-form-card::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 6px;
+    background: linear-gradient(180deg, #198754 0%, #0f6f45 100%);
+    opacity: 0.9;
+  }
+
+  .gsc-cta-card {
+    background:
+      radial-gradient(900px 500px at 20% 20%, rgba(25,135,84,0.18), transparent 55%),
+      linear-gradient(180deg, rgba(25,135,84,0.08), rgba(25,135,84,0.03));
+  }
+
+  .gsc-form-card,
+  .gsc-cta-card {
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .gsc-form-card:hover,
+  .gsc-cta-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 .75rem 1.5rem rgba(15, 23, 42, 0.10);
+  }
 </style>
 {% endblock %}

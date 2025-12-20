@@ -121,3 +121,16 @@
     align-items: center;
   }
 }
+
+section.gsc-stats-strip {
+  background-color: transparent !important;
+  background-image:
+    radial-gradient(1200px 600px at 20% 50%, rgba(25, 135, 84, 0.45), transparent 60%),
+    radial-gradient(900px 500px at 80% 50%, rgba(15, 111, 69, 0.45), transparent 60%),
+    linear-gradient(135deg, #198754 0%, #0f6f45 100%) !important;
+  background-repeat: no-repeat;
+  background-size: cover;
+  overflow: hidden;
+}
+
+

@@ -80,6 +80,7 @@ body {
 
 .gsc-project-card {
   position: relative;
+  color: white;
   border-radius: var(--gsc-radius);
   overflow: hidden;
   min-height: 260px;

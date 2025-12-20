@@ -26,4 +26,5 @@ urlpatterns = [
     path("payments/cancel/<int:pk>/", views.payment_cancel_view, name="payment_cancel"),
     path("opportunities/<int:pk>/", views.opportunity_detail_view, name="opportunity_detail"),
     path("opportunities/<int:pk>/estimate-return/", views.estimate_return_view, name="estimate_return"),
+    path("listings/<int:pk>/activate/", views.activate_listing_view, name="activate_listing"),
 ]
