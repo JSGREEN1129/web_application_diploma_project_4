@@ -16,7 +16,7 @@ class Investment(models.Model):
         related_name="investments",
     )
     listing = models.ForeignKey(
-        "users.Listing",
+        "listings.Listing",
         on_delete=models.CASCADE,
         related_name="investments",
     )
