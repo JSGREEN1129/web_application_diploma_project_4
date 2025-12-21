@@ -129,8 +129,9 @@ STATICFILES_DIRS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-LOGIN_REDIRECT_URL = reverse_lazy('users:dashboard')
-LOGOUT_REDIRECT_URL = '/'
+LOGIN_URL = reverse_lazy("users:login")
+LOGIN_REDIRECT_URL = reverse_lazy("users:dashboard")
+LOGOUT_REDIRECT_URL = reverse_lazy("users:login") 
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"

@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
@@ -46,7 +48,6 @@ class Listing(models.Model):
         related_name="listings",
     )
 
-    # Optional (you already had this correct)
     project_name = models.CharField(
         max_length=120,
         blank=True,
@@ -54,11 +55,6 @@ class Listing(models.Model):
         help_text="Optional project name shown in dashboards and opportunities (e.g. Old Police Station).",
     )
 
-    # -------------------------
-    # IMPORTANT CHANGE:
-    # These fields must allow null/blank so that "Save as draft anytime" works.
-    # Activation/payment logic should enforce completeness later (in views).
-    # -------------------------
     source_use = models.CharField(
         max_length=20,
         choices=UseType.choices,
@@ -111,6 +107,13 @@ class Listing(models.Model):
     duration_days = models.PositiveIntegerField(
         blank=True,
         null=True,
+        help_text="How long the listing stays active to secure funding (days).",
+    )
+
+    project_duration_days = models.PositiveIntegerField(
+        blank=True,
+        null=True,
+        help_text="How long the underlying project is expected to run (days).",
     )
 
     price_per_day_pence = models.PositiveIntegerField(default=199)
@@ -141,9 +144,17 @@ class Listing(models.Model):
         default="",
     )
 
+    def listing_active_days(self) -> int:
+        """Safe int value for listing active duration."""
+        return int(self.duration_days or 0)
+
+    def project_days(self) -> int:
+        """Safe int value for project duration."""
+        return int(self.project_duration_days or 0)
+
     def total_price_pence(self) -> int:
         """
-        For drafts, duration_days may be None. Keep this safe.
+        Listing upload fee. For drafts, duration_days may be None; keep this safe.
         """
         if not self.duration_days:
             return 0
@@ -151,9 +162,8 @@ class Listing(models.Model):
 
     def activate(self):
         """
-        Safety guard: prevent activating an incomplete draft.
-        Your views should already enforce completion before calling activate(),
-        but this avoids accidental activation in other code paths.
+        Activate the listing. This uses duration_days (listing active duration),
+        NOT project_duration_days (project term).
         """
         if not self.duration_days:
             raise ValueError("Cannot activate listing without duration_days.")
@@ -161,8 +171,13 @@ class Listing(models.Model):
         now = timezone.now()
         self.status = self.Status.ACTIVE
         self.active_from = now
-        self.active_until = now + timezone.timedelta(days=int(self.duration_days))
+        self.active_until = now + timedelta(days=int(self.duration_days))
         self.save(update_fields=["status", "active_from", "active_until"])
+
+    def __str__(self) -> str:
+        name = self.project_name.strip() if self.project_name else ""
+        label = name or f"Listing {self.pk}"
+        return f"{label} ({self.get_status_display()})"
 
 
 def listing_media_upload_to(instance, filename):

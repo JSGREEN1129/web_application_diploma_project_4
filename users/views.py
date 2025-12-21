@@ -19,6 +19,8 @@ from django.utils import timezone
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
+from investments.models import Investment
+
 
 from .forms import (
     CustomUserCreationForm,
@@ -134,13 +136,60 @@ def _activate_listing_from_paid_session(*, listing: Listing, session: dict) -> b
     return True
 
 
+def _is_filled(value) -> bool:
+    return value is not None and str(value).strip() != ""
+
+
+def _listing_step_flags(listing: Listing) -> dict:
+    """
+    Steps:
+    1 = Project details (project_name optional; project_duration_days required for completion)
+    2 = Project type (source_use + target_use)
+    3 = Funding & returns (funding_band + return_type + return_band + duration_days)
+    4 = Location (country + county + postcode_prefix)
+    5 = Uploads (at least 1 media)
+    6 = Activate listing (all required steps complete)
+    """
+    # Step 1: project_name optional, but project_duration_days must be selected
+    step1 = listing.project_duration_days is not None
+
+    step2 = _is_filled(listing.source_use) and _is_filled(listing.target_use)
+
+    step3 = (
+        _is_filled(listing.funding_band)
+        and _is_filled(listing.return_type)
+        and _is_filled(listing.return_band)
+        and (listing.duration_days is not None)
+    )
+
+    step4 = (
+        _is_filled(listing.country)
+        and _is_filled(listing.county)
+        and _is_filled(listing.postcode_prefix)
+    )
+
+    step5 = listing.media.exists()
+
+    # Step 6 includes step1 now
+    step6 = step1 and step2 and step3 and step4 and step5
+
+    return {
+        "step1_done": step1,
+        "step2_done": step2,
+        "step3_done": step3,
+        "step4_done": step4,
+        "step5_done": step5,
+        "step6_done": step6,
+    }
+
+
 def _listing_ready_for_activation(listing: Listing) -> bool:
     """
     Server-side enforcement for Step 6 activation.
-    If you decide any of these should be optional, remove them here.
+    NOTE: project_name is optional; do NOT require it here.
     """
     required_fields = [
-        listing.project_name,
+        listing.project_duration_days,  # NEW required field for activation
         listing.source_use,
         listing.target_use,
         listing.funding_band,
@@ -155,7 +204,6 @@ def _listing_ready_for_activation(listing: Listing) -> bool:
     if any(v in (None, "", []) for v in required_fields):
         return False
 
-    # Require at least one upload (image or document)
     if not listing.media.exists():
         return False
 
@@ -278,6 +326,15 @@ def create_listing_view(request):
     - action=save_draft  -> saves partial listing (no strict form validation)
     - action=activate    -> requires full validation, then proceeds to activation (Stripe checkout)
     """
+    empty_flags = {
+        "step1_done": False,
+        "step2_done": False,
+        "step3_done": False,
+        "step4_done": False,
+        "step5_done": False,
+        "step6_done": False,
+    }
+
     if request.method == "POST":
         action = (request.POST.get("action") or "save_draft").strip()
 
@@ -287,7 +344,6 @@ def create_listing_view(request):
         images = request.FILES.getlist("images")
         documents = request.FILES.getlist("documents")
 
-        # Validate uploads only if provided (for BOTH draft and activation)
         try:
             if images:
                 validate_uploaded_files(
@@ -312,20 +368,29 @@ def create_listing_view(request):
             return render(
                 request,
                 "users/create_listing.html",
-                {"form": form, "media_form": media_form},
+                {"form": form, "media_form": media_form, **empty_flags},
             )
 
-        # -------------------------
-        # SAVE AS DRAFT (no full validation)
-        # -------------------------
         if action == "save_draft":
             listing = Listing(owner=request.user, status=Listing.Status.DRAFT)
 
-            # Fill what we can from POST without enforcing form validation
             for field_name in form.fields.keys():
                 if hasattr(listing, field_name):
                     raw = (request.POST.get(field_name) or "").strip()
-                    setattr(listing, field_name, raw if raw != "" else None)
+
+                    if raw == "":
+                        setattr(listing, field_name, None)
+                        continue
+
+                    # Cast numeric fields for draft saves (keeps activation logic unchanged)
+                    if field_name in {"duration_days", "project_duration_days"}:
+                        try:
+                            setattr(listing, field_name, int(raw))
+                        except Exception:
+                            setattr(listing, field_name, None)
+                        continue
+
+                    setattr(listing, field_name, raw)
 
             try:
                 listing.save()
@@ -338,10 +403,9 @@ def create_listing_view(request):
                 return render(
                     request,
                     "users/create_listing.html",
-                    {"form": form, "media_form": media_form},
+                    {"form": form, "media_form": media_form, **empty_flags},
                 )
 
-            # Save media (optional)
             for image in images:
                 ListingMedia.objects.create(
                     listing=listing,
@@ -359,16 +423,13 @@ def create_listing_view(request):
             messages.success(request, "Draft saved. You can edit it anytime from the dashboard.")
             return redirect("users:dashboard")
 
-        # -------------------------
-        # ACTIVATE (strict validation)
-        # -------------------------
         if action == "activate":
             if not form.is_valid():
                 messages.error(request, "Please complete the required fields before activating.")
                 return render(
                     request,
                     "users/create_listing.html",
-                    {"form": form, "media_form": media_form},
+                    {"form": form, "media_form": media_form, **empty_flags},
                 )
 
             listing = form.save(commit=False)
@@ -392,12 +453,11 @@ def create_listing_view(request):
 
             return redirect("users:activate_listing", pk=listing.pk)
 
-        # Fallback
         messages.error(request, "Unknown action.")
         return render(
             request,
             "users/create_listing.html",
-            {"form": form, "media_form": media_form},
+            {"form": form, "media_form": media_form, **empty_flags},
         )
 
     # GET
@@ -406,16 +466,12 @@ def create_listing_view(request):
     return render(
         request,
         "users/create_listing.html",
-        {"form": form, "media_form": media_form},
+        {"form": form, "media_form": media_form, **empty_flags},
     )
 
 
 @login_required
 def activate_listing_view(request, pk):
-    """
-    Step 6 activation endpoint.
-    Enforces completion and then sends user to Stripe checkout using existing flow.
-    """
     listing = get_object_or_404(Listing.objects.prefetch_related("media"), pk=pk, owner=request.user)
 
     if listing.status != Listing.Status.DRAFT:
@@ -426,7 +482,6 @@ def activate_listing_view(request, pk):
         messages.error(request, "Complete Steps 1–5 (including at least one upload) before activating.")
         return redirect("users:listing_edit", pk=listing.pk)
 
-    # Reuse existing Stripe checkout flow
     return start_listing_checkout_view(request, pk=listing.pk)
 
 
@@ -661,11 +716,58 @@ def opportunity_detail_view(request, pk):
     images = listing.media.filter(media_type=ListingMedia.MediaType.IMAGE).order_by("uploaded_at")
     documents = listing.media.filter(media_type=ListingMedia.MediaType.DOCUMENT).order_by("uploaded_at")
 
+    pledged_pence = (
+        Investment.objects.filter(
+            listing=listing,
+            status=Investment.Status.PLEDGED, 
+        ).aggregate(total=Coalesce(Sum("amount_pence"), 0))["total"]
+        or 0
+    )
+
+    pledged_gbp = (Decimal(pledged_pence) / Decimal("100")).quantize(Decimal("0.01"))
+
+    target_gbp = None
+    remaining_gbp = None
+    progress_pct = 0
+
+    try:
+        if listing.funding_band:
+            parts = str(listing.funding_band).split("_")
+            if len(parts) >= 2:
+                target_int = int(parts[-1])  # upper bound
+                target_gbp = Decimal(target_int).quantize(Decimal("0.01"))
+
+                remaining = Decimal(target_int) - pledged_gbp
+                if remaining < 0:
+                    remaining = Decimal("0")
+                remaining_gbp = remaining.quantize(Decimal("0.01"))
+
+                if target_int > 0:
+                    pct = (pledged_gbp / Decimal(target_int)) * Decimal("100")
+                    if pct < 0:
+                        pct = Decimal("0")
+                    if pct > 100:
+                        pct = Decimal("100")
+                    progress_pct = int(pct)
+    except Exception:
+        target_gbp = None
+        remaining_gbp = None
+        progress_pct = 0
+
     return render(
         request,
         "users/opportunity_detail.html",
-        {"listing": listing, "images": images, "documents": documents},
+        {
+            "listing": listing,
+            "images": images,
+            "documents": documents,
+            "pledged_gbp": pledged_gbp,
+            "target_gbp": target_gbp,
+            "remaining_gbp": remaining_gbp,
+            "progress_pct": progress_pct,
+        },
     )
+
 
 
 @login_required
@@ -711,14 +813,16 @@ def edit_listing_view(request, pk):
     documents_qs = listing.media.filter(media_type=ListingMedia.MediaType.DOCUMENT).order_by("uploaded_at")
 
     if request.method == "POST":
+        action = (request.POST.get("action") or "save_draft").strip()
+
         form = ListingCreateForm(request.POST, instance=listing)
         media_form = ListingMediaForm()
 
-        if form.is_valid():
-            images = request.FILES.getlist("images")
-            documents = request.FILES.getlist("documents")
+        images = request.FILES.getlist("images")
+        documents = request.FILES.getlist("documents")
 
-            try:
+        try:
+            if images:
                 validate_uploaded_files(
                     images,
                     allowed_exts=ALLOWED_IMAGE_EXTENSIONS,
@@ -727,6 +831,7 @@ def edit_listing_view(request, pk):
                     label="Images",
                     allowed_exts_label="JPG, PNG or WEBP",
                 )
+            if documents:
                 validate_uploaded_files(
                     documents,
                     allowed_exts=ALLOWED_DOCUMENT_EXTENSIONS,
@@ -735,8 +840,67 @@ def edit_listing_view(request, pk):
                     label="Documents",
                     allowed_exts_label="PDF, DOC or DOCX",
                 )
-            except ValueError as e:
-                messages.error(request, str(e))
+        except ValueError as e:
+            messages.error(request, str(e))
+            flags = _listing_step_flags(listing)
+            return render(
+                request,
+                "users/edit_listing.html",
+                {
+                    "form": form,
+                    "media_form": media_form,
+                    "listing": listing,
+                    "images": images_qs,
+                    "documents": documents_qs,
+                    **flags,
+                },
+            )
+
+        if action == "save_draft":
+            for field_name in ListingCreateForm.Meta.fields:
+                if not hasattr(listing, field_name):
+                    continue
+
+                raw = request.POST.get(field_name, "")
+                raw = raw.strip() if isinstance(raw, str) else raw
+
+                if raw in ("", None):
+                    setattr(listing, field_name, None)
+                    continue
+
+                if field_name in {"duration_days", "project_duration_days"}:
+                    try:
+                        setattr(listing, field_name, int(raw))
+                    except Exception:
+                        setattr(listing, field_name, None)
+                    continue
+
+                setattr(listing, field_name, raw)
+
+            _reset_payment_state(listing)
+
+            listing.save()
+
+            for image in images:
+                ListingMedia.objects.create(
+                    listing=listing,
+                    file=image,
+                    media_type=ListingMedia.MediaType.IMAGE,
+                )
+            for doc in documents:
+                ListingMedia.objects.create(
+                    listing=listing,
+                    file=doc,
+                    media_type=ListingMedia.MediaType.DOCUMENT,
+                )
+
+            messages.success(request, "Draft updated. You can keep editing anytime.")
+            return redirect("users:listing_edit", pk=listing.pk)
+
+        if action == "activate":
+            if not form.is_valid():
+                messages.error(request, "Please complete the required fields before activating.")
+                flags = _listing_step_flags(listing)
                 return render(
                     request,
                     "users/edit_listing.html",
@@ -746,6 +910,7 @@ def edit_listing_view(request, pk):
                         "listing": listing,
                         "images": images_qs,
                         "documents": documents_qs,
+                        **flags,
                     },
                 )
 
@@ -759,7 +924,6 @@ def edit_listing_view(request, pk):
                     file=image,
                     media_type=ListingMedia.MediaType.IMAGE,
                 )
-
             for doc in documents:
                 ListingMedia.objects.create(
                     listing=listing,
@@ -767,12 +931,18 @@ def edit_listing_view(request, pk):
                     media_type=ListingMedia.MediaType.DOCUMENT,
                 )
 
-            messages.success(request, "Draft updated. Redirecting you to payment...")
-            return redirect("users:listing_checkout", pk=listing.pk)
+            if not _listing_ready_for_activation(listing):
+                messages.error(request, "Complete Steps 1–5 (including at least one upload) before activating.")
+                return redirect("users:listing_edit", pk=listing.pk)
 
-    else:
-        form = ListingCreateForm(instance=listing)
-        media_form = ListingMediaForm()
+            return redirect("users:activate_listing", pk=listing.pk)
+
+        messages.error(request, "Unknown action.")
+        return redirect("users:listing_edit", pk=listing.pk)
+
+    form = ListingCreateForm(instance=listing)
+    media_form = ListingMediaForm()
+    flags = _listing_step_flags(listing)
 
     return render(
         request,
@@ -783,6 +953,7 @@ def edit_listing_view(request, pk):
             "listing": listing,
             "images": images_qs,
             "documents": documents_qs,
+            **flags,
         },
     )
 

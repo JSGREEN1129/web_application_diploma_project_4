@@ -4,212 +4,302 @@
 {% block content %}
 <div class="container-xl py-5">
 
-  {# --- Header --- #}
-  <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
-    <div>
-      <span class="badge text-bg-success px-3 py-2 rounded-pill">Green Square Capital</span>
-      <h1 class="h4 fw-semibold mb-1 mt-3">{{ listing.source_use|capfirst }} → {{ listing.target_use|capfirst }}</h1>
-      <p class="text-muted small mb-0">
-        {{ listing.country|capfirst }} • {{ listing.county }} • {{ listing.postcode_prefix }}
-      </p>
+  <div class="card border border-success shadow-sm rounded-xxl mb-4 overflow-hidden">
+    <div class="card-body p-4 p-md-5">
 
-      {% if listing.owner %}
-        <p class="text-muted small mb-0">
-          Posted by {{ listing.owner.get_full_name|default:listing.owner.first_name|default:listing.owner.email }}
-        </p>
+      <div class="d-flex flex-wrap align-items-start justify-content-between gap-3">
+        <div class="min-w-0">
+          <div class="d-flex flex-wrap align-items-center gap-2">
+            <span class="badge text-bg-success px-3 py-2 rounded-pill">Green Square Capital</span>
+            <span class="badge bg-light text-dark border rounded-pill px-3">
+              Opportunity #{{ listing.id }}
+            </span>
+          </div>
+
+          <h1 class="h4 fw-semibold text-success mb-1 mt-3 text-truncate">
+            {{ listing.source_use|capfirst }} → {{ listing.target_use|capfirst }}
+          </h1>
+
+          <div class="d-flex flex-wrap gap-2 mt-2 text-muted small">
+            <span>{{ listing.country|capfirst }}</span>
+            <span>•</span>
+            <span>{{ listing.county }}</span>
+            <span>•</span>
+            <span>{{ listing.postcode_prefix }}</span>
+          </div>
+
+          {% if listing.owner %}
+            <div class="text-muted small mt-2">
+              Posted by
+              <span class="fw-semibold text-body">
+                {{ listing.owner.get_full_name|default:listing.owner.first_name|default:listing.owner.email }}
+              </span>
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="d-flex flex-column align-items-start align-items-md-end gap-2">
+          <span class="badge text-bg-success rounded-pill px-3 py-2">Active</span>
+          <a href="{% url 'users:search_listings' %}" class="btn btn-outline-secondary rounded-pill px-3">
+            ← Back to search
+          </a>
+        </div>
+      </div>
+
+      {# --- TOP METRICS (now includes Project duration + Listing duration) --- #}
+      <div class="row g-3 mt-4">
+        <div class="col-6 col-lg-2">
+          <div class="rounded-4 bg-success text-white border-subtle p-3 h-100">
+            <div class="text-white small">Funding</div>
+            <div class="fw-semibold">{{ listing.get_funding_band_display }}</div>
+          </div>
+        </div>
+        <div class="col-6 col-lg-2">
+          <div class="rounded-4 bg-success text-white border-subtle p-3 h-100">
+            <div class="text-white small">Return Type</div>
+            <div class="fw-semibold">{{ listing.get_return_type_display }}</div>
+          </div>
+        </div>
+        <div class="col-6 col-lg-2">
+          <div class="rounded-4 bg-success text-white border-subtle p-3 h-100">
+            <div class="text-white small">Potential Return</div>
+            <div class="fw-semibold">{{ listing.get_return_band_display }}</div>
+          </div>
+        </div>
+        <div class="col-6 col-lg-3">
+          <div class="rounded-4 bg-success text-white border-subtle p-3 h-100">
+            <div class="text-white small">Project duration</div>
+            <div class="fw-semibold">
+              {% if listing.project_duration_days %}
+                {{ listing.project_duration_days }} days
+              {% else %}
+                —
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-lg-3">
+          <div class="rounded-4 bg-success text-white border-subtle p-3 h-100">
+            <div class="text-white small">Listing duration</div>
+            <div class="fw-semibold">
+              {% if listing.duration_days %}
+                {{ listing.duration_days }} days
+              {% else %}
+                —
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {# --- FUNDING PROGRESS (requires view context vars) --- #}
+      <div class="mt-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+          <div class="fw-semibold text-success">Funding progress</div>
+          <div class="text-muted small">
+            Pledged: <span class="fw-semibold text-body">£{{ pledged_gbp }}</span>
+            {% if target_gbp %}
+              • Target: <span class="fw-semibold text-body">£{{ target_gbp }}</span>
+              • Remaining: <span class="fw-semibold text-body">£{{ remaining_gbp }}</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="progress rounded-pill mt-2" style="height: 12px;">
+          <div
+            class="progress-bar bg-success"
+            role="progressbar"
+            style="width: {{ progress_pct|default:0 }}%;"
+            aria-valuenow="{{ progress_pct|default:0 }}"
+            aria-valuemin="0"
+            aria-valuemax="100">
+          </div>
+        </div>
+
+        <div class="text-muted small mt-2">
+          {% if target_gbp %}
+            {{ progress_pct|default:0 }}% funded
+          {% else %}
+            Funding target not available for this listing.
+          {% endif %}
+        </div>
+      </div>
+
+      {% if listing.active_until %}
+        <div class="text-muted small mt-3">
+          Active until <span class="fw-semibold text-body">{{ listing.active_until|date:"d M Y" }}</span>
+        </div>
       {% endif %}
-    </div>
-    <span class="badge text-bg-success rounded-pill px-3">Active</span>
-  </div>
 
-  {# --- Actions --- #}
-  <div class="card border-0 shadow-sm rounded-xxl mb-4">
-    <div class="card-body p-3 p-md-4 d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-3">
-      <div>
-        <div class="fw-semibold">Opportunity</div>
-        <div class="text-muted small">Review details, media, and supporting documents.</div>
-      </div>
-      <div class="d-flex gap-2 flex-wrap justify-content-md-end">
-        <a href="{% url 'users:search_listings' %}" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
-          ← Back to search
-        </a>
-      </div>
     </div>
   </div>
 
-  {# --- Content grid --- #}
-  <div class="row g-4 align-items-stretch">
+  <div class="gsc-quad">
 
-    {# LEFT: Summary + Pledge #}
-    <div class="col-12 col-lg-4 d-flex">
-      <div class="card border-0 shadow-sm rounded-xxl h-100 w-100">
-        <div class="card-body p-4 p-md-5 d-flex flex-column">
-
-          {# Summary #}
-          <div class="d-flex align-items-center justify-content-between mb-3">
-            <div>
-              <h2 class="h5 fw-semibold mb-1">Summary</h2>
-              <p class="text-muted small mb-0">Key opportunity details at a glance.</p>
-            </div>
-            <span class="badge bg-light text-dark border rounded-pill px-3">Details</span>
+    {# --- IMAGES --- #}
+    <div class="card border border-success shadow-sm rounded-xxl gsc-card-fill">
+      <div class="card-body p-4 p-md-5 d-flex flex-column">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <div>
+            <h2 class="h5 fw-semibold text-success mb-1">Images</h2>
+            <p class="text-muted small mb-0">Click an image to open it in a new tab.</p>
           </div>
+          <span class="badge bg-success text-white border rounded-pill px-3">{{ images|length }}</span>
+        </div>
 
-          <div class="rounded-4 bg-light p-3">
-            <div class="d-flex justify-content-between small">
-              <span class="text-muted">Funding</span>
-              <span class="fw-semibold">{{ listing.get_funding_band_display }}</span>
-            </div>
-            <div class="d-flex justify-content-between small mt-2">
-              <span class="text-muted">Return Type</span>
-              <span class="fw-semibold">{{ listing.get_return_type_display }}</span>
-            </div>
-            <div class="d-flex justify-content-between small mt-2">
-              <span class="text-muted">Potential Return</span>
-              <span class="fw-semibold">{{ listing.get_return_band_display }}</span>
-            </div>
-            <div class="d-flex justify-content-between small mt-2">
-              <span class="text-muted">Duration</span>
-              <span class="fw-semibold">{{ listing.duration_days }} days</span>
-            </div>
-
-            {% if listing.owner %}
-              <hr class="my-3">
-              <div class="d-flex justify-content-between small">
-                <span class="text-muted">Posted by</span>
-                <span class="fw-semibold">
-                  {{ listing.owner.get_full_name|default:listing.owner.first_name|default:listing.owner.email }}
-                </span>
-              </div>
-            {% endif %}
-
-            {% if listing.active_until %}
-              <hr class="my-3">
-              <div class="d-flex justify-content-between small">
-                <span class="text-muted">Active until</span>
-                <span class="fw-semibold">{{ listing.active_until|date:"d M Y" }}</span>
-              </div>
-            {% endif %}
-          </div>
-
-          <div class="mt-4">
-            <div class="rounded-4 bg-light p-3 p-md-4">
-              <div class="d-flex align-items-center justify-content-between mb-2">
-                <div class="fw-semibold">Pledge</div>
-                <span class="badge bg-white text-dark border rounded-pill px-3">Invest</span>
-              </div>
-              <p class="text-muted small mb-3">
-                Enter an amount to see an estimated return, then pledge instantly.
-              </p>
-
-              <form method="post" action="{% url 'investments:pledge' listing.pk %}">
-                {% csrf_token %}
-
-                <label class="form-label small fw-semibold mb-2">Pledge amount</label>
-                <div class="input-group input-group-sm">
-                  <span class="input-group-text">£</span>
-                  <input
-                    type="number"
-                    name="amount_gbp"
-                    class="form-control js-pledge-amount"
-                    step="0.01"
-                    min="1"
-                    placeholder="Amount"
-                    required
-                    data-listing-id="{{ listing.id }}"
-                    data-estimate-url="{% url 'users:estimate_return' listing.pk %}"
-                  >
-                  <button type="submit" class="btn btn-success">Pledge</button>
+        <div class="row g-3 gsc-scroll-area">
+          {% for img in images %}
+            <div class="col-6 col-md-4 col-xl-3">
+              <a href="{{ img.file.url }}" target="_blank" class="text-decoration-none">
+                <div class="gsc-thumb gsc-lift rounded-4 overflow-hidden bg-light border-subtle">
+                  <img src="{{ img.file.url }}" alt="">
+                  <div class="gsc-thumb-overlay">
+                    <span class="badge bg-white text-dark border rounded-pill px-3">Open</span>
+                  </div>
                 </div>
-
-                <div class="mt-2 text-muted small js-return-estimate" data-listing-id="{{ listing.id }}">
-                  Expected return will be calculated based on this listing’s return and duration.
-                </div>
-              </form>
-            </div>
-          </div>
-
-          <div class="mt-auto pt-4">
-            <div class="border-top pt-3">
-              <a href="{% url 'users:search_listings' %}" class="btn btn-outline-secondary w-100 rounded-pill">
-                ← Back to search
               </a>
             </div>
-          </div>
-
+          {% empty %}
+            <div class="col-12">
+              <div class="rounded-4 bg-light border-subtle p-4 text-center">
+                <div class="fw-semibold">No images uploaded</div>
+                <div class="text-muted small">Images will appear here when available.</div>
+              </div>
+            </div>
+          {% endfor %}
         </div>
       </div>
     </div>
 
-    {# RIGHT: Images + Documents #}
-    <div class="col-12 col-lg-8 d-flex flex-column gap-4">
-
-      {# --- Images --- #}
-      <div class="card border-0 shadow-sm rounded-xxl">
-        <div class="card-body p-4 p-md-5">
-          <div class="d-flex align-items-center justify-content-between mb-3">
-            <div>
-              <h2 class="h5 fw-semibold mb-1">Images</h2>
-              <p class="text-muted small mb-0">Click an image to open it in a new tab.</p>
-            </div>
-            <span class="badge bg-light text-dark border rounded-pill px-3">{{ images|length }}</span>
+    {# --- DOCUMENTS --- #}
+    <div class="card border border-success shadow-sm rounded-xxl gsc-card-fill" id="documents">
+      <div class="card-body p-4 p-md-5 d-flex flex-column">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <div>
+            <h2 class="h5 fw-semibold text-success mb-1">Documents</h2>
+            <p class="text-muted small mb-0">Open documents in a new tab.</p>
           </div>
-
-          <div class="row g-3">
-            {% for img in images %}
-              <div class="col-6 col-md-4 col-lg-3">
-                <a class="d-block text-decoration-none" href="{{ img.file.url }}" target="_blank" rel="noopener">
-                  <div class="gsc-thumb rounded-4 overflow-hidden bg-light border-subtle">
-                    <img src="{{ img.file.url }}" class="img-fluid" alt="">
-                  </div>
-                </a>
-              </div>
-            {% empty %}
-              <div class="col-12">
-                <div class="rounded-4 bg-light p-3">
-                  <p class="text-muted small mb-0">No images uploaded.</p>
-                </div>
-              </div>
-            {% endfor %}
-          </div>
+          <span class="badge bg-success text-white border rounded-pill px-3">{{ documents|length }}</span>
         </div>
-      </div>
 
-      {# --- Documents --- #}
-      <div class="card border-0 shadow-sm rounded-xxl">
-        <div class="card-body p-4 p-md-5">
-          <div class="d-flex align-items-center justify-content-between mb-3">
-            <div>
-              <h2 class="h5 fw-semibold mb-1">Documents</h2>
-              <p class="text-muted small mb-0">Open documents in a new tab.</p>
-            </div>
-            <span class="badge bg-light text-dark border rounded-pill px-3">{{ documents|length }}</span>
-          </div>
-
-          <div class="list-group list-group-flush">
-            {% for doc in documents %}
-              <div class="list-group-item px-0 py-3 d-flex justify-content-between align-items-center">
+        <div class="list-group list-group-flush gsc-scroll-area">
+          {% for doc in documents %}
+            <div class="list-group-item px-0 py-3 d-flex justify-content-between align-items-center gap-3">
+              <div class="min-w-0 d-flex align-items-center gap-3">
+                <div class="gsc-file-icon rounded-4 border-subtle bg-light"></div>
                 <div class="min-w-0">
                   <div class="fw-semibold small text-truncate">{{ doc.file.name }}</div>
                   <div class="text-muted small">Document</div>
                 </div>
-                <a class="btn btn-sm btn-outline-secondary rounded-pill px-3 flex-shrink-0"
-                   href="{{ doc.file.url }}" target="_blank" rel="noopener">
-                  Open
-                </a>
               </div>
-            {% empty %}
-              <div class="list-group-item px-0 py-3 text-muted small">
-                No documents uploaded.
+              <a href="{{ doc.file.url }}" target="_blank"
+                 class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+                Open
+              </a>
+            </div>
+          {% empty %}
+            <div class="px-0 py-3">
+              <div class="rounded-4 bg-light border-subtle p-4 text-center">
+                <div class="fw-semibold">No documents uploaded</div>
+                <div class="text-muted small">Documents will appear here when available.</div>
               </div>
-            {% endfor %}
-          </div>
-
+            </div>
+          {% endfor %}
         </div>
       </div>
-
     </div>
-  </div>
 
+    {# --- PLEDGE --- #}
+    <div class="card border border-success shadow-sm rounded-xxl gsc-card-fill">
+      <div class="card-body p-4 p-md-5 d-flex flex-column">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div>
+            <h2 class="h5 fw-semibold text-success mb-1">Pledge</h2>
+            <p class="text-muted small mb-0">Enter an amount to see an estimate.</p>
+          </div>
+          <span class="badge bg-success text-white border rounded-pill px-3">Invest</span>
+        </div>
+
+        <form method="post" action="{% url 'investments:pledge' listing.pk %}" class="mt-3">
+          {% csrf_token %}
+          <label class="form-label small fw-semibold">Pledge amount</label>
+          <div class="input-group">
+            <span class="input-group-text bg-light border-subtle">£</span>
+            <input
+              type="number"
+              name="amount_gbp"
+              class="form-control js-pledge-amount border-subtle"
+              step="0.01"
+              min="1"
+              placeholder="e.g. 1000"
+              required
+              data-listing-id="{{ listing.id }}"
+              data-estimate-url="{% url 'users:estimate_return' listing.pk %}">
+            <button type="submit" class="btn btn-success px-4">Pledge</button>
+          </div>
+
+          <div class="mt-3 rounded-4 bg-light border-subtle p-3">
+            <div class="text-muted small js-return-estimate" data-listing-id="{{ listing.id }}">
+              Expected return will be calculated based on this listing’s return and duration.
+            </div>
+          </div>
+        </form>
+
+        <div class="mt-auto pt-3">
+          <a href="{% url 'users:search_listings' %}" class="btn btn-outline-secondary w-100 rounded-pill">
+            ← Back to search
+          </a>
+        </div>
+      </div>
+    </div>
+
+    {# --- SUMMARY --- #}
+    <div class="card border border-success shadow-sm rounded-xxl gsc-card-fill">
+      <div class="card-body p-4 p-md-5 d-flex flex-column">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+          <div>
+            <h2 class="h5 fw-semibold text-success mb-1">Summary</h2>
+            <p class="text-muted small mb-0">Key details at a glance.</p>
+          </div>
+          <span class="badge bg-success text-white border rounded-pill px-3">Details</span>
+        </div>
+
+        <div class="rounded-4 border-subtle p-3 bg-light">
+          <div class="d-flex justify-content-between small py-2">
+            <span class="text-muted">Funding</span>
+            <span class="fw-semibold">{{ listing.get_funding_band_display }}</span>
+          </div>
+          <div class="d-flex justify-content-between small py-2 border-top">
+            <span class="text-muted">Return</span>
+            <span class="fw-semibold">{{ listing.get_return_band_display }}</span>
+          </div>
+          <div class="d-flex justify-content-between small py-2 border-top">
+            <span class="text-muted">Project duration</span>
+            <span class="fw-semibold">
+              {% if listing.project_duration_days %}{{ listing.project_duration_days }} days{% else %}—{% endif %}
+            </span>
+          </div>
+          <div class="d-flex justify-content-between small py-2 border-top">
+            <span class="text-muted">Listing duration</span>
+            <span class="fw-semibold">
+              {% if listing.duration_days %}{{ listing.duration_days }} days{% else %}—{% endif %}
+            </span>
+          </div>
+          <div class="d-flex justify-content-between small py-2 border-top">
+            <span class="text-muted">Pledged</span>
+            <span class="fw-semibold">£{{ pledged_gbp }}</span>
+          </div>
+          {% if target_gbp %}
+            <div class="d-flex justify-content-between small py-2 border-top">
+              <span class="text-muted">Remaining</span>
+              <span class="fw-semibold">£{{ remaining_gbp }}</span>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+  </div>
 </div>
 {% endblock %}
 
@@ -219,78 +309,64 @@
   const input = document.querySelector(".js-pledge-amount");
   if (!input) return;
 
-  function setEstimate(listingId, text) {
-    const box = document.querySelector(`.js-return-estimate[data-listing-id="${listingId}"]`);
-    if (box) box.textContent = text;
-  }
-
-  async function fetchEstimate(url, amount) {
-    const fullUrl = url + "?amount=" + encodeURIComponent(amount);
-    const res = await fetch(fullUrl, { headers: { "X-Requested-With": "XMLHttpRequest" } });
-    return await res.json();
+  function setEstimate(id, text) {
+    const el = document.querySelector(`.js-return-estimate[data-listing-id="${id}"]`);
+    if (el) el.textContent = text;
   }
 
   let timer = null;
-
   input.addEventListener("input", () => {
-    const listingId = input.dataset.listingId;
-    const estimateUrl = input.dataset.estimateUrl || "";
-    const val = (input.value || "").trim();
-
     clearTimeout(timer);
-
     timer = setTimeout(async () => {
-      if (!val) {
-        setEstimate(listingId, "Expected return will be calculated based on this listing’s return and duration.");
-        return;
+      const val = input.value.trim();
+      if (!val) return;
+      const res = await fetch(input.dataset.estimateUrl + "?amount=" + val);
+      const data = await res.json();
+      if (data.ok) {
+        setEstimate(input.dataset.listingId,
+          `Estimated return: £${data.total_min}–£${data.total_max}`);
       }
-
-      if (!/^\d+(\.\d{1,2})?$/.test(val)) {
-        setEstimate(listingId, "Enter a valid amount (e.g. 1000 or 1000.00).");
-        return;
-      }
-
-      if (!estimateUrl) {
-        setEstimate(listingId, "Return estimate is not available.");
-        return;
-      }
-
-      try {
-        const data = await fetchEstimate(estimateUrl, val);
-
-        if (!data.ok) {
-          setEstimate(listingId, data.error || "Could not calculate return.");
-          return;
-        }
-
-        setEstimate(
-          listingId,
-          `Estimated return: £${data.profit_min}–£${data.profit_max} (${data.min_pct}%–${data.max_pct}%). ` +
-          `Estimated total back: £${data.total_min}–£${data.total_max}.`
-        );
-      } catch (e) {
-        setEstimate(listingId, "Could not calculate return right now.");
-      }
-    }, 250);
+    }, 300);
   });
 })();
 </script>
 
 <style>
-  .rounded-xxl { border-radius: 1.25rem !important; }
-  .min-w-0 { min-width: 0; }
-  .border-subtle { border: 1px solid rgba(15, 23, 42, 0.08) !important; }
+.rounded-xxl{border-radius:1.25rem}
+.border-subtle{border:1px solid rgba(15,23,42,.08)}
+.min-w-0{min-width:0}
 
-  .gsc-thumb {
-    aspect-ratio: 4 / 3;
-    display: grid;
-    place-items: center;
+.gsc-quad{
+  display:grid;
+  gap:1.5rem;
+  grid-template-columns:1fr;
+}
+@media(min-width:992px){
+  .gsc-quad{
+    grid-template-columns:1fr 1fr;
+    grid-auto-rows:1fr;
   }
-  .gsc-thumb img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
+}
+.gsc-card-fill{height:100%}
+.gsc-scroll-area{overflow:auto}
+
+.gsc-thumb{aspect-ratio:4/3;position:relative}
+.gsc-thumb img{width:100%;height:100%;object-fit:cover}
+.gsc-thumb-overlay{
+  position:absolute;inset:0;
+  display:grid;place-items:center;
+  background:rgba(0,0,0,.25);
+  opacity:0;transition:.15s;
+}
+.gsc-lift:hover .gsc-thumb-overlay{opacity:1}
+
+.gsc-file-icon{
+  width:40px;height:40px;
+  border-radius:1rem;
+  background:#f8f9fa;
+  border:1px solid rgba(15,23,42,.1);
+}
+
+.progress { background: rgba(15,23,42,.08); }
 </style>
 {% endblock %}

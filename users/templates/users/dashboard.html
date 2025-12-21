@@ -21,7 +21,7 @@
         <div class="col-6 col-lg-3">
             <div class="card border-0 shadow-sm rounded-xxl bg-success text-white">
                 <div class="card-body p-3">
-                    <div class="small text-white-50">Total pledged</div>
+                    <div class="small text-white">Total pledged</div>
                     <div class="h4 fw-semibold mb-0">£{{ total_pledged }}</div>
                 </div>
             </div>
@@ -30,7 +30,7 @@
         <div class="col-6 col-lg-3">
             <div class="card border-0 shadow-sm rounded-xxl bg-success text-white">
                 <div class="card-body p-3">
-                    <div class="small text-white-50">Active investments</div>
+                    <div class="small text-white">Active investments</div>
                     <div class="h4 fw-semibold mb-0">{{ active_investments }}</div>
                 </div>
             </div>
@@ -39,7 +39,7 @@
         <div class="col-6 col-lg-3">
             <div class="card border-0 shadow-sm rounded-xxl bg-success text-white">
                 <div class="card-body p-3">
-                    <div class="small text-white-50">Your Active listings</div>
+                    <div class="small text-white">Your Active listings</div>
                     <div class="h4 fw-semibold mb-0">{{ active_listings }}</div>
                 </div>
             </div>
@@ -48,7 +48,7 @@
         <div class="col-6 col-lg-3">
             <div class="card border-0 shadow-sm rounded-xxl bg-success text-white">
                 <div class="card-body p-3">
-                    <div class="small text-white-50">Draft listings</div>
+                    <div class="small text-white">Draft listings</div>
                     <div class="h4 fw-semibold mb-0">
                         {{ draft_waiting_payment }}
                     </div>
@@ -80,8 +80,8 @@
                                 {{ inv.listing.source_use|capfirst }} → {{ inv.listing.target_use|capfirst }}
                             </h5>
                             <p class="text-muted small mb-0 text-truncate">
-                                {{ inv.listing.country|capfirst }} • {{ inv.listing.county }} • {{
-                                inv.listing.postcode_prefix }}
+                                {{ inv.listing.country|capfirst }} • {{ inv.listing.county }} • 
+                                {{ inv.listing.postcode_prefix }}
                             </p>
                         </div>
                         <span class="badge text-bg-success rounded-pill px-3">Pledged</span>

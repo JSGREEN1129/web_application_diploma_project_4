@@ -11,13 +11,53 @@
       {# --- Header --- #}
       <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
         <div>
-          <span class="badge text-bg-success px-3 py-2 rounded-pill">Green Square Capital</span>
-          <h1 class="h4 fw-semibold mb-1 mt-3">Edit Draft Listing</h1>
+          <h1 class="h4 fw-semibold mb-1 mt-3 text-success">Edit Draft Listing</h1>
           <p class="text-muted small mb-0">Update your draft details and manage uploaded files.</p>
         </div>
         <a href="{% url 'users:dashboard' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
-          Back
+          Back to dashboard
         </a>
+      </div>
+
+      {# --- Stepper (dynamic based on flags from views.py) --- #}
+      <div class="card border-0 shadow-sm rounded-xxl mb-4">
+        <div class="card-body p-3 p-md-4">
+          <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+
+              <span class="badge {% if step1_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %} rounded-pill px-3 py-2">
+                1. Details
+              </span>
+              <span class="text-muted small">→</span>
+
+              <span class="badge {% if step2_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %} rounded-pill px-3 py-2">
+                2. Project type
+              </span>
+              <span class="text-muted small">→</span>
+
+              <span class="badge {% if step3_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %} rounded-pill px-3 py-2">
+                3. Funding
+              </span>
+              <span class="text-muted small">→</span>
+
+              <span class="badge {% if step4_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %} rounded-pill px-3 py-2">
+                4. Location
+              </span>
+              <span class="text-muted small">→</span>
+
+              <span class="badge {% if step5_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %} rounded-pill px-3 py-2">
+                5. Uploads
+              </span>
+              <span class="text-muted small">→</span>
+
+              <span class="badge {% if step6_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %} rounded-pill px-3 py-2">
+                6. Activate listing
+              </span>
+            </div>
+
+            <span class="text-muted small">Save changes anytime</span>
+          </div>
+        </div>
       </div>
 
       <form method="post" enctype="multipart/form-data" novalidate>
@@ -35,21 +75,64 @@
           </div>
         {% endif %}
 
-        <div class="row g-4 align-items-stretch">
+        <div class="row g-4 align-items-start">
 
           {# LEFT COLUMN #}
-          <div class="col-12 col-lg-6 d-flex flex-column gap-4">
+          <div class="col-12 col-lg-6">
 
-            {# --- Project Type --- #}
-            <div class="card border-0 shadow-sm rounded-xxl">
+            {# --- Project details --- #}
+            <div class="card gsc-form-card border border-success shadow-sm rounded-xxl mb-4">
               <div class="card-body p-4 p-md-5">
-                <div class="mb-3">
-                  <h2 class="h5 fw-semibold mb-1">Project Type</h2>
-                  <p class="text-muted small mb-0">Adjust the asset’s transition details.</p>
+                <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
+                  <div>
+                    <h2 class="h5 fw-semibold text-success mb-1">Project details</h2>
+                    <p class="text-muted small mb-0">Update the name and expected project duration.</p>
+                  </div>
+
+                  <span class="badge {% if step1_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %} rounded-pill px-3">
+                    Step 1
+                  </span>
                 </div>
 
                 <div class="row g-3">
-                  <div class="col-md-6">
+                  <div class="col-12">
+                    <label for="id_project_name" class="form-label small fw-semibold">Project name</label>
+                    {{ form.project_name|add_class:"form-control" }}
+                    {% if form.project_name.errors %}
+                      <div class="text-danger small mt-1">{{ form.project_name.errors }}</div>
+                    {% endif %}
+                    <div class="form-text">Optional — e.g. “Old Police Station”.</div>
+                  </div>
+
+                  <div class="col-12">
+                    <label for="id_project_duration_days" class="form-label small fw-semibold">Project duration</label>
+                    {{ form.project_duration_days|add_class:"form-select" }}
+                    {% if form.project_duration_days.errors %}
+                      <div class="text-danger small mt-1">{{ form.project_duration_days.errors }}</div>
+                    {% endif %}
+                    <div class="form-text">How long the underlying project is expected to run.</div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            {# --- Project Type --- #}
+            <div class="card gsc-form-card border border-success shadow-sm rounded-xxl mb-4">
+              <div class="card-body p-4 p-md-5">
+                <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
+                  <div>
+                    <h2 class="h5 fw-semibold text-success mb-1">Project Type</h2>
+                    <p class="text-muted small mb-0">Adjust the asset’s transition details.</p>
+                  </div>
+
+                  <span class="badge {% if step2_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %} rounded-pill px-3">
+                    Step 2
+                  </span>
+                </div>
+
+                <div class="row g-3">
+                  <div class="col-md-6 col-lg-12">
                     <label for="id_source_use" class="form-label small fw-semibold">From</label>
                     {{ form.source_use|add_class:"form-select" }}
                     {% if form.source_use.errors %}
@@ -57,7 +140,7 @@
                     {% endif %}
                   </div>
 
-                  <div class="col-md-6">
+                  <div class="col-md-6 col-lg-12">
                     <label for="id_target_use" class="form-label small fw-semibold">To</label>
                     {{ form.target_use|add_class:"form-select" }}
                     {% if form.target_use.errors %}
@@ -68,19 +151,81 @@
               </div>
             </div>
 
-            {# --- Location --- #}
-            <div class="card border-0 shadow-sm rounded-xxl">
+            {# --- Funding & Returns --- #}
+            <div class="card gsc-form-card border border-success shadow-sm rounded-xxl">
               <div class="card-body p-4 p-md-5">
-                <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
                   <div>
-                    <h2 class="h5 fw-semibold mb-1">Location</h2>
-                    <p class="text-muted small mb-0">Keep it accurate for investor discovery.</p>
+                    <h2 class="h5 fw-semibold text-success mb-1">Funding & Returns</h2>
+                    <p class="text-muted small mb-0">Update expected bands and listing duration.</p>
                   </div>
-                  <span class="badge bg-light text-dark border rounded-pill px-3">Step 2</span>
+
+                  <span class="badge {% if step3_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %} rounded-pill px-3">
+                    Step 3
+                  </span>
                 </div>
 
                 <div class="row g-3">
-                  <div class="col-md-4">
+                  <div class="col-md-6 col-lg-12">
+                    <label for="id_funding_band" class="form-label small fw-semibold">Funding amount</label>
+                    {{ form.funding_band|add_class:"form-select" }}
+                    {% if form.funding_band.errors %}
+                      <div class="text-danger small mt-1">{{ form.funding_band.errors }}</div>
+                    {% endif %}
+                  </div>
+
+                  <div class="col-md-6 col-lg-12">
+                    <label for="id_return_type" class="form-label small fw-semibold">Return type</label>
+                    {{ form.return_type|add_class:"form-select" }}
+                    {% if form.return_type.errors %}
+                      <div class="text-danger small mt-1">{{ form.return_type.errors }}</div>
+                    {% endif %}
+                  </div>
+
+                  <div class="col-md-6 col-lg-12">
+                    <label for="id_return_band" class="form-label small fw-semibold">Potential return</label>
+                    {{ form.return_band|add_class:"form-select" }}
+                    {% if form.return_band.errors %}
+                      <div class="text-danger small mt-1">{{ form.return_band.errors }}</div>
+                    {% endif %}
+                  </div>
+
+                  <div class="col-md-6 col-lg-12">
+                    <label for="id_duration_days" class="form-label small fw-semibold">Listing duration</label>
+                    {{ form.duration_days|add_class:"form-select" }}
+                    {% if form.duration_days.errors %}
+                      <div class="text-danger small mt-1">{{ form.duration_days.errors }}</div>
+                    {% endif %}
+                  </div>
+                </div>
+
+                <div class="mt-3 small text-muted">
+                  Your listing will remain active for the selected duration once it’s published.
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          {# RIGHT COLUMN #}
+          <div class="col-12 col-lg-6">
+
+            {# --- Location --- #}
+            <div class="card gsc-form-card border border-success shadow-sm rounded-xxl mb-4">
+              <div class="card-body p-4 p-md-5">
+                <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
+                  <div>
+                    <h2 class="h5 fw-semibold text-success mb-1">Location</h2>
+                    <p class="text-muted small mb-0">Keep it accurate for investor discovery.</p>
+                  </div>
+
+                  <span class="badge {% if step4_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %} rounded-pill px-3">
+                    Step 4
+                  </span>
+                </div>
+
+                <div class="row g-3">
+                  <div class="col-md-4 col-lg-12">
                     <label for="id_country" class="form-label small fw-semibold">Country</label>
                     {% render_field form.country class="form-select" data-selected=listing.country %}
                     {% if form.country.errors %}
@@ -88,7 +233,7 @@
                     {% endif %}
                   </div>
 
-                  <div class="col-md-4">
+                  <div class="col-md-4 col-lg-12">
                     <label for="id_county" class="form-label small fw-semibold">County</label>
                     {% render_field form.county class="form-select" data-selected=listing.county %}
                     {% if form.county.errors %}
@@ -96,7 +241,7 @@
                     {% endif %}
                   </div>
 
-                  <div class="col-md-4">
+                  <div class="col-md-4 col-lg-12">
                     <label for="id_postcode_prefix" class="form-label small fw-semibold">Postcode prefix</label>
                     {% render_field form.postcode_prefix class="form-select" data-selected=listing.postcode_prefix %}
                     {% if form.postcode_prefix.errors %}
@@ -116,67 +261,18 @@
               </div>
             </div>
 
-            {# --- Funding & Returns --- #}
-            <div class="card border-0 shadow-sm rounded-xxl">
+            {# --- Media uploads --- #}
+            <div class="card gsc-form-card border border-success shadow-sm rounded-xxl mb-4">
               <div class="card-body p-4 p-md-5">
-                <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
                   <div>
-                    <h2 class="h5 fw-semibold mb-1">Funding & Returns</h2>
-                    <p class="text-muted small mb-0">Update expected bands and listing duration.</p>
-                  </div>
-                  <span class="badge bg-light text-dark border rounded-pill px-3">Step 3</span>
-                </div>
-
-                <div class="row g-3">
-                  <div class="col-md-6">
-                    <label for="id_funding_band" class="form-label small fw-semibold">Funding amount</label>
-                    {{ form.funding_band|add_class:"form-select" }}
-                    {% if form.funding_band.errors %}
-                      <div class="text-danger small mt-1">{{ form.funding_band.errors }}</div>
-                    {% endif %}
+                    <h2 class="h5 fw-semibold text-success mb-1">Media uploads</h2>
+                    <p class="text-muted small mb-0">Add images and documents to support your opportunity.</p>
                   </div>
 
-                  <div class="col-md-6">
-                    <label for="id_return_type" class="form-label small fw-semibold">Return type</label>
-                    {{ form.return_type|add_class:"form-select" }}
-                    {% if form.return_type.errors %}
-                      <div class="text-danger small mt-1">{{ form.return_type.errors }}</div>
-                    {% endif %}
-                  </div>
-
-                  <div class="col-md-6">
-                    <label for="id_return_band" class="form-label small fw-semibold">Potential return</label>
-                    {{ form.return_band|add_class:"form-select" }}
-                    {% if form.return_band.errors %}
-                      <div class="text-danger small mt-1">{{ form.return_band.errors }}</div>
-                    {% endif %}
-                  </div>
-
-                  <div class="col-md-6">
-                    <label for="id_duration_days" class="form-label small fw-semibold">Listing duration</label>
-                    {{ form.duration_days|add_class:"form-select" }}
-                    {% if form.duration_days.errors %}
-                      <div class="text-danger small mt-1">{{ form.duration_days.errors }}</div>
-                    {% endif %}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-          {# RIGHT COLUMN #}
-          <div class="col-12 col-lg-6 d-flex flex-column gap-4">
-
-            {# --- Add more media --- #}
-            <div class="card border-0 shadow-sm rounded-xxl">
-              <div class="card-body p-4 p-md-5">
-                <div class="d-flex align-items-center justify-content-between mb-3">
-                  <div>
-                    <h2 class="h5 fw-semibold mb-1">Add more media</h2>
-                    <p class="text-muted small mb-0">Upload new images and documents.</p>
-                  </div>
-                  <span class="badge bg-light text-dark border rounded-pill px-3">Optional</span>
+                  <span class="badge {% if step5_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %} rounded-pill px-3">
+                    Step 5
+                  </span>
                 </div>
 
                 <div class="row g-3">
@@ -206,99 +302,160 @@
                     </div>
                   </div>
                 </div>
+
+                {% if not step5_done %}
+                  <div class="alert alert-warning mt-3 mb-0 rounded-4 border-0">
+                    <div class="small">
+                      Step 5 isn’t complete yet — upload at least 1 image or document to activate.
+                    </div>
+                  </div>
+                {% endif %}
               </div>
             </div>
 
-            {# --- Existing images --- #}
-            <div class="card border-0 shadow-sm rounded-xxl flex-grow-1">
-              <div class="card-body p-4 p-md-5 d-flex flex-column">
-                <div class="d-flex align-items-center justify-content-between mb-3">
-                  <div>
-                    <h2 class="h5 fw-semibold mb-1">Existing images</h2>
-                    <p class="text-muted small mb-0">Review and remove images if needed.</p>
-                  </div>
-                  <span class="badge bg-light text-dark border rounded-pill px-3">{{ images|length }}</span>
-                </div>
-
-                <div class="existing-images-scroll">
-                  <div class="row g-3">
-                    {% for img in images %}
-                      <div class="col-6 col-md-4">
-                        <a class="d-block text-decoration-none" href="{{ img.file.url }}" target="_blank" rel="noopener">
-                          <div class="gsc-thumb rounded-4 overflow-hidden bg-light border-subtle mb-2">
-                            <img src="{{ img.file.url }}" class="img-fluid" alt="">
-                          </div>
-                        </a>
-
-                        <button
-                          type="submit"
-                          class="btn btn-sm btn-outline-danger rounded-pill w-100"
-                          formaction="{% url 'users:listing_media_delete' listing.pk img.pk %}"
-                          formmethod="post">
-                          Delete
-                        </button>
-                      </div>
-                    {% empty %}
-                      <div class="col-12">
-                        <div class="rounded-4 bg-light p-3">
-                          <p class="text-muted small mb-0">No images uploaded.</p>
-                        </div>
-                      </div>
-                    {% endfor %}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {# --- Existing documents --- #}
-            <div class="card border-0 shadow-sm rounded-xxl">
+            {# --- Existing media (tabbed container) --- #}
+            <div class="card gsc-form-card border border-success shadow-sm rounded-xxl">
               <div class="card-body p-4 p-md-5">
-                <div class="d-flex align-items-center justify-content-between mb-3">
+
+                <div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-3">
                   <div>
-                    <h2 class="h5 fw-semibold mb-1">Existing documents</h2>
-                    <p class="text-muted small mb-0">Open or delete uploaded documents.</p>
+                    <h2 class="h5 fw-semibold text-success mb-1">Existing media</h2>
+                    <p class="text-muted small mb-0">Review and remove uploaded images and documents.</p>
                   </div>
-                  <span class="badge bg-light text-dark border rounded-pill px-3">{{ documents|length }}</span>
+                  <div class="d-flex gap-2">
+                    <span class="badge bg-light text-dark border rounded-pill px-3">{{ images|length }} image{{ images|length|pluralize }}</span>
+                    <span class="badge bg-light text-dark border rounded-pill px-3">{{ documents|length }} doc{{ documents|length|pluralize:"s" }}</span>
+                  </div>
                 </div>
 
-                <div class="list-group list-group-flush">
-                  {% for doc in documents %}
-                    <div class="list-group-item px-0 py-3 d-flex justify-content-between align-items-center">
-                      <a class="text-decoration-none min-w-0" href="{{ doc.file.url }}" target="_blank" rel="noopener">
-                        <div class="fw-semibold small text-truncate">{{ doc.file.name }}</div>
-                        <div class="text-muted small">Document</div>
-                      </a>
+                <ul class="nav nav-pills gsc-inner-tabs mb-3" role="tablist">
+                  <li class="nav-item" role="presentation">
+                    <button
+                      class="nav-link active rounded-pill px-3"
+                      id="tab-existing-images"
+                      data-bs-toggle="pill"
+                      data-bs-target="#pane-existing-images"
+                      type="button"
+                      role="tab">
+                      Images
+                    </button>
+                  </li>
+                  <li class="nav-item" role="presentation">
+                    <button
+                      class="nav-link rounded-pill px-3"
+                      id="tab-existing-docs"
+                      data-bs-toggle="pill"
+                      data-bs-target="#pane-existing-docs"
+                      type="button"
+                      role="tab">
+                      Documents
+                    </button>
+                  </li>
+                </ul>
 
-                      <button
-                        type="submit"
-                        class="btn btn-sm btn-outline-danger rounded-pill px-3 flex-shrink-0"
-                        formaction="{% url 'users:listing_media_delete' listing.pk doc.pk %}"
-                        formmethod="post">
-                        Delete
-                      </button>
+                <div class="tab-content">
+
+                  {# Images pane #}
+                  <div class="tab-pane fade show active" id="pane-existing-images" role="tabpanel" aria-labelledby="tab-existing-images">
+                    <div class="existing-images-scroll">
+                      <div class="row g-3">
+                        {% for img in images %}
+                          <div class="col-6 col-md-4">
+                            <a class="d-block text-decoration-none" href="{{ img.file.url }}" target="_blank" rel="noopener">
+                              <div class="gsc-thumb rounded-4 overflow-hidden bg-light border-subtle mb-2">
+                                <img src="{{ img.file.url }}" class="img-fluid" alt="">
+                              </div>
+                            </a>
+
+                            <button
+                              type="submit"
+                              class="btn btn-sm btn-outline-danger rounded-pill w-100"
+                              formaction="{% url 'users:listing_media_delete' listing.pk img.pk %}"
+                              formmethod="post">
+                              Delete
+                            </button>
+                          </div>
+                        {% empty %}
+                          <div class="col-12">
+                            <div class="rounded-4 bg-light p-3">
+                              <p class="text-muted small mb-0">No images uploaded.</p>
+                            </div>
+                          </div>
+                        {% endfor %}
+                      </div>
                     </div>
-                  {% empty %}
-                    <div class="list-group-item px-0 py-3 text-muted small">
-                      No documents uploaded.
+                  </div>
+
+                  {# Documents pane #}
+                  <div class="tab-pane fade" id="pane-existing-docs" role="tabpanel" aria-labelledby="tab-existing-docs">
+                    <div class="list-group list-group-flush">
+                      {% for doc in documents %}
+                        <div class="list-group-item px-0 py-3 d-flex justify-content-between align-items-center">
+                          <a class="text-decoration-none min-w-0" href="{{ doc.file.url }}" target="_blank" rel="noopener">
+                            <div class="fw-semibold small text-truncate">{{ doc.file.name }}</div>
+                            <div class="text-muted small">Document</div>
+                          </a>
+
+                          <button
+                            type="submit"
+                            class="btn btn-sm btn-outline-danger rounded-pill px-3 flex-shrink-0"
+                            formaction="{% url 'users:listing_media_delete' listing.pk doc.pk %}"
+                            formmethod="post">
+                            Delete
+                          </button>
+                        </div>
+                      {% empty %}
+                        <div class="list-group-item px-0 py-3 text-muted small">
+                          No documents uploaded.
+                        </div>
+                      {% endfor %}
                     </div>
-                  {% endfor %}
+                  </div>
+
                 </div>
+
               </div>
             </div>
 
           </div>
 
-          {# --- Full-width CTA --- #}
+          {# --- Step 6: Full-width CTA --- #}
           <div class="col-12">
-            <div class="card border-0 shadow-sm rounded-xxl">
-              <div class="card-body p-3 p-md-4 d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-3">
-                <div>
-                  <div class="fw-semibold">Save changes</div>
-                  <div class="text-muted small">Your draft will update immediately.</div>
+            <div class="card gsc-cta-card border border-success shadow-sm rounded-xxl mt-1">
+              <div class="card-body p-4 p-md-5">
+                <div class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-3">
+                  <div class="text-center text-md-start">
+                    <div class="fw-semibold">Step 6 — Save changes or activate</div>
+                    <div class="text-muted small">
+                      Save updates anytime. Activate will take you to payment.
+                    </div>
+                  </div>
+
+                  <div class="d-flex flex-column flex-sm-row gap-2">
+                    <button type="submit" name="action" value="save_draft" class="btn btn-outline-success rounded-pill px-4">
+                      Save changes
+                    </button>
+
+                    <button
+                      type="submit"
+                      name="action"
+                      value="activate"
+                      class="btn btn-success rounded-pill px-4"
+                      {% if not step6_done %}disabled{% endif %}>
+                      Activate listing
+                    </button>
+                  </div>
                 </div>
-                <button type="submit" class="btn btn-success w-100 w-md-auto px-4 rounded-pill">
-                  Save changes
-                </button>
+
+                {% if not step6_done %}
+                  <p class="text-muted small mt-3 mb-0 text-center">
+                    Complete Steps 2–5 before activating.
+                  </p>
+                {% else %}
+                  <p class="text-muted small mt-3 mb-0 text-center">
+                    Ready to activate — you’ll be taken to payment.
+                  </p>
+                {% endif %}
               </div>
             </div>
           </div>
@@ -395,8 +552,46 @@
     display: block;
   }
 
-  .existing-images-scroll {
-    overflow: auto;
+  .existing-images-scroll { overflow: auto; max-height: 440px; }
+
+  .gsc-inner-tabs .nav-link {
+    border: 1px solid rgba(15, 23, 42, 0.12);
+    background: #fff;
+    color: #0f172a;
+  }
+  .gsc-inner-tabs .nav-link.active {
+    background: rgba(25, 135, 84, 0.12);
+    border-color: rgba(25, 135, 84, 0.35);
+    color: #198754;
+    font-weight: 600;
+  }
+
+  .gsc-form-card { position: relative; overflow: hidden; }
+  .gsc-form-card::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 6px;
+    background: linear-gradient(180deg, #198754 0%, #0f6f45 100%);
+    opacity: 0.9;
+  }
+
+  .gsc-cta-card {
+    background:
+      radial-gradient(900px 500px at 20% 20%, rgba(25,135,84,0.18), transparent 55%),
+      linear-gradient(180deg, rgba(25,135,84,0.08), rgba(25,135,84,0.03));
+  }
+
+  .gsc-form-card,
+  .gsc-cta-card {
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .gsc-form-card:hover,
+  .gsc-cta-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 .75rem 1.5rem rgba(15, 23, 42, 0.10);
   }
 </style>
 {% endblock %}
