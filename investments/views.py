@@ -7,8 +7,8 @@ from django.shortcuts import get_object_or_404, redirect
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from users.models import Listing
-from users.pricing import get_return_pct_range
+from listings.models import Listing, ListingMedia
+from listings.services.pricing import get_return_pct_range
 from .forms import InvestmentPledgeForm
 from .models import Investment
 
