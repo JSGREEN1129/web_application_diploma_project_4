@@ -38,8 +38,9 @@
 
         {# Project Name (Free text) #}
         <div class="col-12 col-lg-4">
-          <label class="form-label small fw-semibold">Project Name</label>
+          <label for="id_project_name" class="form-label small fw-semibold">Project Name</label>
           <input
+            id="id_project_name"
             type="text"
             name="project_name"
             value="{{ project_name }}"
@@ -50,8 +51,9 @@
 
         {# Listed by (Free text: name/email) #}
         <div class="col-12 col-lg-4">
-          <label class="form-label small fw-semibold">Listed by</label>
+          <label for="id_listed_by" class="form-label small fw-semibold">Listed by</label>
           <input
+            id="id_listed_by"
             type="text"
             name="listed_by"
             value="{{ listed_by }}"
@@ -62,8 +64,8 @@
 
         {# Project type (Dropdowns) - assumes your view provides source_use_choices/target_use_choices #}
         <div class="col-6 col-lg-2">
-          <label class="form-label small fw-semibold">From (use)</label>
-          <select name="source_use" class="form-select">
+          <label for="id_source_use" class="form-label small fw-semibold">From (use)</label>
+          <select id="id_source_use" name="source_use" class="form-select">
             <option value="">Any</option>
             {% for value,label in source_use_choices %}
               <option value="{{ value }}" {% if source_use == value %}selected{% endif %}>
@@ -74,8 +76,8 @@
         </div>
 
         <div class="col-6 col-lg-2">
-          <label class="form-label small fw-semibold">To (use)</label>
-          <select name="target_use" class="form-select">
+          <label for="id_target_use" class="form-label small fw-semibold">To (use)</label>
+          <select id="id_target_use" name="target_use" class="form-select">
             <option value="">Any</option>
             {% for value,label in target_use_choices %}
               <option value="{{ value }}" {% if target_use == value %}selected{% endif %}>
@@ -87,7 +89,7 @@
 
         {# Location (Dropdowns) #}
         <div class="col-6 col-lg-2">
-          <label class="form-label small fw-semibold">Country</label>
+          <label for="id_country" class="form-label small fw-semibold">Country</label>
           <select id="id_country" name="country" class="form-select" data-selected="{{ country }}">
             <option value="">Any country</option>
             {% for value,label in country_choices %}
@@ -99,14 +101,14 @@
         </div>
 
         <div class="col-6 col-lg-2">
-          <label class="form-label small fw-semibold">County</label>
+          <label for="id_county" class="form-label small fw-semibold">County</label>
           <select id="id_county" name="county" class="form-select" data-selected="{{ county }}" disabled>
             <option value="">Any county</option>
           </select>
         </div>
 
         <div class="col-6 col-lg-2">
-          <label class="form-label small fw-semibold">Postcode prefix</label>
+          <label for="id_postcode_prefix" class="form-label small fw-semibold">Postcode prefix</label>
           <select id="id_postcode_prefix"
                   name="postcode_prefix"
                   class="form-select"
@@ -118,8 +120,8 @@
 
         {# Funding & returns (Dropdowns) #}
         <div class="col-6 col-lg-2">
-          <label class="form-label small fw-semibold">Funding band</label>
-          <select name="funding_band" class="form-select">
+          <label for="id_funding_band" class="form-label small fw-semibold">Funding band</label>
+          <select id="id_funding_band" name="funding_band" class="form-select">
             <option value="">Any</option>
             {% for value,label in funding_band_choices %}
               <option value="{{ value }}" {% if funding_band == value %}selected{% endif %}>
@@ -130,8 +132,8 @@
         </div>
 
         <div class="col-6 col-lg-2">
-          <label class="form-label small fw-semibold">Return type</label>
-          <select name="return_type" class="form-select">
+          <label for="id_return_type" class="form-label small fw-semibold">Return type</label>
+          <select id="id_return_type" name="return_type" class="form-select">
             <option value="">Any</option>
             {% for value,label in return_type_choices %}
               <option value="{{ value }}" {% if return_type == value %}selected{% endif %}>
@@ -142,8 +144,8 @@
         </div>
 
         <div class="col-6 col-lg-2">
-          <label class="form-label small fw-semibold">Return band</label>
-          <select name="return_band" class="form-select">
+          <label for="id_return_band" class="form-label small fw-semibold">Return band</label>
+          <select id="id_return_band" name="return_band" class="form-select">
             <option value="">Any</option>
             {% for value,label in return_band_choices %}
               <option value="{{ value }}" {% if return_band == value %}selected{% endif %}>

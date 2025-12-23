@@ -174,12 +174,16 @@
                     <div class="d-flex justify-content-between align-items-center small text-muted mb-3">
                         <span>{{ listing.media.count }} file{{ listing.media.count|pluralize }} uploaded</span>
                         <span class="badge bg-light text-dark border rounded-pill px-3">
-                            {{ listing.get_funding_band_display }}
+                            {{ listing.project_name }}
                         </span>
                     </div>
 
                     <div class="rounded-4 bg-light border border-success p-3 mb-3">
-                        <div class="d-flex justify-content-between small">
+                        <div class="d-flex justify-content-between small mt-1">
+                            <span class="text-muted fw-bold">Funding Required</span>
+                            <span class="fw-semibold">{{ listing.get_funding_band_display }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between small mt-2">
                             <span class="text-muted fw-bold">Return Type</span>
                             <span class="fw-semibold">{{ listing.get_return_type_display }}</span>
                         </div>
@@ -188,7 +192,7 @@
                             <span class="fw-semibold">{{ listing.get_return_band_display }}</span>
                         </div>
                         <div class="d-flex justify-content-between small mt-2">
-                            <span class="text-muted fw-bold">Duration</span>
+                            <span class="text-muted fw-bold">Project Duration</span>
                             <span class="fw-semibold">{{ listing.duration_days }} days</span>
                         </div>
                     </div>
@@ -217,7 +221,7 @@
                     </div>
                     {% else %}
                     <a href="{% url 'listings:listing_detail' listing.pk %}"
-                        class="btn btn-sm btn-outline-success w-100">
+                        class="btn btn-sm btn-success w-100">
                         View Listing
                     </a>
                     {% endif %}
