@@ -105,37 +105,48 @@ def _is_filled(value) -> bool:
     return value is not None and str(value).strip() != ""
 
 
-def _listing_step_flags(listing: Listing) -> dict:
+def _step_flags_from_payload(
+    payload: dict,
+    *,
+    has_media: bool,
+    is_active: bool,
+) -> dict:
     """
-    Steps:
-    1 = Project details (project_name optional; project_duration_days required for completion)
-    2 = Project type (source_use + target_use)
-    3 = Funding & returns (funding_band + return_type + return_band + duration_days)
-    4 = Location (country + county + postcode_prefix)
-    5 = Uploads (at least 1 media)
-    6 = Activate listing (should be TRUE ONLY when listing is ACTIVE)
+    Compute step flags from raw POST-like payload.
+    This is what you use to update steppers *without saving*.
+
+    Step rules match _listing_step_flags:
+      1: project_duration_days required
+      2: source_use + target_use
+      3: funding_band + return_type + return_band + duration_days
+      4: country + county + postcode_prefix
+      5: has_media
+      6: is_active (activated)
     """
-    step1 = listing.project_duration_days is not None
+    project_duration_days = payload.get("project_duration_days")
+    source_use = payload.get("source_use")
+    target_use = payload.get("target_use")
+    funding_band = payload.get("funding_band")
+    return_type = payload.get("return_type")
+    return_band = payload.get("return_band")
+    duration_days = payload.get("duration_days")
+    country = payload.get("country")
+    county = payload.get("county")
+    postcode_prefix = payload.get("postcode_prefix")
 
-    step2 = _is_filled(listing.source_use) and _is_filled(listing.target_use)
-
+    step1 = _is_filled(project_duration_days)
+    step2 = _is_filled(source_use) and _is_filled(target_use)
     step3 = (
-        _is_filled(listing.funding_band)
-        and _is_filled(listing.return_type)
-        and _is_filled(listing.return_band)
-        and (listing.duration_days is not None)
+        _is_filled(funding_band)
+        and _is_filled(return_type)
+        and _is_filled(return_band)
+        and _is_filled(duration_days)
     )
+    step4 = _is_filled(country) and _is_filled(county) and _is_filled(postcode_prefix)
+    step5 = bool(has_media)
+    step6 = bool(is_active)
 
-    step4 = (
-        _is_filled(listing.country)
-        and _is_filled(listing.county)
-        and _is_filled(listing.postcode_prefix)
-    )
-
-    step5 = listing.media.exists()
-
-    # IMPORTANT: Step 6 means "activated", not "ready".
-    step6 = listing.status == Listing.Status.ACTIVE
+    can_activate = step1 and step2 and step3 and step4 and step5 and (not step6)
 
     return {
         "step1_done": step1,
@@ -144,14 +155,43 @@ def _listing_step_flags(listing: Listing) -> dict:
         "step4_done": step4,
         "step5_done": step5,
         "step6_done": step6,
+        "can_activate": can_activate,
+    }
+
+
+def _listing_step_flags(listing: Listing) -> dict:
+    """
+    Server truth for saved listings (Edit page uses this).
+    """
+    step1 = listing.project_duration_days is not None
+    step2 = _is_filled(listing.source_use) and _is_filled(listing.target_use)
+    step3 = (
+        _is_filled(listing.funding_band)
+        and _is_filled(listing.return_type)
+        and _is_filled(listing.return_band)
+        and (listing.duration_days is not None)
+    )
+    step4 = (
+        _is_filled(listing.country)
+        and _is_filled(listing.county)
+        and _is_filled(listing.postcode_prefix)
+    )
+    step5 = listing.media.exists()
+    step6 = listing.status == Listing.Status.ACTIVE
+    can_activate = step1 and step2 and step3 and step4 and step5 and not step6
+
+    return {
+        "step1_done": step1,
+        "step2_done": step2,
+        "step3_done": step3,
+        "step4_done": step4,
+        "step5_done": step5,
+        "step6_done": step6,
+        "can_activate": can_activate,
     }
 
 
 def _listing_ready_for_activation(listing: Listing) -> bool:
-    """
-    Server-side enforcement for activation readiness.
-    NOTE: project_name is optional; do NOT require it here.
-    """
     required_fields = [
         listing.project_duration_days,
         listing.source_use,
@@ -179,11 +219,74 @@ def _money(x: Decimal) -> str:
 
 
 @login_required
+@require_POST
+def api_listing_stepper_flags(request, pk=None):
+    """
+    Returns JSON step flags based on *current form values* without saving.
+    This is what lets create/edit steppers update WITHOUT submitting the full form.
+
+    - For create: call this with no pk (or pk=None route)
+    - For edit: call this with pk so existing media can count towards Step 5
+
+    For Step 5 (uploads), the client should send:
+      media_selected = "1" if there are any file inputs selected in the browser.
+
+    This avoids trying to transmit files just to compute the stepper.
+    """
+    listing = None
+    existing_has_media = False
+    is_active = False
+
+    if pk is not None:
+        listing = get_object_or_404(
+            Listing.objects.prefetch_related("media"),
+            pk=pk,
+            owner=request.user,
+        )
+        existing_has_media = listing.media.exists()
+        is_active = listing.status == Listing.Status.ACTIVE
+
+    media_selected = (request.POST.get("media_selected") or "").strip()
+    client_has_media = media_selected in {"1", "true", "True", "yes", "on"}
+
+    flags = _step_flags_from_payload(
+        request.POST,
+        has_media=(existing_has_media or client_has_media),
+        is_active=is_active,
+    )
+
+    if flags["can_activate"]:
+        msg = "Steps 1–5 complete — activation is available."
+        msg_class = "text-success"
+    else:
+        if not (flags["step1_done"] and flags["step2_done"] and flags["step3_done"] and flags["step4_done"]):
+            msg = "Complete steps 1–4 to enable activation. You can save a draft at any time."
+        elif not flags["step5_done"]:
+            msg = "Upload at least one image or document to complete Step 5."
+        else:
+            msg = "Complete steps 1–5 to enable activation."
+        msg_class = "text-muted"
+
+    return JsonResponse(
+        {
+            "ok": True,
+            **flags,
+            "msg": msg,
+            "msg_class": msg_class,
+        }
+    )
+
+
+@login_required
 def create_listing_view(request):
     """
     Supports two submit actions:
     - action=save_draft  -> saves partial listing (no strict form validation)
     - action=activate    -> requires full validation, saves draft, then proceeds to activation (Stripe checkout)
+
+    NOTE:
+    This view now ALWAYS supplies step flags to the template (like edit_listing_view does),
+    so both pages use the same stepper logic.
     """
     if request.method == "POST":
         action = (request.POST.get("action") or "save_draft").strip()
@@ -193,6 +296,12 @@ def create_listing_view(request):
 
         images = request.FILES.getlist("images")
         documents = request.FILES.getlist("documents")
+
+        flags = _step_flags_from_payload(
+            request.POST,
+            has_media=bool(images or documents),
+            is_active=False,
+        )
 
         try:
             if images:
@@ -218,7 +327,7 @@ def create_listing_view(request):
             return render(
                 request,
                 "listings/create_listing.html",
-                {"form": form, "media_form": media_form},
+                {"form": form, "media_form": media_form, **flags},
             )
 
         if action == "save_draft":
@@ -268,7 +377,7 @@ def create_listing_view(request):
                 return render(
                     request,
                     "listings/create_listing.html",
-                    {"form": form, "media_form": media_form},
+                    {"form": form, "media_form": media_form, **flags},
                 )
 
             listing = form.save(commit=False)
@@ -301,16 +410,18 @@ def create_listing_view(request):
         return render(
             request,
             "listings/create_listing.html",
-            {"form": form, "media_form": media_form},
+            {"form": form, "media_form": media_form, **flags},
         )
 
-    # GET
     form = ListingCreateForm()
     media_form = ListingMediaForm()
+
+    flags = _step_flags_from_payload({}, has_media=False, is_active=False)
+
     return render(
         request,
         "listings/create_listing.html",
-        {"form": form, "media_form": media_form},
+        {"form": form, "media_form": media_form, **flags},
     )
 
 
@@ -570,7 +681,6 @@ def start_listing_checkout_view(request, pk):
         messages.error(request, "Stripe is not configured on the server.")
         return redirect("listings:listing_detail", pk=listing.pk)
 
-    # Reuse an open checkout session if it exists
     reused_url = try_reuse_existing_checkout_session(listing=listing)
     if reused_url:
         return redirect(reused_url, permanent=False)
@@ -820,7 +930,6 @@ def opportunity_detail_view(request, pk):
     remaining_gbp = None
     progress_pct = 0
 
-    # funding_band format: "10000_20000" (we use upper bound as "target")
     try:
         if listing.funding_band:
             parts = str(listing.funding_band).split("_")
