@@ -10,9 +10,8 @@
       <div class="d-flex flex-wrap align-items-start justify-content-between gap-3">
         <div class="min-w-0">
           <div class="d-flex flex-wrap align-items-center gap-2">
-            <span class="badge text-bg-success px-3 py-2 rounded-pill">Green Square Capital</span>
-            <span class="badge bg-light text-dark border rounded-pill px-3">
-              Opportunity #{{ listing.id }}
+            <span class="badge bg-success px-3 py-2 rounded-pill">
+              {{ listing.project_name }}
             </span>
           </div>
 
@@ -40,7 +39,7 @@
 
         <div class="d-flex flex-column align-items-start align-items-md-end gap-2">
           <span class="badge text-bg-success rounded-pill px-3 py-2">Active</span>
-          <a href="{% url 'users:search_listings' %}" class="btn btn-outline-secondary rounded-pill px-3">
+          <a href="{% url 'listings:search_listings' %}" class="btn btn-outline-success rounded-pill px-3">
             ← Back to search
           </a>
         </div>
@@ -109,8 +108,8 @@
           <div
             class="progress-bar bg-success"
             role="progressbar"
-            style="width: {{ progress_pct|default:0 }}%;"
-            aria-valuenow="{{ progress_pct|default:0 }}"
+            style="width: {{ progress_pct|default:'0' }}%;"
+            aria-valuenow="{{ progress_pct|default:'0' }}"
             aria-valuemin="0"
             aria-valuemax="100">
           </div>
@@ -118,7 +117,7 @@
 
         <div class="text-muted small mt-2">
           {% if target_gbp %}
-            {{ progress_pct|default:0 }}% funded
+            {{ progress_pct|default:'0' }}% funded
           {% else %}
             Funding target not available for this listing.
           {% endif %}
@@ -193,7 +192,7 @@
                 </div>
               </div>
               <a href="{{ doc.file.url }}" target="_blank"
-                 class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+                 class="btn btn-sm btn-outline-success rounded-pill px-3">
                 Open
               </a>
             </div>
@@ -234,7 +233,7 @@
               placeholder="e.g. 1000"
               required
               data-listing-id="{{ listing.id }}"
-              data-estimate-url="{% url 'users:estimate_return' listing.pk %}">
+              data-estimate-url="{% url 'listings:estimate_return' listing.pk %}">
             <button type="submit" class="btn btn-success px-4">Pledge</button>
           </div>
 
@@ -246,7 +245,7 @@
         </form>
 
         <div class="mt-auto pt-3">
-          <a href="{% url 'users:search_listings' %}" class="btn btn-outline-secondary w-100 rounded-pill">
+          <a href="{% url 'listings:search_listings' %}" class="btn btn-outline-success w-100 rounded-pill">
             ← Back to search
           </a>
         </div>
@@ -264,7 +263,7 @@
           <span class="badge bg-success text-white border rounded-pill px-3">Details</span>
         </div>
 
-        <div class="rounded-4 border-subtle p-3 bg-light">
+        <div class="rounded-4 border border-success p-3 bg-light">
           <div class="d-flex justify-content-between small py-2">
             <span class="text-muted">Funding</span>
             <span class="fw-semibold">{{ listing.get_funding_band_display }}</span>

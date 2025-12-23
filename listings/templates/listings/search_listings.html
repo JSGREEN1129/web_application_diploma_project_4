@@ -12,16 +12,16 @@
       <span class="badge text-bg-success px-3 py-2 rounded-pill">Green Square Capital</span>
       <h1 class="h4 fw-semibold text-success mb-1 mt-3">Find investment opportunities</h1>
       <p class="text-muted small mb-0">
-        Search by location, funding band, and return profile. Pledge directly from results.
+        Search by project, type, location, funding and returns. Pledge directly from results.
       </p>
     </div>
     <a href="{% url 'users:dashboard' %}"
-       class="btn btn-outline-secondary btn-sm rounded-pill px-3">
-      Back to dashboard
+       class="btn btn-outline-success btn-sm rounded-pill px-3">
+      ← Back to dashboard
     </a>
   </div>
 
-  {# --- Search / Filters (MATCHES LISTING CARDS) --- #}
+  {# --- Search / Filters --- #}
   <form method="get"
         class="card gsc-form-card border border-success shadow-sm rounded-xxl mb-4">
     <div class="card-body p-4 p-md-5">
@@ -36,17 +36,56 @@
 
       <div class="row g-3 align-items-end">
 
+        {# Project Name (Free text) #}
         <div class="col-12 col-lg-4">
-          <label class="form-label small fw-semibold">Search</label>
+          <label class="form-label small fw-semibold">Project Name</label>
           <input
             type="text"
-            name="q"
-            value="{{ q }}"
+            name="project_name"
+            value="{{ project_name }}"
             class="form-control"
-            placeholder="e.g. London, SW, residential → commercial"
+            placeholder="e.g. Riverside Apartments"
           >
         </div>
 
+        {# Listed by (Free text: name/email) #}
+        <div class="col-12 col-lg-4">
+          <label class="form-label small fw-semibold">Listed by</label>
+          <input
+            type="text"
+            name="listed_by"
+            value="{{ listed_by }}"
+            class="form-control"
+            placeholder="Name or email"
+          >
+        </div>
+
+        {# Project type (Dropdowns) - assumes your view provides source_use_choices/target_use_choices #}
+        <div class="col-6 col-lg-2">
+          <label class="form-label small fw-semibold">From (use)</label>
+          <select name="source_use" class="form-select">
+            <option value="">Any</option>
+            {% for value,label in source_use_choices %}
+              <option value="{{ value }}" {% if source_use == value %}selected{% endif %}>
+                {{ label }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-6 col-lg-2">
+          <label class="form-label small fw-semibold">To (use)</label>
+          <select name="target_use" class="form-select">
+            <option value="">Any</option>
+            {% for value,label in target_use_choices %}
+              <option value="{{ value }}" {% if target_use == value %}selected{% endif %}>
+                {{ label }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        {# Location (Dropdowns) #}
         <div class="col-6 col-lg-2">
           <label class="form-label small fw-semibold">Country</label>
           <select id="id_country" name="country" class="form-select" data-selected="{{ country }}">
@@ -77,10 +116,11 @@
           </select>
         </div>
 
+        {# Funding & returns (Dropdowns) #}
         <div class="col-6 col-lg-2">
           <label class="form-label small fw-semibold">Funding band</label>
           <select name="funding_band" class="form-select">
-            <option value="">Any funding band</option>
+            <option value="">Any</option>
             {% for value,label in funding_band_choices %}
               <option value="{{ value }}" {% if funding_band == value %}selected{% endif %}>
                 {{ label }}
@@ -92,9 +132,21 @@
         <div class="col-6 col-lg-2">
           <label class="form-label small fw-semibold">Return type</label>
           <select name="return_type" class="form-select">
-            <option value="">Any return type</option>
+            <option value="">Any</option>
             {% for value,label in return_type_choices %}
               <option value="{{ value }}" {% if return_type == value %}selected{% endif %}>
+                {{ label }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-6 col-lg-2">
+          <label class="form-label small fw-semibold">Return band</label>
+          <select name="return_band" class="form-select">
+            <option value="">Any</option>
+            {% for value,label in return_band_choices %}
+              <option value="{{ value }}" {% if return_band == value %}selected{% endif %}>
                 {{ label }}
               </option>
             {% endfor %}
@@ -109,7 +161,7 @@
 
         <div class="col-12 col-lg-2 d-grid">
           <a class="btn btn-outline-secondary rounded-pill"
-             href="{% url 'users:search_listings' %}">
+             href="{% url 'listings:search_listings' %}">
             Clear
           </a>
         </div>
@@ -147,10 +199,24 @@
                   <p class="text-muted small mb-0 text-truncate">
                     {{ listing.country|capfirst }} • {{ listing.county }} • {{ listing.postcode_prefix }}
                   </p>
+
+                  {# Project name (if you want it visible on cards) #}
+                  {% if listing.project_name %}
+                    <p class="text-muted small mb-0 text-truncate">
+                      {{ listing.project_name }}
+                    </p>
+                  {% endif %}
+
                   {% if listing.owner %}
                     <p class="text-muted small mb-0">
-                      Posted by
-                      {{ listing.owner.get_full_name|default:listing.owner.first_name|default:listing.owner.email }}
+                      Listed by
+                      {% if listing.owner.get_full_name %}
+                        {{ listing.owner.get_full_name }}
+                      {% elif listing.owner.first_name %}
+                        {{ listing.owner.first_name }}
+                      {% else %}
+                        {{ listing.owner.email }}
+                      {% endif %}
                     </p>
                   {% endif %}
                 </div>
@@ -180,7 +246,7 @@
               </div>
 
               <a class="btn btn-sm btn-outline-secondary rounded-pill px-3 mt-auto"
-                 href="{% url 'users:opportunity_detail' listing.pk %}">
+                 href="{% url 'listings:opportunity_detail' listing.pk %}">
                 View listing
               </a>
 
@@ -200,7 +266,7 @@
                          placeholder="Amount"
                          required
                          data-listing-id="{{ listing.id }}"
-                         data-estimate-url="{% url 'users:estimate_return' listing.pk %}">
+                         data-estimate-url="{% url 'listings:estimate_return' listing.pk %}">
                   <button type="submit" class="btn btn-success">
                     Pledge
                   </button>
@@ -268,8 +334,17 @@
 </div>
 {% endblock %}
 
+
 {% block extra_js %}
-{{ block.super }}
+  {{ block.super }}
+
+<div
+  id="js-search-endpoints"
+  data-counties-url="{% url 'listings:api_counties' %}"
+  data-outcodes-url="{% url 'listings:api_outcodes' %}">
+</div>
+
+<script src="{% static 'js/search_filters.js' %}"></script>
 
 <style>
   .rounded-xxl { border-radius: 1.25rem !important; }

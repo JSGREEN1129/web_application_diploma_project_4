@@ -107,9 +107,9 @@
                         Pledged: {{ inv.created_at|date:"d M Y" }}
                     </p>
 
-                    <a href="{% url 'users:opportunity_detail' inv.listing.pk %}"
-                        class="btn btn-sm btn-outline-secondary w-100">
-                        View Opportunity
+                    <a href="{% url 'listings:opportunity_detail' inv.listing.pk %}"
+                        class="btn btn-sm btn-success w-100">
+                        View Listing
                     </a>
 
                 </div>
@@ -245,7 +245,9 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/click_hold_drag_scroll.js' %}"></script>
+  {{ block.super }}
+  
+  <script src="{% static 'js/click_hold_drag_scroll.js' %}"></script>
 
 <style>
     .rounded-xxl {
