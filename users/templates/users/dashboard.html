@@ -10,8 +10,7 @@
     {# --- Page header --- #}
     <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
         <div>
-            <span class="badge text-bg-success px-3 py-2 rounded-pill">Green Square Capital</span>
-            <h2 class="h4 fw-semibold mb-1 mt-3">Dashboard</h2>
+            <h2 class="h2 fw-semibold text-success mb-1 mt-3">Dashboard</h2>
             <p class="text-muted small mb-0">A quick overview of your investments and listings.</p>
         </div>
     </div>
@@ -60,7 +59,7 @@
     {# --- Current Investments --- #}
     <div class="d-flex align-items-end justify-content-between mb-2">
         <div>
-            <h3 class="h5 fw-semibold mb-1">Current Investments</h3>
+            <h3 class="h3 text-success fw-semibold mb-1">Current Investments</h3>
             <p class="text-muted small mb-0">
                 A snapshot of your pledged investments. Scroll horizontally to view more.
             </p>
@@ -117,7 +116,7 @@
             </div>
             {% endfor %}
             {% else %}
-            <div class="card dashboard-card flex-shrink-0 border-0 shadow-sm rounded-xxl">
+            <div class="card dashboard-card flex-shrink-0 border-success shadow-sm rounded-xxl">
                 <div class="card-body p-4 d-flex flex-column justify-content-center">
                     <h5 class="card-title fw-semibold mb-1">No investments yet</h5>
                     <p class="text-muted small mb-0">
@@ -132,12 +131,12 @@
     {# --- Your Listings --- #}
     <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-2">
         <div>
-            <h3 class="h5 fw-semibold mb-1">Your Listings</h3>
+            <h3 class="h3 fw-semibold text-success mb-1">Your Listings</h3>
             <p class="text-muted small mb-0">
                 Draft listings are saved but not active until payment is complete.
             </p>
         </div>
-        <a href="{% url 'users:create_listing' %}" class="btn btn-sm btn-success px-3">
+        <a href="{% url 'listings:create_listing' %}" class="btn btn-sm btn-success px-3">
             + Create Listing
         </a>
     </div>
@@ -179,17 +178,17 @@
                         </span>
                     </div>
 
-                    <div class="rounded-4 bg-light p-3 mb-3">
+                    <div class="rounded-4 bg-light border border-success p-3 mb-3">
                         <div class="d-flex justify-content-between small">
-                            <span class="text-muted">Return Type</span>
+                            <span class="text-muted fw-bold">Return Type</span>
                             <span class="fw-semibold">{{ listing.get_return_type_display }}</span>
                         </div>
                         <div class="d-flex justify-content-between small mt-2">
-                            <span class="text-muted">Potential Return</span>
+                            <span class="text-muted fw-bold">Potential Return</span>
                             <span class="fw-semibold">{{ listing.get_return_band_display }}</span>
                         </div>
                         <div class="d-flex justify-content-between small mt-2">
-                            <span class="text-muted">Duration</span>
+                            <span class="text-muted fw-bold">Duration</span>
                             <span class="fw-semibold">{{ listing.duration_days }} days</span>
                         </div>
                     </div>
@@ -204,21 +203,21 @@
 
                     {% if listing.status == "draft" or listing.status == "pending_payment" %}
                     <div class="d-flex gap-2 flex-wrap">
-                        <a href="{% url 'users:listing_detail' listing.pk %}"
-                            class="btn btn-sm btn-outline-secondary flex-grow-1">
+                        <a href="{% url 'listings:listing_detail' listing.pk %}"
+                            class="btn btn-sm btn-outline-success flex-grow-1">
                             View Draft
                         </a>
-                        <a href="{% url 'users:listing_edit' listing.pk %}" class="btn btn-sm btn-success flex-grow-1">
+                        <a href="{% url 'listings:listing_edit' listing.pk %}" class="btn btn-sm btn-outline-success flex-grow-1">
                             Edit
                         </a>
-                        <a href="{% url 'users:listing_checkout' listing.pk %}"
-                            class="btn btn-sm btn-success flex-grow-1">
+                        <a href="{% url 'listings:listing_checkout' listing.pk %}"
+                            class="btn btn-sm btn-outline-success flex-grow-1">
                             Pay
                         </a>
                     </div>
                     {% else %}
-                    <a href="{% url 'users:listing_detail' listing.pk %}"
-                        class="btn btn-sm btn-outline-secondary w-100">
+                    <a href="{% url 'listings:listing_detail' listing.pk %}"
+                        class="btn btn-sm btn-outline-success w-100">
                         View Listing
                     </a>
                     {% endif %}
@@ -227,13 +226,13 @@
             </div>
             {% endfor %}
             {% else %}
-            <div class="card dashboard-card flex-shrink-0 border-0 shadow-sm rounded-xxl">
+            <div class="card dashboard-card flex-shrink-0 border-success shadow-sm rounded-xxl">
                 <div class="card-body p-4 d-flex flex-column justify-content-center">
                     <h5 class="card-title fw-semibold mb-1">No listings yet</h5>
                     <p class="text-muted small mb-3">
                         Create a listing to start offering new opportunities.
                     </p>
-                    <a href="{% url 'users:create_listing' %}" class="btn btn-sm btn-success w-100">
+                    <a href="{% url 'listings:create_listing' %}" class="btn btn-sm btn-success w-100">
                         Create your first listing
                     </a>
                 </div>

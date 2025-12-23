@@ -8,54 +8,62 @@
   <div class="row justify-content-center">
     <div class="col-12 col-xl-10">
 
-      {# --- Header --- #}
       <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
         <div>
-          <h1 class="h4 fw-semibold mb-1 mt-3 text-success">Edit Draft Listing</h1>
+          <h1 class="h2 fw-semibold mb-1 mt-3 text-success">Edit Draft Listing</h1>
           <p class="text-muted small mb-0">Update your draft details and manage uploaded files.</p>
         </div>
-        <a href="{% url 'users:dashboard' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
-          Back to dashboard
+        <a href="{% url 'users:dashboard' %}" class="btn btn-outline-success btn-sm rounded-pill px-3">
+          ← Back to dashboard
         </a>
       </div>
 
-      {# --- Stepper (dynamic based on flags from views.py) --- #}
       <div class="card border-0 shadow-sm rounded-xxl mb-4">
         <div class="card-body p-3 p-md-4">
           <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
             <div class="d-flex flex-wrap gap-2 align-items-center">
 
-              <span class="badge {% if step1_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %} rounded-pill px-3 py-2">
+              <span id="js-stepper-1" class="badge {% if step1_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %} rounded-pill px-3 py-2">
                 1. Details
               </span>
               <span class="text-muted small">→</span>
 
-              <span class="badge {% if step2_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %} rounded-pill px-3 py-2">
+              <span id="js-stepper-2" class="badge {% if step2_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %} rounded-pill px-3 py-2">
                 2. Project type
               </span>
               <span class="text-muted small">→</span>
 
-              <span class="badge {% if step3_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %} rounded-pill px-3 py-2">
+              <span id="js-stepper-3" class="badge {% if step3_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %} rounded-pill px-3 py-2">
                 3. Funding
               </span>
               <span class="text-muted small">→</span>
 
-              <span class="badge {% if step4_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %} rounded-pill px-3 py-2">
+              <span id="js-stepper-4" class="badge {% if step4_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %} rounded-pill px-3 py-2">
                 4. Location
               </span>
               <span class="text-muted small">→</span>
 
-              <span class="badge {% if step5_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %} rounded-pill px-3 py-2">
+              <span id="js-stepper-5"
+                    class="badge {% if step5_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %} rounded-pill px-3 py-2"
+                    data-has-existing="{% if step5_done %}1{% else %}0{% endif %}">
                 5. Uploads
               </span>
               <span class="text-muted small">→</span>
 
-              <span class="badge {% if step6_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %} rounded-pill px-3 py-2">
+              <span id="js-stepper-6" class="badge {% if step6_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %} rounded-pill px-3 py-2">
                 6. Activate listing
               </span>
             </div>
 
-            <span class="text-muted small">Save changes anytime</span>
+            <span class="text-muted small">Save as a draft at any step</span>
+          </div>
+
+          <div id="js-stepper-msg" class="mt-2 small {% if can_activate %}text-success{% else %}text-muted{% endif %}">
+            {% if can_activate %}
+              Steps 1–5 complete — activation is available.
+            {% else %}
+              Complete steps 1–5 to enable activation. You can save a draft at any time.
+            {% endif %}
           </div>
         </div>
       </div>
@@ -77,10 +85,8 @@
 
         <div class="row g-4 align-items-start">
 
-          {# LEFT COLUMN #}
           <div class="col-12 col-lg-6">
 
-            {# --- Project details --- #}
             <div class="card gsc-form-card border border-success shadow-sm rounded-xxl mb-4">
               <div class="card-body p-4 p-md-5">
                 <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
@@ -89,7 +95,7 @@
                     <p class="text-muted small mb-0">Update the name and expected project duration.</p>
                   </div>
 
-                  <span class="badge {% if step1_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %} rounded-pill px-3">
+                  <span id="js-card-1" class="badge {% if step1_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %} rounded-pill px-3">
                     Step 1
                   </span>
                 </div>
@@ -117,7 +123,6 @@
               </div>
             </div>
 
-            {# --- Project Type --- #}
             <div class="card gsc-form-card border border-success shadow-sm rounded-xxl mb-4">
               <div class="card-body p-4 p-md-5">
                 <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
@@ -126,7 +131,7 @@
                     <p class="text-muted small mb-0">Adjust the asset’s transition details.</p>
                   </div>
 
-                  <span class="badge {% if step2_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %} rounded-pill px-3">
+                  <span id="js-card-2" class="badge {% if step2_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %} rounded-pill px-3">
                     Step 2
                   </span>
                 </div>
@@ -151,7 +156,6 @@
               </div>
             </div>
 
-            {# --- Funding & Returns --- #}
             <div class="card gsc-form-card border border-success shadow-sm rounded-xxl">
               <div class="card-body p-4 p-md-5">
                 <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
@@ -160,7 +164,7 @@
                     <p class="text-muted small mb-0">Update expected bands and listing duration.</p>
                   </div>
 
-                  <span class="badge {% if step3_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %} rounded-pill px-3">
+                  <span id="js-card-3" class="badge {% if step3_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %} rounded-pill px-3">
                     Step 3
                   </span>
                 </div>
@@ -207,10 +211,8 @@
 
           </div>
 
-          {# RIGHT COLUMN #}
           <div class="col-12 col-lg-6">
 
-            {# --- Location --- #}
             <div class="card gsc-form-card border border-success shadow-sm rounded-xxl mb-4">
               <div class="card-body p-4 p-md-5">
                 <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
@@ -219,7 +221,7 @@
                     <p class="text-muted small mb-0">Keep it accurate for investor discovery.</p>
                   </div>
 
-                  <span class="badge {% if step4_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %} rounded-pill px-3">
+                  <span id="js-card-4" class="badge {% if step4_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %} rounded-pill px-3">
                     Step 4
                   </span>
                 </div>
@@ -261,7 +263,6 @@
               </div>
             </div>
 
-            {# --- Media uploads --- #}
             <div class="card gsc-form-card border border-success shadow-sm rounded-xxl mb-4">
               <div class="card-body p-4 p-md-5">
                 <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
@@ -270,7 +271,9 @@
                     <p class="text-muted small mb-0">Add images and documents to support your opportunity.</p>
                   </div>
 
-                  <span class="badge {% if step5_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %} rounded-pill px-3">
+                  <span id="js-card-5"
+                        class="badge {% if step5_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %} rounded-pill px-3"
+                        data-has-existing="{% if step5_done %}1{% else %}0{% endif %}">
                     Step 5
                   </span>
                 </div>
@@ -313,7 +316,6 @@
               </div>
             </div>
 
-            {# --- Existing media (tabbed container) --- #}
             <div class="card gsc-form-card border border-success shadow-sm rounded-xxl">
               <div class="card-body p-4 p-md-5">
 
@@ -323,8 +325,8 @@
                     <p class="text-muted small mb-0">Review and remove uploaded images and documents.</p>
                   </div>
                   <div class="d-flex gap-2">
-                    <span class="badge bg-light text-dark border rounded-pill px-3">{{ images|length }} image{{ images|length|pluralize }}</span>
-                    <span class="badge bg-light text-dark border rounded-pill px-3">{{ documents|length }} doc{{ documents|length|pluralize:"s" }}</span>
+                    <span class="badge bg-success text-white border rounded-pill px-3">{{ images|length }} image{{ images|length|pluralize }}</span>
+                    <span class="badge bg-success text-white border rounded-pill px-3">{{ documents|length }} doc{{ documents|length|pluralize:"s" }}</span>
                   </div>
                 </div>
 
@@ -355,7 +357,6 @@
 
                 <div class="tab-content">
 
-                  {# Images pane #}
                   <div class="tab-pane fade show active" id="pane-existing-images" role="tabpanel" aria-labelledby="tab-existing-images">
                     <div class="existing-images-scroll">
                       <div class="row g-3">
@@ -370,7 +371,7 @@
                             <button
                               type="submit"
                               class="btn btn-sm btn-outline-danger rounded-pill w-100"
-                              formaction="{% url 'users:listing_media_delete' listing.pk img.pk %}"
+                              formaction="{% url 'listings:listing_media_delete' listing.pk img.pk %}"
                               formmethod="post">
                               Delete
                             </button>
@@ -386,7 +387,6 @@
                     </div>
                   </div>
 
-                  {# Documents pane #}
                   <div class="tab-pane fade" id="pane-existing-docs" role="tabpanel" aria-labelledby="tab-existing-docs">
                     <div class="list-group list-group-flush">
                       {% for doc in documents %}
@@ -399,7 +399,7 @@
                           <button
                             type="submit"
                             class="btn btn-sm btn-outline-danger rounded-pill px-3 flex-shrink-0"
-                            formaction="{% url 'users:listing_media_delete' listing.pk doc.pk %}"
+                            formaction="{% url 'listings:listing_media_delete' listing.pk doc.pk %}"
                             formmethod="post">
                             Delete
                           </button>
@@ -419,14 +419,13 @@
 
           </div>
 
-          {# --- Step 6: Full-width CTA --- #}
           <div class="col-12">
             <div class="card gsc-cta-card border border-success shadow-sm rounded-xxl mt-1">
               <div class="card-body p-4 p-md-5">
                 <div class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-3">
                   <div class="text-center text-md-start">
-                    <div class="fw-semibold">Step 6 — Save changes or activate</div>
-                    <div class="text-muted small">
+                    <div class="h3 fw-bold text-success">Step 6 — Save changes or activate</div>
+                    <div class="text-muted fw-bold small">
                       Save updates anytime. Activate will take you to payment.
                     </div>
                   </div>
@@ -437,25 +436,24 @@
                     </button>
 
                     <button
+                      id="js-activate-btn"
                       type="submit"
                       name="action"
                       value="activate"
                       class="btn btn-success rounded-pill px-4"
-                      {% if not step6_done %}disabled{% endif %}>
-                      Activate listing
-                    </button>
+                      {% if not can_activate %}disabled{% endif %}>
+                        Activate listing
+                      </button>
                   </div>
                 </div>
 
-                {% if not step6_done %}
-                  <p class="text-muted small mt-3 mb-0 text-center">
-                    Complete Steps 2–5 before activating.
-                  </p>
-                {% else %}
-                  <p class="text-muted small mt-3 mb-0 text-center">
+                <p id="js-step6-msg" class="fw-bold small mt-3 mb-0 text-center {% if can_activate %}text-success{% else %}text-muted{% endif %}">
+                  {% if can_activate %}
                     Ready to activate — you’ll be taken to payment.
-                  </p>
-                {% endif %}
+                  {% else %}
+                    Complete Steps 2–5 before activating.
+                  {% endif %}
+                </p>
               </div>
             </div>
           </div>
@@ -502,7 +500,7 @@
     setOptions(outcodeEl, [], "Select postcode prefix");
     if (!country) return;
 
-    const res = await fetch("{% url 'users:api_counties' %}?country=" + encodeURIComponent(country));
+    const res = await fetch("{% url 'listings:api_counties' %}?country=" + encodeURIComponent(country));
     const data = await res.json();
 
     setOptions(countyEl, data.counties || [], "Select county", selectedCounty);
@@ -518,7 +516,7 @@
     setOptions(outcodeEl, [], "Select postcode prefix");
     if (!county) return;
 
-    const res = await fetch("{% url 'users:api_outcodes' %}?county=" + encodeURIComponent(county));
+    const res = await fetch("{% url 'listings:api_outcodes' %}?county=" + encodeURIComponent(county));
     const data = await res.json();
 
     setOptions(outcodeEl, data.outcodes || [], "Select postcode prefix", selectedOutcode);
@@ -527,11 +525,131 @@
   countryEl?.addEventListener("change", () => loadCounties(""));
   countyEl?.addEventListener("change", () => loadOutcodes(""));
 
-  if (initialCountry) {
-    countryEl.value = initialCountry;
-  }
+  if (initialCountry) countryEl.value = initialCountry;
   loadCounties(initialCounty);
+})();
+</script>
 
+<script>
+(function () {
+  const stepper = {
+    s1: document.getElementById("js-stepper-1"),
+    s2: document.getElementById("js-stepper-2"),
+    s3: document.getElementById("js-stepper-3"),
+    s4: document.getElementById("js-stepper-4"),
+    s5: document.getElementById("js-stepper-5"),
+    s6: document.getElementById("js-stepper-6"),
+    msg: document.getElementById("js-stepper-msg"),
+  };
+
+  const cards = {
+    c1: document.getElementById("js-card-1"),
+    c2: document.getElementById("js-card-2"),
+    c3: document.getElementById("js-card-3"),
+    c4: document.getElementById("js-card-4"),
+    c5: document.getElementById("js-card-5"),
+    msg6: document.getElementById("js-step6-msg"),
+  };
+
+  const activateBtn = document.getElementById("js-activate-btn");
+
+  const required = {
+    step1: ["#id_project_duration_days"],
+    step2: ["#id_source_use", "#id_target_use"],
+    step3: ["#id_funding_band", "#id_return_type", "#id_return_band", "#id_duration_days"],
+    step4: ["#id_country", "#id_county", "#id_postcode_prefix"],
+  };
+
+  const imgInput = document.getElementById("id_images");
+  const docInput = document.getElementById("id_documents");
+
+  function hasValue(sel) {
+    const el = document.querySelector(sel);
+    if (!el) return false;
+    return String(el.value || "").trim() !== "";
+  }
+
+  function stepOk(selectors) {
+    return (selectors || []).every(hasValue);
+  }
+
+  function existingMediaOk() {
+    const v = (stepper.s5?.dataset?.hasExisting || cards.c5?.dataset?.hasExisting || "0").trim();
+    return v === "1";
+  }
+
+  function mediaOk() {
+    const imgCount = imgInput?.files?.length || 0;
+    const docCount = docInput?.files?.length || 0;
+    return existingMediaOk() || ((imgCount + docCount) > 0);
+  }
+
+  function setPill(el, ok) {
+    if (!el) return;
+    el.classList.remove("bg-success", "text-white", "bg-light", "text-dark", "border");
+    if (ok) el.classList.add("bg-success", "text-white");
+    else el.classList.add("bg-light", "text-dark", "border");
+  }
+
+  function sync() {
+    const ok1 = stepOk(required.step1);
+    const ok2 = stepOk(required.step2);
+    const ok3 = stepOk(required.step3);
+    const ok4 = stepOk(required.step4);
+    const ok5 = mediaOk();
+    const okAll = ok1 && ok2 && ok3 && ok4 && ok5;
+
+    setPill(stepper.s1, ok1); setPill(cards.c1, ok1);
+    setPill(stepper.s2, ok2); setPill(cards.c2, ok2);
+    setPill(stepper.s3, ok3); setPill(cards.c3, ok3);
+    setPill(stepper.s4, ok4); setPill(cards.c4, ok4);
+    setPill(stepper.s5, ok5); setPill(cards.c5, ok5);
+    setPill(stepper.s6, okAll);
+
+    if (stepper.msg) {
+      stepper.msg.classList.remove("text-success", "text-muted");
+      if (okAll) {
+        stepper.msg.textContent = "Steps 1–5 complete — activation is available.";
+        stepper.msg.classList.add("text-success");
+      } else {
+        stepper.msg.textContent = "Complete steps 1–5 to enable activation. You can save a draft at any time.";
+        stepper.msg.classList.add("text-muted");
+      }
+    }
+
+    if (cards.msg6) {
+      cards.msg6.classList.remove("text-success", "text-muted");
+      if (okAll) {
+        cards.msg6.textContent = "Ready to activate — you’ll be taken to payment.";
+        cards.msg6.classList.add("text-success");
+      } else if (!ok5) {
+        cards.msg6.textContent = "Upload at least one image or document to complete Step 5.";
+        cards.msg6.classList.add("text-muted");
+      } else {
+        cards.msg6.textContent = "Complete Steps 2–5 before activating.";
+        cards.msg6.classList.add("text-muted");
+      }
+    }
+
+    if (activateBtn) {
+      activateBtn.disabled = !okAll;
+    }
+  }
+
+  const watch = [
+    ...required.step1, ...required.step2, ...required.step3, ...required.step4,
+  ];
+
+  watch.forEach(sel => {
+    const el = document.querySelector(sel);
+    el?.addEventListener("change", sync);
+    el?.addEventListener("input", sync);
+  });
+
+  imgInput?.addEventListener("change", sync);
+  docInput?.addEventListener("change", sync);
+
+  sync();
 })();
 </script>
 
