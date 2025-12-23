@@ -845,28 +845,43 @@ def api_outcodes(request):
 
 @login_required
 def search_listings_view(request):
-    q = (request.GET.get("q") or "").strip()
+    project_name = (request.GET.get("project_name") or "").strip()
+    listed_by = (request.GET.get("listed_by") or "").strip()
+
+    source_use = (request.GET.get("source_use") or "").strip()
+    target_use = (request.GET.get("target_use") or "").strip()
+
     country = (request.GET.get("country") or "").strip().lower()
     county = (request.GET.get("county") or "").strip()
     postcode_prefix = (request.GET.get("postcode_prefix") or "").strip()
+
     funding_band = (request.GET.get("funding_band") or "").strip()
     return_type = (request.GET.get("return_type") or "").strip()
+    return_band = (request.GET.get("return_band") or "").strip()
 
     qs = (
         Listing.objects.filter(status=Listing.Status.ACTIVE)
         .exclude(owner=request.user)
+        .select_related("owner")
         .prefetch_related("media")
         .order_by("-created_at")
     )
 
-    if q:
+    if project_name:
+        qs = qs.filter(project_name__icontains=project_name)
+
+    if listed_by:
         qs = qs.filter(
-            Q(country__icontains=q)
-            | Q(county__icontains=q)
-            | Q(postcode_prefix__icontains=q)
-            | Q(source_use__icontains=q)
-            | Q(target_use__icontains=q)
+            Q(owner__first_name__icontains=listed_by)
+            | Q(owner__last_name__icontains=listed_by)
+            | Q(owner__email__icontains=listed_by)
         )
+
+    if source_use:
+        qs = qs.filter(source_use=source_use)
+
+    if target_use:
+        qs = qs.filter(target_use=target_use)
 
     if country:
         qs = qs.filter(country__iexact=country)
@@ -883,26 +898,43 @@ def search_listings_view(request):
     if return_type:
         qs = qs.filter(return_type=return_type)
 
+    if return_band:
+        qs = qs.filter(return_band=return_band)
+
     paginator = Paginator(qs, 12)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
+
+    source_use_choices = Listing._meta.get_field("source_use").choices
+    target_use_choices = Listing._meta.get_field("target_use").choices
+    return_band_choices = Listing._meta.get_field("return_band").choices
 
     return render(
         request,
         "listings/search_listings.html",
         {
-            "q": q,
+            "project_name": project_name,
+            "listed_by": listed_by,
+            "source_use": source_use,
+            "target_use": target_use,
             "country": country,
             "county": county,
             "postcode_prefix": postcode_prefix,
             "funding_band": funding_band,
             "return_type": return_type,
+            "return_band": return_band,
+
             "page_obj": page_obj,
+
+            "source_use_choices": source_use_choices,
+            "target_use_choices": target_use_choices,
+            "country_choices": Listing.Country.choices,
             "funding_band_choices": Listing.FundingBand.choices,
             "return_type_choices": Listing.ReturnType.choices,
-            "country_choices": Listing.Country.choices,
+            "return_band_choices": return_band_choices,
         },
     )
+
 
 
 @login_required

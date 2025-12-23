@@ -1,10 +1,10 @@
-:root {
-  --gsc-green: #2f6f3a;
-  --gsc-green-dark: #275f31;
-  --gsc-green-ink: rgba(255, 255, 255, 0.92);
-  --gsc-green-ink-soft: rgba(255, 255, 255, 0.78);
-  --gsc-white: #ffffff;
+:root{
+  --gsc-bar-border: rgba(255,255,255,0.14);
 }
+.gsc-bar { border-color: var(--gsc-bar-border); }
+.gsc-nav { border-bottom: 1px solid var(--gsc-bar-border); }
+.gsc-footer { border-top: 1px solid var(--gsc-bar-border); }
+.gsc-footer-bottom { border-top: 1px solid var(--gsc-bar-border); }
 
 .gsc-bar {
   background: linear-gradient(180deg, var(--gsc-green) 0%, var(--gsc-green-dark) 100%);
