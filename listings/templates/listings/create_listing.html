@@ -1,5 +1,6 @@
 {% extends "core/base_users.html" %}
 {% load widget_tweaks %}
+{% load static %}
 
 {% block title %}Create Listing – Green Square Capital{% endblock %}
 
@@ -23,37 +24,43 @@
           <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
 
             <div class="d-flex flex-wrap gap-2 align-items-center">
-              <span id="js-stepper-1" class="badge rounded-pill px-3 py-2 {% if step1_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %}">
+              <span id="js-stepper-1"
+                class="badge rounded-pill px-3 py-2 {% if step1_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %}">
                 1. Project details
               </span>
 
               <span class="text-muted small">→</span>
 
-              <span id="js-stepper-2" class="badge rounded-pill px-3 py-2 {% if step2_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %}">
+              <span id="js-stepper-2"
+                class="badge rounded-pill px-3 py-2 {% if step2_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %}">
                 2. Project type
               </span>
 
               <span class="text-muted small">→</span>
 
-              <span id="js-stepper-3" class="badge rounded-pill px-3 py-2 {% if step3_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %}">
+              <span id="js-stepper-3"
+                class="badge rounded-pill px-3 py-2 {% if step3_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %}">
                 3. Funding & returns
               </span>
 
               <span class="text-muted small">→</span>
 
-              <span id="js-stepper-4" class="badge rounded-pill px-3 py-2 {% if step4_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %}">
+              <span id="js-stepper-4"
+                class="badge rounded-pill px-3 py-2 {% if step4_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %}">
                 4. Location
               </span>
 
               <span class="text-muted small">→</span>
 
-              <span id="js-stepper-5" class="badge rounded-pill px-3 py-2 {% if step5_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %}">
+              <span id="js-stepper-5"
+                class="badge rounded-pill px-3 py-2 {% if step5_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %}">
                 5. Media uploads
               </span>
 
               <span class="text-muted small">→</span>
 
-              <span id="js-stepper-6" class="badge rounded-pill px-3 py-2 {% if step6_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %}">
+              <span id="js-stepper-6"
+                class="badge rounded-pill px-3 py-2 {% if step6_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %}">
                 6. Activate listing
               </span>
             </div>
@@ -63,9 +70,9 @@
 
           <div id="js-stepper-msg" class="mt-2 small {% if can_activate %}text-success{% else %}text-muted{% endif %}">
             {% if can_activate %}
-              Steps 1–5 complete — activation is available.
+            Steps 1–5 complete — activation is available.
             {% else %}
-              Complete steps 1–5 to enable activation. You can save a draft at any time.
+            Complete steps 1–5 to enable activation. You can save a draft at any time.
             {% endif %}
           </div>
         </div>
@@ -75,15 +82,15 @@
         {% csrf_token %}
 
         {% if form.non_field_errors %}
-          <div class="alert alert-danger rounded-xxl border border-success shadow-sm">
-            {{ form.non_field_errors }}
-          </div>
+        <div class="alert alert-danger rounded-xxl border border-success shadow-sm">
+          {{ form.non_field_errors }}
+        </div>
         {% endif %}
 
         {% if media_form.non_field_errors %}
-          <div class="alert alert-danger rounded-xxl border border-success shadow-sm">
-            {{ media_form.non_field_errors }}
-          </div>
+        <div class="alert alert-danger rounded-xxl border border-success shadow-sm">
+          {{ media_form.non_field_errors }}
+        </div>
         {% endif %}
 
         <div class="row g-4 align-items-stretch">
@@ -98,7 +105,8 @@
                     <p class="text-muted small mb-0">Name your project and set the expected completion term.</p>
                   </div>
 
-                  <span id="js-card-1" class="badge rounded-pill px-3 {% if step1_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %}">
+                  <span id="js-card-1"
+                    class="badge rounded-pill px-3 {% if step1_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %}">
                     Step 1
                   </span>
                 </div>
@@ -108,7 +116,7 @@
                     <label for="id_project_name" class="form-label small fw-semibold">Project name</label>
                     {{ form.project_name|add_class:"form-control" }}
                     {% if form.project_name.errors %}
-                      <div class="text-danger small mt-1">{{ form.project_name.errors }}</div>
+                    <div class="text-danger small mt-1">{{ form.project_name.errors }}</div>
                     {% endif %}
                     <div class="form-text">Optional — e.g. “Old Police Station”.</div>
                   </div>
@@ -117,7 +125,7 @@
                     <label for="id_project_duration_days" class="form-label small fw-semibold">Project duration</label>
                     {{ form.project_duration_days|add_class:"form-select" }}
                     {% if form.project_duration_days.errors %}
-                      <div class="text-danger small mt-1">{{ form.project_duration_days.errors }}</div>
+                    <div class="text-danger small mt-1">{{ form.project_duration_days.errors }}</div>
                     {% endif %}
                     <div class="form-text">How long the project is expected to take to complete.</div>
                   </div>
@@ -133,7 +141,8 @@
                     <p class="text-muted small mb-0">Choose what the asset is moving from and to.</p>
                   </div>
 
-                  <span id="js-card-2" class="badge rounded-pill px-3 {% if step2_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %}">
+                  <span id="js-card-2"
+                    class="badge rounded-pill px-3 {% if step2_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %}">
                     Step 2
                   </span>
                 </div>
@@ -143,7 +152,7 @@
                     <label for="id_source_use" class="form-label small fw-semibold">From</label>
                     {{ form.source_use|add_class:"form-select" }}
                     {% if form.source_use.errors %}
-                      <div class="text-danger small mt-1">{{ form.source_use.errors }}</div>
+                    <div class="text-danger small mt-1">{{ form.source_use.errors }}</div>
                     {% endif %}
                   </div>
 
@@ -151,7 +160,7 @@
                     <label for="id_target_use" class="form-label small fw-semibold">To</label>
                     {{ form.target_use|add_class:"form-select" }}
                     {% if form.target_use.errors %}
-                      <div class="text-danger small mt-1">{{ form.target_use.errors }}</div>
+                    <div class="text-danger small mt-1">{{ form.target_use.errors }}</div>
                     {% endif %}
                   </div>
                 </div>
@@ -166,7 +175,8 @@
                     <p class="text-muted small mb-0">Set investor expectations and listing duration.</p>
                   </div>
 
-                  <span id="js-card-3" class="badge rounded-pill px-3 {% if step3_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %}">
+                  <span id="js-card-3"
+                    class="badge rounded-pill px-3 {% if step3_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %}">
                     Step 3
                   </span>
                 </div>
@@ -176,7 +186,7 @@
                     <label for="id_funding_band" class="form-label small fw-semibold">Funding amount</label>
                     {{ form.funding_band|add_class:"form-select" }}
                     {% if form.funding_band.errors %}
-                      <div class="text-danger small mt-1">{{ form.funding_band.errors }}</div>
+                    <div class="text-danger small mt-1">{{ form.funding_band.errors }}</div>
                     {% endif %}
                   </div>
 
@@ -184,7 +194,7 @@
                     <label for="id_return_type" class="form-label small fw-semibold">Return type</label>
                     {{ form.return_type|add_class:"form-select" }}
                     {% if form.return_type.errors %}
-                      <div class="text-danger small mt-1">{{ form.return_type.errors }}</div>
+                    <div class="text-danger small mt-1">{{ form.return_type.errors }}</div>
                     {% endif %}
                   </div>
 
@@ -192,7 +202,7 @@
                     <label for="id_return_band" class="form-label small fw-semibold">Potential return</label>
                     {{ form.return_band|add_class:"form-select" }}
                     {% if form.return_band.errors %}
-                      <div class="text-danger small mt-1">{{ form.return_band.errors }}</div>
+                    <div class="text-danger small mt-1">{{ form.return_band.errors }}</div>
                     {% endif %}
                   </div>
 
@@ -200,7 +210,7 @@
                     <label for="id_duration_days" class="form-label small fw-semibold">Listing duration</label>
                     {{ form.duration_days|add_class:"form-select" }}
                     {% if form.duration_days.errors %}
-                      <div class="text-danger small mt-1">{{ form.duration_days.errors }}</div>
+                    <div class="text-danger small mt-1">{{ form.duration_days.errors }}</div>
                     {% endif %}
                   </div>
                 </div>
@@ -223,7 +233,8 @@
                     <p class="text-muted small mb-0">Narrow down to a postcode prefix for matching investors.</p>
                   </div>
 
-                  <span id="js-card-4" class="badge rounded-pill px-3 {% if step4_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %}">
+                  <span id="js-card-4"
+                    class="badge rounded-pill px-3 {% if step4_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %}">
                     Step 4
                   </span>
                 </div>
@@ -233,7 +244,7 @@
                     <label for="id_country" class="form-label small fw-semibold">Country</label>
                     {{ form.country|add_class:"form-select" }}
                     {% if form.country.errors %}
-                      <div class="text-danger small mt-1">{{ form.country.errors }}</div>
+                    <div class="text-danger small mt-1">{{ form.country.errors }}</div>
                     {% endif %}
                   </div>
 
@@ -241,7 +252,7 @@
                     <label for="id_county" class="form-label small fw-semibold">County</label>
                     {{ form.county|add_class:"form-select" }}
                     {% if form.county.errors %}
-                      <div class="text-danger small mt-1">{{ form.county.errors }}</div>
+                    <div class="text-danger small mt-1">{{ form.county.errors }}</div>
                     {% endif %}
                   </div>
 
@@ -249,7 +260,7 @@
                     <label for="id_postcode_prefix" class="form-label small fw-semibold">Postcode prefix</label>
                     {{ form.postcode_prefix|add_class:"form-select" }}
                     {% if form.postcode_prefix.errors %}
-                      <div class="text-danger small mt-1">{{ form.postcode_prefix.errors }}</div>
+                    <div class="text-danger small mt-1">{{ form.postcode_prefix.errors }}</div>
                     {% endif %}
                   </div>
                 </div>
@@ -273,7 +284,8 @@
                     <p class="text-muted small mb-0">Add images and documents to support your opportunity.</p>
                   </div>
 
-                  <span id="js-card-5" class="badge rounded-pill px-3 {% if step5_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %}">
+                  <span id="js-card-5"
+                    class="badge rounded-pill px-3 {% if step5_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %}">
                     Step 5
                   </span>
                 </div>
@@ -286,7 +298,7 @@
                       </label>
                       {{ media_form.images|add_class:"form-control" }}
                       {% if media_form.images.errors %}
-                        <div class="text-danger small mt-1">{{ media_form.images.errors }}</div>
+                      <div class="text-danger small mt-1">{{ media_form.images.errors }}</div>
                       {% endif %}
                       <div class="form-text">You can select multiple images.</div>
                     </div>
@@ -299,7 +311,7 @@
                       </label>
                       {{ media_form.documents|add_class:"form-control" }}
                       {% if media_form.documents.errors %}
-                        <div class="text-danger small mt-1">{{ media_form.documents.errors }}</div>
+                      <div class="text-danger small mt-1">{{ media_form.documents.errors }}</div>
                       {% endif %}
                       <div class="form-text">You can select multiple documents.</div>
                     </div>
@@ -307,11 +319,11 @@
                 </div>
 
                 {% if not step5_done %}
-                  <div class="alert alert-warning mt-3 mb-0 rounded-4 border-0">
-                    <div class="small">
-                      Step 5 isn’t complete yet — upload at least 1 image or document and save.
-                    </div>
+                <div class="alert alert-warning mt-3 mb-0 rounded-4 border-0">
+                  <div class="small">
+                    Step 5 isn’t complete yet — upload at least 1 image or document and save.
                   </div>
+                </div>
                 {% endif %}
 
               </div>
@@ -321,26 +333,19 @@
               <div class="card-body p-4 p-md-5 text-center d-flex flex-column justify-content-center h-100">
 
                 <div class="d-flex justify-content-center mb-3">
-                  <span id="js-card-6" class="badge rounded-pill px-3 {% if step6_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %}">
+                  <span id="js-card-6"
+                    class="badge rounded-pill px-3 {% if step6_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %}">
                     Step 6 • Activate listing
                   </span>
                 </div>
 
-                <div class="d-flex flex-column flex-md-row gap-2 justify-content-center align-items-stretch align-items-md-center">
-                  <button
-                    type="submit"
-                    name="action"
-                    value="save_draft"
-                    class="btn btn-outline-success px-4">
+                <div
+                  class="d-flex flex-column flex-md-row gap-2 justify-content-center align-items-stretch align-items-md-center">
+                  <button type="submit" name="action" value="save_draft" class="btn btn-outline-success px-4">
                     Save as draft
                   </button>
 
-                  <button
-                    id="js-activate-btn"
-                    type="submit"
-                    name="action"
-                    value="activate"
-                    class="btn btn-success px-4"
+                  <button id="js-activate-btn" type="submit" name="action" value="activate" class="btn btn-success px-4"
                     {% if not can_activate %}disabled{% endif %}>
                     Activate listing
                   </button>
@@ -350,11 +355,12 @@
                   You will be able to edit your draft from the dashboard view.
                 </p>
 
-                <p id="js-step6-msg" class="small mt-2 mb-0 {% if can_activate %}text-success{% else %}text-muted{% endif %}">
+                <p id="js-step6-msg"
+                  class="small mt-2 mb-0 {% if can_activate %}text-success{% else %}text-muted{% endif %}">
                   {% if can_activate %}
-                    Ready to activate — you’ll be taken to payment.
+                  Ready to activate — you’ll be taken to payment.
                   {% else %}
-                    Complete Steps 1–5 (and save) to enable activation.
+                  Complete Steps 1–5 (and save) to enable activation.
                   {% endif %}
                 </p>
 
@@ -370,209 +376,10 @@
   </div>
 </div>
 
-<script>
-(function () {
-  const countryEl = document.getElementById("id_country");
-  const countyEl = document.getElementById("id_county");
-  const outcodeEl = document.getElementById("id_postcode_prefix");
+<div id="js-listing-endpoints" data-counties-url="{% url 'listings:api_counties' %}"
+  data-outcodes-url="{% url 'listings:api_outcodes' %}">
+</div>
 
-  function setOptions(selectEl, items, placeholder) {
-    if (!selectEl) return;
-    selectEl.innerHTML = "";
+<script src="{% static 'js/listing_stepper.js' %}"></script>
 
-    const opt0 = document.createElement("option");
-    opt0.value = "";
-    opt0.textContent = placeholder;
-    selectEl.appendChild(opt0);
-
-    (items || []).forEach(v => {
-      const opt = document.createElement("option");
-      opt.value = v;
-      opt.textContent = v;
-      selectEl.appendChild(opt);
-    });
-  }
-
-  async function loadCounties() {
-    const country = (countryEl?.value || "").trim();
-    setOptions(countyEl, [], "Select county");
-    setOptions(outcodeEl, [], "Select postcode prefix");
-    if (!country) return;
-
-    const res = await fetch("{% url 'listings:api_counties' %}?country=" + encodeURIComponent(country));
-    const data = await res.json();
-    setOptions(countyEl, data.counties || [], "Select county");
-  }
-
-  async function loadOutcodes() {
-    const county = (countyEl?.value || "").trim();
-    setOptions(outcodeEl, [], "Select postcode prefix");
-    if (!county) return;
-
-    const res = await fetch("{% url 'listings:api_outcodes' %}?county=" + encodeURIComponent(county));
-    const data = await res.json();
-    setOptions(outcodeEl, data.outcodes || [], "Select postcode prefix");
-  }
-
-  countryEl?.addEventListener("change", loadCounties);
-  countyEl?.addEventListener("change", loadOutcodes);
-
-  setOptions(countyEl, [], "Select county");
-  setOptions(outcodeEl, [], "Select postcode prefix");
-})();
-</script>
-
-<script>
-(function () {
-  const stepper = {
-    s1: document.getElementById("js-stepper-1"),
-    s2: document.getElementById("js-stepper-2"),
-    s3: document.getElementById("js-stepper-3"),
-    s4: document.getElementById("js-stepper-4"),
-    s5: document.getElementById("js-stepper-5"),
-    s6: document.getElementById("js-stepper-6"),
-    msg: document.getElementById("js-stepper-msg"),
-  };
-
-  const cards = {
-    c1: document.getElementById("js-card-1"),
-    c2: document.getElementById("js-card-2"),
-    c3: document.getElementById("js-card-3"),
-    c4: document.getElementById("js-card-4"),
-    c5: document.getElementById("js-card-5"),
-    c6: document.getElementById("js-card-6"),
-    msg6: document.getElementById("js-step6-msg"),
-  };
-
-  const activateBtn = document.getElementById("js-activate-btn");
-
-  const required = {
-    step1: ["#id_project_duration_days"],
-    step2: ["#id_source_use", "#id_target_use"],
-    step3: ["#id_funding_band", "#id_return_type", "#id_return_band", "#id_duration_days"],
-    step4: ["#id_country", "#id_county", "#id_postcode_prefix"],
-  };
-
-  const imgInput = document.getElementById("id_images");
-  const docInput = document.getElementById("id_documents");
-
-  function hasValue(sel) {
-    const el = document.querySelector(sel);
-    if (!el) return false;
-    return String(el.value || "").trim() !== "";
-  }
-
-  function stepOk(selectors) {
-    return (selectors || []).every(hasValue);
-  }
-
-  function mediaSelected() {
-    const imgCount = imgInput?.files?.length || 0;
-    const docCount = docInput?.files?.length || 0;
-    return (imgCount + docCount) > 0;
-  }
-
-  function setPill(el, ok) {
-    if (!el) return;
-    el.classList.remove("bg-success", "text-white", "bg-light", "text-dark", "border");
-    if (ok) el.classList.add("bg-success", "text-white");
-    else el.classList.add("bg-light", "text-dark", "border");
-  }
-
-  function sync() {
-    const ok1 = stepOk(required.step1);
-    const ok2 = stepOk(required.step2);
-    const ok3 = stepOk(required.step3);
-    const ok4 = stepOk(required.step4);
-    const ok5 = mediaSelected();
-    const okAll = ok1 && ok2 && ok3 && ok4 && ok5;
-
-    setPill(stepper.s1, ok1); setPill(cards.c1, ok1);
-    setPill(stepper.s2, ok2); setPill(cards.c2, ok2);
-    setPill(stepper.s3, ok3); setPill(cards.c3, ok3);
-    setPill(stepper.s4, ok4); setPill(cards.c4, ok4);
-    setPill(stepper.s5, ok5); setPill(cards.c5, ok5);
-    setPill(stepper.s6, okAll); setPill(cards.c6, okAll);
-
-    if (stepper.msg) {
-      stepper.msg.classList.remove("text-success", "text-muted");
-      if (okAll) {
-        stepper.msg.textContent = "Steps 1–5 complete — activation is available.";
-        stepper.msg.classList.add("text-success");
-      } else {
-        stepper.msg.textContent = "Complete steps 1–5 to enable activation. You can save a draft at any time.";
-        stepper.msg.classList.add("text-muted");
-      }
-    }
-
-    if (cards.msg6) {
-      cards.msg6.classList.remove("text-success", "text-muted");
-      if (okAll) {
-        cards.msg6.textContent = "Ready to activate — you’ll be taken to payment.";
-        cards.msg6.classList.add("text-success");
-      } else if (!ok5) {
-        cards.msg6.textContent = "Upload at least one image or document to complete Step 5.";
-        cards.msg6.classList.add("text-muted");
-      } else {
-        cards.msg6.textContent = "Complete Steps 1–5 to enable activation.";
-        cards.msg6.classList.add("text-muted");
-      }
-    }
-
-    if (activateBtn) {
-      activateBtn.disabled = !okAll;
-    }
-  }
-
-  const watch = [
-    ...required.step1, ...required.step2, ...required.step3, ...required.step4,
-  ];
-
-  watch.forEach(sel => {
-    const el = document.querySelector(sel);
-    el?.addEventListener("change", sync);
-    el?.addEventListener("input", sync);
-  });
-
-  imgInput?.addEventListener("change", sync);
-  docInput?.addEventListener("change", sync);
-
-  sync();
-})();
-</script>
-
-<style>
-  .rounded-xxl { border-radius: 1.25rem !important; }
-
-  .gsc-form-card {
-    position: relative;
-    overflow: hidden;
-  }
-  .gsc-form-card::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 6px;
-    background: linear-gradient(180deg, #198754 0%, #0f6f45 100%);
-    opacity: 0.9;
-  }
-
-  .gsc-cta-card {
-    background:
-      radial-gradient(900px 500px at 20% 20%, rgba(25,135,84,0.18), transparent 55%),
-      linear-gradient(180deg, rgba(25,135,84,0.08), rgba(25,135,84,0.03));
-  }
-
-  .gsc-form-card,
-  .gsc-cta-card {
-    transition: transform .15s ease, box-shadow .15s ease;
-  }
-  .gsc-form-card:hover,
-  .gsc-cta-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 .75rem 1.5rem rgba(15, 23, 42, 0.10);
-  }
-</style>
 {% endblock %}
