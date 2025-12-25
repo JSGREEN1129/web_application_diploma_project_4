@@ -93,6 +93,10 @@ body {
   padding: .85rem 1.2rem;
 }
 
+.btn-outline-light:hover {
+    color: #0b4a0d;
+}
+
 .badge {
   border-radius: 999px;
 }
