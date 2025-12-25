@@ -8,7 +8,8 @@
   <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
     <div>
       <span class="badge text-bg-success px-3 py-2 rounded-pill">Green Square Capital</span>
-      <h1 class="h4 fw-semibold mb-1 mt-3">{{ listing.source_use|capfirst }} → {{ listing.target_use|capfirst }}</h1>
+      <h1 class="h2 fw-semibold text-success mb-1 mt-3">{{ listing.source_use|capfirst }} → {{
+        listing.target_use|capfirst }}</h1>
       <p class="text-muted small mb-0">
         {{ listing.country|capfirst }} • {{ listing.county }} • {{ listing.postcode_prefix }}
       </p>
@@ -16,94 +17,87 @@
 
     <div class="d-flex align-items-center gap-2">
       {% if listing.status == "draft" %}
-        <span class="badge text-bg-secondary rounded-pill px-3">Draft</span>
+      <span class="badge text-bg-secondary rounded-pill px-3">Draft</span>
       {% elif listing.status == "active" %}
-        <span class="badge text-bg-success rounded-pill px-3">Active</span>
+      <span class="badge text-bg-success rounded-pill px-3">Active</span>
       {% elif listing.status == "expired" %}
-        <span class="badge text-bg-dark rounded-pill px-3">Expired</span>
+      <span class="badge text-bg-dark rounded-pill px-3">Expired</span>
       {% else %}
-        <span class="badge text-bg-light rounded-pill px-3">Unknown</span>
+      <span class="badge text-bg-light rounded-pill px-3">Unknown</span>
       {% endif %}
     </div>
   </div>
 
   {# --- Actions --- #}
-  <div class="card border-0 shadow-sm rounded-xxl mb-4">
-    <div class="card-body p-3 p-md-4 d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-3">
+  <div class="card border border-success shadow-sm rounded-xxl mb-4">
+    <div
+      class="card-body p-3 p-md-4 d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-3">
       <div>
-        <div class="fw-semibold">Listing actions</div>
+        <div class="h3 fw-semibold text-success">Listing actions</div>
         <div class="text-muted small">Manage your listing and access uploaded files.</div>
       </div>
 
       <div class="d-flex gap-2 flex-wrap justify-content-md-end">
-        <a href="{% url 'users:dashboard' %}" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+        <a href="{% url 'users:dashboard' %}" class="btn btn-sm btn-outline-success rounded-pill px-3">
           ← Back to Dashboard
         </a>
 
         {% if listing.status == "draft" %}
-          <a href="{% url 'users:listing_edit' listing.pk %}" class="btn btn-sm btn-success rounded-pill px-3">
-            Edit listing
-          </a>
+        <a href="{% url 'users:listing_edit' listing.pk %}" class="btn btn-sm btn-success rounded-pill px-3">
+          Edit listing
+        </a>
 
-          <a href="{% url 'users:listing_checkout' listing.pk %}" class="btn btn-sm btn-success rounded-pill px-3">
-            Continue to payment
-          </a>
+        <a href="{% url 'users:listing_checkout' listing.pk %}" class="btn btn-sm btn-success rounded-pill px-3">
+          Continue to payment
+        </a>
 
-          <button
-            type="button"
-            class="btn btn-sm btn-outline-danger rounded-pill px-3"
-            data-bs-toggle="modal"
-            data-bs-target="#deleteListingModal"
-          >
-            Delete listing
-          </button>
+        <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3" data-bs-toggle="modal"
+          data-bs-target="#deleteListingModal">
+          Delete listing
+        </button>
         {% endif %}
       </div>
     </div>
   </div>
 
   {% if listing.status == "draft" %}
-    <div class="modal fade" id="deleteListingModal" tabindex="-1" aria-labelledby="deleteListingModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-sm rounded-xxl">
-          <form method="post" action="{% url 'users:listing_delete' listing.pk %}">
-            {% csrf_token %}
-            <div class="modal-header border-0 pb-0">
-              <div>
-                <h5 class="modal-title fw-semibold" id="deleteListingModalLabel">Confirm delete</h5>
-                <p class="text-muted small mb-0">This action cannot be undone.</p>
-              </div>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+  <div class="modal fade" id="deleteListingModal" tabindex="-1" aria-labelledby="deleteListingModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-sm rounded-xxl">
+        <form method="post" action="{% url 'users:listing_delete' listing.pk %}">
+          {% csrf_token %}
+          <div class="modal-header border-0 pb-0">
+            <div>
+              <h5 class="modal-title fw-semibold" id="deleteListingModalLabel">Confirm delete</h5>
+              <p class="text-muted small mb-0">This action cannot be undone.</p>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+
+          <div class="modal-body pt-3">
+            <div class="rounded-4 bg-light p-3 mb-3">
+              <p class="mb-0 small">
+                This will permanently delete this draft listing and its uploaded files.
+              </p>
             </div>
 
-            <div class="modal-body pt-3">
-              <div class="rounded-4 bg-light p-3 mb-3">
-                <p class="mb-0 small">
-                  This will permanently delete this draft listing and its uploaded files.
-                </p>
-              </div>
-
-              <div class="mb-2">
-                <label for="deletePassword" class="form-label small fw-semibold">Enter your password to confirm</label>
-                <input
-                  type="password"
-                  class="form-control"
-                  id="deletePassword"
-                  name="password"
-                  required
-                  autocomplete="current-password"
-                >
-              </div>
+            <div class="mb-2">
+              <label for="deletePassword" class="form-label small fw-semibold">Enter your password to confirm</label>
+              <input type="password" class="form-control" id="deletePassword" name="password" required
+                autocomplete="current-password">
             </div>
+          </div>
 
-            <div class="modal-footer border-0 pt-0">
-              <button type="button" class="btn btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
-              <button type="submit" class="btn btn-danger rounded-pill px-3">Delete</button>
-            </div>
-          </form>
-        </div>
+          <div class="modal-footer border-0 pt-0">
+            <button type="button" class="btn btn-outline-secondary rounded-pill px-3"
+              data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-danger rounded-pill px-3">Delete</button>
+          </div>
+        </form>
       </div>
     </div>
+  </div>
   {% endif %}
 
   {# --- Content grid (summary matches combined height of images+documents on lg+) --- #}
@@ -111,17 +105,17 @@
 
     {# LEFT: Summary fills full column height #}
     <div class="col-12 col-lg-4 d-flex">
-      <div class="card border-0 shadow-sm rounded-xxl h-100 w-100">
+      <div class="card border border-success shadow-sm rounded-xxl h-100 w-100">
         <div class="card-body p-4 p-md-5 d-flex flex-column">
           <div class="d-flex align-items-center justify-content-between mb-3">
             <div>
-              <h2 class="h5 fw-semibold mb-1">Summary</h2>
+              <h2 class="h3 fw-semibold text-success mb-1">Summary</h2>
               <p class="text-muted small mb-0">Key listing details at a glance.</p>
             </div>
-            <span class="badge bg-light text-dark border rounded-pill px-3">Details</span>
+            <span class="badge bg-success text-white border rounded-pill px-3">Details</span>
           </div>
 
-          <div class="rounded-4 bg-light p-3">
+          <div class="rounded-4 border border-success bg-light p-3">
             <div class="d-flex justify-content-between small">
               <span class="text-muted">Funding</span>
               <span class="fw-semibold">{{ listing.get_funding_band_display }}</span>
@@ -140,18 +134,18 @@
             </div>
 
             {% if listing.active_until %}
-              <hr class="my-3">
-              <div class="d-flex justify-content-between small">
-                <span class="text-muted">Active until</span>
-                <span class="fw-semibold">{{ listing.active_until|date:"d M Y" }}</span>
-              </div>
+            <hr class="my-3">
+            <div class="d-flex justify-content-between small">
+              <span class="text-muted">Active until</span>
+              <span class="fw-semibold">{{ listing.active_until|date:"d M Y" }}</span>
+            </div>
             {% endif %}
           </div>
 
           {# Push footer to bottom to feel like a proper sidebar #}
           <div class="mt-auto pt-4">
             <div class="border-top pt-3">
-              <a href="{% url 'users:dashboard' %}" class="btn btn-outline-secondary w-100 rounded-pill">
+              <a href="{% url 'users:dashboard' %}" class="btn btn-outline-success w-100 rounded-pill">
                 ← Back to Dashboard
               </a>
             </div>
@@ -164,63 +158,63 @@
     <div class="col-12 col-lg-8 d-flex flex-column gap-4">
 
       {# --- Images --- #}
-      <div class="card border-0 shadow-sm rounded-xxl">
+      <div class="card border border-success shadow-sm rounded-xxl">
         <div class="card-body p-4 p-md-5">
           <div class="d-flex align-items-center justify-content-between mb-3">
             <div>
-              <h2 class="h5 fw-semibold mb-1">Images</h2>
+              <h2 class="h3 fw-semibold text-success mb-1">Images</h2>
               <p class="text-muted small mb-0">Click an image to open it in a new tab.</p>
             </div>
-            <span class="badge bg-light text-dark border rounded-pill px-3">{{ images|length }}</span>
+            <span class="badge bg-success text-white border rounded-pill px-3">{{ images|length }}</span>
           </div>
 
           <div class="row g-3">
             {% for img in images %}
-              <div class="col-6 col-md-4 col-lg-3">
-                <a class="d-block text-decoration-none" href="{{ img.file.url }}" target="_blank" rel="noopener">
-                  <div class="gsc-thumb rounded-4 overflow-hidden bg-light border-subtle">
-                    <img src="{{ img.file.url }}" class="img-fluid" alt="">
-                  </div>
-                </a>
-              </div>
-            {% empty %}
-              <div class="col-12">
-                <div class="rounded-4 bg-light p-3">
-                  <p class="text-muted small mb-0">No images uploaded.</p>
+            <div class="col-6 col-md-4 col-lg-3">
+              <a class="d-block text-decoration-none" href="{{ img.file.url }}" target="_blank" rel="noopener">
+                <div class="gsc-thumb rounded-4 overflow-hidden bg-light border-subtle">
+                  <img src="{{ img.file.url }}" class="img-fluid" alt="">
                 </div>
+              </a>
+            </div>
+            {% empty %}
+            <div class="col-12">
+              <div class="rounded-4 bg-light p-3">
+                <p class="text-muted small mb-0">No images uploaded.</p>
               </div>
+            </div>
             {% endfor %}
           </div>
         </div>
       </div>
 
       {# --- Documents --- #}
-      <div class="card border-0 shadow-sm rounded-xxl">
+      <div class="card border border-success shadow-sm rounded-xxl">
         <div class="card-body p-4 p-md-5">
           <div class="d-flex align-items-center justify-content-between mb-3">
             <div>
-              <h2 class="h5 fw-semibold mb-1">Documents</h2>
+              <h2 class="h3 fw-semibold text-success mb-1">Documents</h2>
               <p class="text-muted small mb-0">Open documents in a new tab.</p>
             </div>
-            <span class="badge bg-light text-dark border rounded-pill px-3">{{ documents|length }}</span>
+            <span class="badge bg-success text-white border rounded-pill px-3">{{ documents|length }}</span>
           </div>
 
           <div class="list-group list-group-flush">
             {% for doc in documents %}
-              <div class="list-group-item px-0 py-3 d-flex justify-content-between align-items-center">
-                <div class="min-w-0">
-                  <div class="fw-semibold small text-truncate">{{ doc.file.name }}</div>
-                  <div class="text-muted small">Document</div>
-                </div>
-                <a class="btn btn-sm btn-outline-secondary rounded-pill px-3 flex-shrink-0"
-                   href="{{ doc.file.url }}" target="_blank" rel="noopener">
-                  Open
-                </a>
+            <div class="list-group-item px-0 py-3 d-flex justify-content-between align-items-center">
+              <div class="min-w-0">
+                <div class="fw-semibold small text-truncate">{{ doc.file.name }}</div>
+                <div class="text-muted small">Document</div>
               </div>
+              <a class="btn btn-sm btn-outline-success rounded-pill px-3 flex-shrink-0" href="{{ doc.file.url }}"
+                target="_blank" rel="noopener">
+                Open
+              </a>
+            </div>
             {% empty %}
-              <div class="list-group-item px-0 py-3 text-muted small">
-                No documents uploaded.
-              </div>
+            <div class="list-group-item px-0 py-3 text-muted small">
+              No documents uploaded.
+            </div>
             {% endfor %}
           </div>
         </div>
@@ -230,22 +224,4 @@
   </div>
 
 </div>
-
-<style>
-  .rounded-xxl { border-radius: 1.25rem !important; }
-  .min-w-0 { min-width: 0; }
-  .border-subtle { border: 1px solid rgba(15, 23, 42, 0.08) !important; }
-
-  .gsc-thumb {
-    aspect-ratio: 4 / 3;
-    display: grid;
-    place-items: center;
-  }
-  .gsc-thumb img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-</style>
 {% endblock %}

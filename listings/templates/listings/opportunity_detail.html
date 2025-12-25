@@ -28,12 +28,12 @@
           </div>
 
           {% if listing.owner %}
-            <div class="text-muted small mt-2">
-              Posted by
-              <span class="fw-semibold text-body">
-                {{ listing.owner.get_full_name|default:listing.owner.first_name|default:listing.owner.email }}
-              </span>
-            </div>
+          <div class="text-muted small mt-2">
+            Posted by
+            <span class="fw-semibold text-body">
+              {{ listing.owner.get_full_name|default:listing.owner.first_name|default:listing.owner.email }}
+            </span>
+          </div>
           {% endif %}
         </div>
 
@@ -70,9 +70,9 @@
             <div class="text-white small">Project duration</div>
             <div class="fw-semibold">
               {% if listing.project_duration_days %}
-                {{ listing.project_duration_days }} days
+              {{ listing.project_duration_days }} days
               {% else %}
-                —
+              —
               {% endif %}
             </div>
           </div>
@@ -82,9 +82,9 @@
             <div class="text-white small">Listing duration</div>
             <div class="fw-semibold">
               {% if listing.duration_days %}
-                {{ listing.duration_days }} days
+              {{ listing.duration_days }} days
               {% else %}
-                —
+              —
               {% endif %}
             </div>
           </div>
@@ -98,36 +98,31 @@
           <div class="text-muted small">
             Pledged: <span class="fw-semibold text-body">£{{ pledged_gbp }}</span>
             {% if target_gbp %}
-              • Target: <span class="fw-semibold text-body">£{{ target_gbp }}</span>
-              • Remaining: <span class="fw-semibold text-body">£{{ remaining_gbp }}</span>
+            • Target: <span class="fw-semibold text-body">£{{ target_gbp }}</span>
+            • Remaining: <span class="fw-semibold text-body">£{{ remaining_gbp }}</span>
             {% endif %}
           </div>
         </div>
 
         <div class="progress rounded-pill mt-2" style="height: 12px;">
-          <div
-            class="progress-bar bg-success"
-            role="progressbar"
-            style="width: {{ progress_pct|default:'0' }}%;"
-            aria-valuenow="{{ progress_pct|default:'0' }}"
-            aria-valuemin="0"
-            aria-valuemax="100">
+          <div class="progress-bar bg-success" role="progressbar" style="width: {{ progress_pct|default:'0' }}%;"
+            aria-valuenow="{{ progress_pct|default:'0' }}" aria-valuemin="0" aria-valuemax="100">
           </div>
         </div>
 
         <div class="text-muted small mt-2">
           {% if target_gbp %}
-            {{ progress_pct|default:'0' }}% funded
+          {{ progress_pct|default:'0' }}% funded
           {% else %}
-            Funding target not available for this listing.
+          Funding target not available for this listing.
           {% endif %}
         </div>
       </div>
 
       {% if listing.active_until %}
-        <div class="text-muted small mt-3">
-          Active until <span class="fw-semibold text-body">{{ listing.active_until|date:"d M Y" }}</span>
-        </div>
+      <div class="text-muted small mt-3">
+        Active until <span class="fw-semibold text-body">{{ listing.active_until|date:"d M Y" }}</span>
+      </div>
       {% endif %}
 
     </div>
@@ -148,23 +143,23 @@
 
         <div class="row g-3 gsc-scroll-area">
           {% for img in images %}
-            <div class="col-6 col-md-4 col-xl-3">
-              <a href="{{ img.file.url }}" target="_blank" class="text-decoration-none">
-                <div class="gsc-thumb gsc-lift rounded-4 overflow-hidden bg-light border-subtle">
-                  <img src="{{ img.file.url }}" alt="">
-                  <div class="gsc-thumb-overlay">
-                    <span class="badge bg-white text-dark border rounded-pill px-3">Open</span>
-                  </div>
+          <div class="col-6 col-md-4 col-xl-3">
+            <a href="{{ img.file.url }}" target="_blank" class="text-decoration-none">
+              <div class="gsc-thumb gsc-lift rounded-4 overflow-hidden bg-light border-subtle">
+                <img src="{{ img.file.url }}" alt="">
+                <div class="gsc-thumb-overlay">
+                  <span class="badge bg-white text-dark border rounded-pill px-3">Open</span>
                 </div>
-              </a>
-            </div>
-          {% empty %}
-            <div class="col-12">
-              <div class="rounded-4 bg-light border-subtle p-4 text-center">
-                <div class="fw-semibold">No images uploaded</div>
-                <div class="text-muted small">Images will appear here when available.</div>
               </div>
+            </a>
+          </div>
+          {% empty %}
+          <div class="col-12">
+            <div class="rounded-4 bg-light border-subtle p-4 text-center">
+              <div class="fw-semibold">No images uploaded</div>
+              <div class="text-muted small">Images will appear here when available.</div>
             </div>
+          </div>
           {% endfor %}
         </div>
       </div>
@@ -183,26 +178,25 @@
 
         <div class="list-group list-group-flush gsc-scroll-area">
           {% for doc in documents %}
-            <div class="list-group-item px-0 py-3 d-flex justify-content-between align-items-center gap-3">
-              <div class="min-w-0 d-flex align-items-center gap-3">
-                <div class="gsc-file-icon rounded-4 border-subtle bg-light"></div>
-                <div class="min-w-0">
-                  <div class="fw-semibold small text-truncate">{{ doc.file.name }}</div>
-                  <div class="text-muted small">Document</div>
-                </div>
+          <div class="list-group-item px-0 py-3 d-flex justify-content-between align-items-center gap-3">
+            <div class="min-w-0 d-flex align-items-center gap-3">
+              <div class="gsc-file-icon rounded-4 border-subtle bg-light"></div>
+              <div class="min-w-0">
+                <div class="fw-semibold small text-truncate">{{ doc.file.name }}</div>
+                <div class="text-muted small">Document</div>
               </div>
-              <a href="{{ doc.file.url }}" target="_blank"
-                 class="btn btn-sm btn-outline-success rounded-pill px-3">
-                Open
-              </a>
             </div>
+            <a href="{{ doc.file.url }}" target="_blank" class="btn btn-sm btn-outline-success rounded-pill px-3">
+              Open
+            </a>
+          </div>
           {% empty %}
-            <div class="px-0 py-3">
-              <div class="rounded-4 bg-light border-subtle p-4 text-center">
-                <div class="fw-semibold">No documents uploaded</div>
-                <div class="text-muted small">Documents will appear here when available.</div>
-              </div>
+          <div class="px-0 py-3">
+            <div class="rounded-4 bg-light border-subtle p-4 text-center">
+              <div class="fw-semibold">No documents uploaded</div>
+              <div class="text-muted small">Documents will appear here when available.</div>
             </div>
+          </div>
           {% endfor %}
         </div>
       </div>
@@ -224,15 +218,8 @@
           <label class="form-label small fw-semibold">Pledge amount</label>
           <div class="input-group">
             <span class="input-group-text bg-light border-subtle">£</span>
-            <input
-              type="number"
-              name="amount_gbp"
-              class="form-control js-pledge-amount border-subtle"
-              step="0.01"
-              min="1"
-              placeholder="e.g. 1000"
-              required
-              data-listing-id="{{ listing.id }}"
+            <input type="number" name="amount_gbp" class="form-control js-pledge-amount border-subtle" step="0.01"
+              min="1" placeholder="e.g. 1000" required data-listing-id="{{ listing.id }}"
               data-estimate-url="{% url 'listings:estimate_return' listing.pk %}">
             <button type="submit" class="btn btn-success px-4">Pledge</button>
           </div>
@@ -289,10 +276,10 @@
             <span class="fw-semibold">£{{ pledged_gbp }}</span>
           </div>
           {% if target_gbp %}
-            <div class="d-flex justify-content-between small py-2 border-top">
-              <span class="text-muted">Remaining</span>
-              <span class="fw-semibold">£{{ remaining_gbp }}</span>
-            </div>
+          <div class="d-flex justify-content-between small py-2 border-top">
+            <span class="text-muted">Remaining</span>
+            <span class="fw-semibold">£{{ remaining_gbp }}</span>
+          </div>
           {% endif %}
         </div>
       </div>
@@ -303,69 +290,6 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-(function () {
-  const input = document.querySelector(".js-pledge-amount");
-  if (!input) return;
+<script src="{% static 'js/pledge_progress.js' %}"></script>
 
-  function setEstimate(id, text) {
-    const el = document.querySelector(`.js-return-estimate[data-listing-id="${id}"]`);
-    if (el) el.textContent = text;
-  }
-
-  let timer = null;
-  input.addEventListener("input", () => {
-    clearTimeout(timer);
-    timer = setTimeout(async () => {
-      const val = input.value.trim();
-      if (!val) return;
-      const res = await fetch(input.dataset.estimateUrl + "?amount=" + val);
-      const data = await res.json();
-      if (data.ok) {
-        setEstimate(input.dataset.listingId,
-          `Estimated return: £${data.total_min}–£${data.total_max}`);
-      }
-    }, 300);
-  });
-})();
-</script>
-
-<style>
-.rounded-xxl{border-radius:1.25rem}
-.border-subtle{border:1px solid rgba(15,23,42,.08)}
-.min-w-0{min-width:0}
-
-.gsc-quad{
-  display:grid;
-  gap:1.5rem;
-  grid-template-columns:1fr;
-}
-@media(min-width:992px){
-  .gsc-quad{
-    grid-template-columns:1fr 1fr;
-    grid-auto-rows:1fr;
-  }
-}
-.gsc-card-fill{height:100%}
-.gsc-scroll-area{overflow:auto}
-
-.gsc-thumb{aspect-ratio:4/3;position:relative}
-.gsc-thumb img{width:100%;height:100%;object-fit:cover}
-.gsc-thumb-overlay{
-  position:absolute;inset:0;
-  display:grid;place-items:center;
-  background:rgba(0,0,0,.25);
-  opacity:0;transition:.15s;
-}
-.gsc-lift:hover .gsc-thumb-overlay{opacity:1}
-
-.gsc-file-icon{
-  width:40px;height:40px;
-  border-radius:1rem;
-  background:#f8f9fa;
-  border:1px solid rgba(15,23,42,.1);
-}
-
-.progress { background: rgba(15,23,42,.08); }
-</style>
 {% endblock %}

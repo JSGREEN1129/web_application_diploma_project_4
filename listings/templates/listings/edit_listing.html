@@ -462,6 +462,10 @@
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
 
 <div id="js-listing-endpoints" data-counties-url="{% url 'listings:api_counties' %}"
   data-outcodes-url="{% url 'listings:api_outcodes' %}">

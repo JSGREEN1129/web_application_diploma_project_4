@@ -15,15 +15,13 @@
         Search by project, type, location, funding and returns. Pledge directly from results.
       </p>
     </div>
-    <a href="{% url 'users:dashboard' %}"
-       class="btn btn-outline-success btn-sm rounded-pill px-3">
+    <a href="{% url 'users:dashboard' %}" class="btn btn-outline-success btn-sm rounded-pill px-3">
       ← Back to dashboard
     </a>
   </div>
 
   {# --- Search / Filters --- #}
-  <form method="get"
-        class="card gsc-form-card border border-success shadow-sm rounded-xxl mb-4">
+  <form method="get" class="card gsc-form-card border border-success shadow-sm rounded-xxl mb-4">
     <div class="card-body p-4 p-md-5">
 
       <div class="d-flex align-items-center justify-content-between mb-3">
@@ -39,27 +37,15 @@
         {# Project Name (Free text) #}
         <div class="col-12 col-lg-4">
           <label for="id_project_name" class="form-label small fw-semibold">Project Name</label>
-          <input
-            id="id_project_name"
-            type="text"
-            name="project_name"
-            value="{{ project_name }}"
-            class="form-control"
-            placeholder="e.g. Riverside Apartments"
-          >
+          <input id="id_project_name" type="text" name="project_name" value="{{ project_name }}" class="form-control"
+            placeholder="e.g. Riverside Apartments">
         </div>
 
         {# Listed by (Free text: name/email) #}
         <div class="col-12 col-lg-4">
           <label for="id_listed_by" class="form-label small fw-semibold">Listed by</label>
-          <input
-            id="id_listed_by"
-            type="text"
-            name="listed_by"
-            value="{{ listed_by }}"
-            class="form-control"
-            placeholder="Name or email"
-          >
+          <input id="id_listed_by" type="text" name="listed_by" value="{{ listed_by }}" class="form-control"
+            placeholder="Name or email">
         </div>
 
         {# Project type (Dropdowns) - assumes your view provides source_use_choices/target_use_choices #}
@@ -68,9 +54,9 @@
           <select id="id_source_use" name="source_use" class="form-select">
             <option value="">Any</option>
             {% for value,label in source_use_choices %}
-              <option value="{{ value }}" {% if source_use == value %}selected{% endif %}>
-                {{ label }}
-              </option>
+            <option value="{{ value }}" {% if source_use==value %}selected{% endif %}>
+              {{ label }}
+            </option>
             {% endfor %}
           </select>
         </div>
@@ -80,9 +66,9 @@
           <select id="id_target_use" name="target_use" class="form-select">
             <option value="">Any</option>
             {% for value,label in target_use_choices %}
-              <option value="{{ value }}" {% if target_use == value %}selected{% endif %}>
-                {{ label }}
-              </option>
+            <option value="{{ value }}" {% if target_use==value %}selected{% endif %}>
+              {{ label }}
+            </option>
             {% endfor %}
           </select>
         </div>
@@ -93,9 +79,9 @@
           <select id="id_country" name="country" class="form-select" data-selected="{{ country }}">
             <option value="">Any country</option>
             {% for value,label in country_choices %}
-              <option value="{{ value }}" {% if country == value %}selected{% endif %}>
-                {{ label }}
-              </option>
+            <option value="{{ value }}" {% if country==value %}selected{% endif %}>
+              {{ label }}
+            </option>
             {% endfor %}
           </select>
         </div>
@@ -109,11 +95,8 @@
 
         <div class="col-6 col-lg-2">
           <label for="id_postcode_prefix" class="form-label small fw-semibold">Postcode prefix</label>
-          <select id="id_postcode_prefix"
-                  name="postcode_prefix"
-                  class="form-select"
-                  data-selected="{{ postcode_prefix }}"
-                  disabled>
+          <select id="id_postcode_prefix" name="postcode_prefix" class="form-select"
+            data-selected="{{ postcode_prefix }}" disabled>
             <option value="">Any prefix</option>
           </select>
         </div>
@@ -124,9 +107,9 @@
           <select id="id_funding_band" name="funding_band" class="form-select">
             <option value="">Any</option>
             {% for value,label in funding_band_choices %}
-              <option value="{{ value }}" {% if funding_band == value %}selected{% endif %}>
-                {{ label }}
-              </option>
+            <option value="{{ value }}" {% if funding_band==value %}selected{% endif %}>
+              {{ label }}
+            </option>
             {% endfor %}
           </select>
         </div>
@@ -136,9 +119,9 @@
           <select id="id_return_type" name="return_type" class="form-select">
             <option value="">Any</option>
             {% for value,label in return_type_choices %}
-              <option value="{{ value }}" {% if return_type == value %}selected{% endif %}>
-                {{ label }}
-              </option>
+            <option value="{{ value }}" {% if return_type==value %}selected{% endif %}>
+              {{ label }}
+            </option>
             {% endfor %}
           </select>
         </div>
@@ -148,9 +131,9 @@
           <select id="id_return_band" name="return_band" class="form-select">
             <option value="">Any</option>
             {% for value,label in return_band_choices %}
-              <option value="{{ value }}" {% if return_band == value %}selected{% endif %}>
-                {{ label }}
-              </option>
+            <option value="{{ value }}" {% if return_band==value %}selected{% endif %}>
+              {{ label }}
+            </option>
             {% endfor %}
           </select>
         </div>
@@ -162,8 +145,7 @@
         </div>
 
         <div class="col-12 col-lg-2 d-grid">
-          <a class="btn btn-outline-secondary rounded-pill"
-             href="{% url 'listings:search_listings' %}">
+          <a class="btn btn-outline-secondary rounded-pill" href="{% url 'listings:search_listings' %}">
             Clear
           </a>
         </div>
@@ -175,162 +157,153 @@
   {# --- Results summary --- #}
   <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
     {% if page_obj.object_list %}
-      <div class="text-muted small">
-        Showing <span class="fw-semibold">{{ page_obj.object_list|length }}</span>
-        opportunity{{ page_obj.object_list|length|pluralize }} on this page.
-      </div>
-      <div class="text-muted small">
-        Page <span class="fw-semibold">{{ page_obj.number }}</span>
-        of <span class="fw-semibold">{{ page_obj.paginator.num_pages }}</span>
-      </div>
+    <div class="text-muted small">
+      Showing <span class="fw-semibold">{{ page_obj.object_list|length }}</span>
+      opportunity{{ page_obj.object_list|length|pluralize }} on this page.
+    </div>
+    <div class="text-muted small">
+      Page <span class="fw-semibold">{{ page_obj.number }}</span>
+      of <span class="fw-semibold">{{ page_obj.paginator.num_pages }}</span>
+    </div>
     {% endif %}
   </div>
 
   {% if page_obj.object_list %}
-    <div class="row g-4">
-      {% for listing in page_obj.object_list %}
-        <div class="col-12 col-md-6 col-lg-4">
-          <div class="card gsc-form-card border border-success shadow-sm rounded-xxl h-100">
-            <div class="card-body p-4 d-flex flex-column">
+  <div class="row g-4">
+    {% for listing in page_obj.object_list %}
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="card gsc-form-card border border-success shadow-sm rounded-xxl h-100">
+        <div class="card-body p-4 d-flex flex-column">
 
-              <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
-                <div class="min-w-0">
-                  <h2 class="h5 fw-semibold mb-1 text-truncate">
-                    {{ listing.source_use|capfirst }} → {{ listing.target_use|capfirst }}
-                  </h2>
-                  <p class="text-muted small mb-0 text-truncate">
-                    {{ listing.country|capfirst }} • {{ listing.county }} • {{ listing.postcode_prefix }}
-                  </p>
+          <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
+            <div class="min-w-0">
+              <h2 class="h5 fw-semibold mb-1 text-truncate">
+                {{ listing.source_use|capfirst }} → {{ listing.target_use|capfirst }}
+              </h2>
+              <p class="text-muted small mb-0 text-truncate">
+                {{ listing.country|capfirst }} • {{ listing.county }} • {{ listing.postcode_prefix }}
+              </p>
 
-                  {# Project name (if you want it visible on cards) #}
-                  {% if listing.project_name %}
-                    <p class="text-muted small mb-0 text-truncate">
-                      {{ listing.project_name }}
-                    </p>
-                  {% endif %}
+              {# Project name (if you want it visible on cards) #}
+              {% if listing.project_name %}
+              <p class="text-muted small mb-0 text-truncate">
+                {{ listing.project_name }}
+              </p>
+              {% endif %}
 
-                  {% if listing.owner %}
-                    <p class="text-muted small mb-0">
-                      Listed by
-                      {% if listing.owner.get_full_name %}
-                        {{ listing.owner.get_full_name }}
-                      {% elif listing.owner.first_name %}
-                        {{ listing.owner.first_name }}
-                      {% else %}
-                        {{ listing.owner.email }}
-                      {% endif %}
-                    </p>
-                  {% endif %}
-                </div>
-                <span class="badge text-bg-success rounded-pill px-3">Active</span>
-              </div>
+              {% if listing.owner %}
+              <p class="text-muted small mb-0">
+                Listed by
+                {% if listing.owner.get_full_name %}
+                {{ listing.owner.get_full_name }}
+                {% elif listing.owner.first_name %}
+                {{ listing.owner.first_name }}
+                {% else %}
+                {{ listing.owner.email }}
+                {% endif %}
+              </p>
+              {% endif %}
+            </div>
+            <span class="badge text-bg-success rounded-pill px-3">Active</span>
+          </div>
 
-              <div class="rounded-4 bg-light p-3 my-3">
-                <div class="d-flex justify-content-between small">
-                  <span class="text-muted">Funding</span>
-                  <span class="fw-semibold">{{ listing.get_funding_band_display }}</span>
-                </div>
-                <div class="d-flex justify-content-between small mt-2">
-                  <span class="text-muted">Return Type</span>
-                  <span class="fw-semibold">{{ listing.get_return_type_display }}</span>
-                </div>
-                <div class="d-flex justify-content-between small mt-2">
-                  <span class="text-muted">Potential Return</span>
-                  <span class="fw-semibold">{{ listing.get_return_band_display }}</span>
-                </div>
-              </div>
-
-              <div class="d-flex justify-content-between align-items-center small text-muted mb-3">
-                <span>{{ listing.media.count }} file{{ listing.media.count|pluralize }} uploaded</span>
-                <span class="badge bg-light text-dark border rounded-pill px-3">
-                  {{ listing.duration_days }} days
-                </span>
-              </div>
-
-              <a class="btn btn-sm btn-outline-secondary rounded-pill px-3 mt-auto"
-                 href="{% url 'listings:opportunity_detail' listing.pk %}">
-                View listing
-              </a>
-
-              <form method="post"
-                    action="{% url 'investments:pledge' listing.pk %}"
-                    class="mt-3">
-                {% csrf_token %}
-
-                <label class="form-label small fw-semibold mb-2">Pledge amount</label>
-                <div class="input-group input-group-sm">
-                  <span class="input-group-text">£</span>
-                  <input type="number"
-                         name="amount_gbp"
-                         class="form-control js-pledge-amount"
-                         step="0.01"
-                         min="1"
-                         placeholder="Amount"
-                         required
-                         data-listing-id="{{ listing.id }}"
-                         data-estimate-url="{% url 'listings:estimate_return' listing.pk %}">
-                  <button type="submit" class="btn btn-success">
-                    Pledge
-                  </button>
-                </div>
-
-                <div class="mt-2 text-muted small js-return-estimate"
-                     data-listing-id="{{ listing.id }}">
-                  Expected return will be calculated based on this listing’s return and duration.
-                </div>
-              </form>
-
+          <div class="rounded-4 bg-light p-3 my-3">
+            <div class="d-flex justify-content-between small">
+              <span class="text-muted">Funding</span>
+              <span class="fw-semibold">{{ listing.get_funding_band_display }}</span>
+            </div>
+            <div class="d-flex justify-content-between small mt-2">
+              <span class="text-muted">Return Type</span>
+              <span class="fw-semibold">{{ listing.get_return_type_display }}</span>
+            </div>
+            <div class="d-flex justify-content-between small mt-2">
+              <span class="text-muted">Potential Return</span>
+              <span class="fw-semibold">{{ listing.get_return_band_display }}</span>
             </div>
           </div>
+
+          <div class="d-flex justify-content-between align-items-center small text-muted mb-3">
+            <span>{{ listing.media.count }} file{{ listing.media.count|pluralize }} uploaded</span>
+            <span class="badge bg-light text-dark border rounded-pill px-3">
+              {{ listing.duration_days }} days
+            </span>
+          </div>
+
+          <a class="btn btn-sm btn-outline-secondary rounded-pill px-3 mt-auto"
+            href="{% url 'listings:opportunity_detail' listing.pk %}">
+            View listing
+          </a>
+
+          <form method="post" action="{% url 'investments:pledge' listing.pk %}" class="mt-3">
+            {% csrf_token %}
+
+            <label class="form-label small fw-semibold mb-2">Pledge amount</label>
+            <div class="input-group input-group-sm">
+              <span class="input-group-text">£</span>
+              <input type="number" name="amount_gbp" class="form-control js-pledge-amount" step="0.01" min="1"
+                placeholder="Amount" required data-listing-id="{{ listing.id }}"
+                data-estimate-url="{% url 'listings:estimate_return' listing.pk %}">
+              <button type="submit" class="btn btn-success">
+                Pledge
+              </button>
+            </div>
+
+            <div class="mt-2 text-muted small js-return-estimate" data-listing-id="{{ listing.id }}">
+              Expected return will be calculated based on this listing’s return and duration.
+            </div>
+          </form>
+
         </div>
-      {% endfor %}
-    </div>
-
-    <nav class="mt-4">
-      <ul class="pagination justify-content-center">
-        {% if page_obj.has_previous %}
-          <li class="page-item">
-            <a class="page-link rounded-pill px-3"
-               href="?{% for k,v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v|urlencode }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}">
-              Previous
-            </a>
-          </li>
-        {% else %}
-          <li class="page-item disabled">
-            <span class="page-link rounded-pill px-3">Previous</span>
-          </li>
-        {% endif %}
-
-        <li class="page-item disabled">
-          <span class="page-link rounded-pill px-3">
-            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-          </span>
-        </li>
-
-        {% if page_obj.has_next %}
-          <li class="page-item">
-            <a class="page-link rounded-pill px-3"
-               href="?{% for k,v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v|urlencode }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}">
-              Next
-            </a>
-          </li>
-        {% else %}
-          <li class="page-item disabled">
-            <span class="page-link rounded-pill px-3">Next</span>
-          </li>
-        {% endif %}
-      </ul>
-    </nav>
-
-  {% else %}
-    <div class="card gsc-form-card border border-success shadow-sm rounded-xxl">
-      <div class="card-body p-4 p-md-5">
-        <h2 class="h5 fw-semibold mb-1">No listings found</h2>
-        <p class="text-muted small mb-0">
-          Try broadening your search or clearing filters.
-        </p>
       </div>
     </div>
+    {% endfor %}
+  </div>
+
+  <nav class="mt-4">
+    <ul class="pagination justify-content-center">
+      {% if page_obj.has_previous %}
+      <li class="page-item">
+        <a class="page-link rounded-pill px-3"
+          href="?{% for k,v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v|urlencode }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}">
+          Previous
+        </a>
+      </li>
+      {% else %}
+      <li class="page-item disabled">
+        <span class="page-link rounded-pill px-3">Previous</span>
+      </li>
+      {% endif %}
+
+      <li class="page-item disabled">
+        <span class="page-link rounded-pill px-3">
+          Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        </span>
+      </li>
+
+      {% if page_obj.has_next %}
+      <li class="page-item">
+        <a class="page-link rounded-pill px-3"
+          href="?{% for k,v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v|urlencode }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}">
+          Next
+        </a>
+      </li>
+      {% else %}
+      <li class="page-item disabled">
+        <span class="page-link rounded-pill px-3">Next</span>
+      </li>
+      {% endif %}
+    </ul>
+  </nav>
+
+  {% else %}
+  <div class="card gsc-form-card border border-success shadow-sm rounded-xxl">
+    <div class="card-body p-4 p-md-5">
+      <h2 class="h5 fw-semibold mb-1">No listings found</h2>
+      <p class="text-muted small mb-0">
+        Try broadening your search or clearing filters.
+      </p>
+    </div>
+  </div>
   {% endif %}
 
 </div>
@@ -338,41 +311,12 @@
 
 
 {% block extra_js %}
-  {{ block.super }}
+{{ block.super }}
 
-<div
-  id="js-search-endpoints"
-  data-counties-url="{% url 'listings:api_counties' %}"
+<div id="js-search-endpoints" data-counties-url="{% url 'listings:api_counties' %}"
   data-outcodes-url="{% url 'listings:api_outcodes' %}">
 </div>
 
 <script src="{% static 'js/search_filters.js' %}"></script>
 
-<style>
-  .rounded-xxl { border-radius: 1.25rem !important; }
-  .min-w-0 { min-width: 0; }
-
-  .gsc-form-card {
-    position: relative;
-    overflow: hidden;
-  }
-  .gsc-form-card::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 6px;
-    background: linear-gradient(180deg, #198754 0%, #0f6f45 100%);
-    opacity: 0.9;
-  }
-
-  .gsc-form-card {
-    transition: transform .15s ease, box-shadow .15s ease;
-  }
-  .gsc-form-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 .75rem 1.5rem rgba(15, 23, 42, 0.10);
-  }
-</style>
 {% endblock %}
