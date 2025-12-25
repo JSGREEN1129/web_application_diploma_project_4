@@ -65,7 +65,6 @@ def pledge_investment_view(request, listing_id: int):
             messages.error(request, "This listing is no longer available.")
             return redirect("users:search_listings")
 
-        # Safety: if your system sets active_until, also block pledging when expired
         now = timezone.now()
         if listing.active_until and listing.active_until <= now:
             messages.error(request, "This listing has expired.")
@@ -76,7 +75,7 @@ def pledge_investment_view(request, listing_id: int):
             pct=mid_pct,
         )
 
-        Investment.objects.create(
+        investment = Investment.objects.create(
             investor=request.user,
             listing=listing,
             amount_pence=amount_pence,
@@ -85,7 +84,10 @@ def pledge_investment_view(request, listing_id: int):
             status=Investment.Status.PLEDGED,
         )
 
-    messages.success(request, "Pledge created.")
+    messages.success(
+        request, 
+        f"Pledge created. Pledged Amount: £{investment.amount_gbp:,.2f}, Est. Return: £{investment.expected_return_gbp:,.2f}, Est. Total Back: £{investment.expected_total_back_gbp:,.2f}"
+    )
     return redirect("users:dashboard")
 
 

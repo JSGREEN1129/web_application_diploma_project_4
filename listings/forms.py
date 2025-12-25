@@ -1,3 +1,4 @@
+from unicodedata import name
 from django import forms
 
 from .models import Listing
@@ -98,7 +99,7 @@ class ListingCreateForm(forms.ModelForm):
 
     def clean_project_name(self):
         name = (self.cleaned_data.get("project_name") or "").strip()
-        return name or None
+        return name
 
     def clean_postcode_prefix(self):
         """

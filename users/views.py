@@ -106,6 +106,8 @@ def dashboard_view(request):
 
     total_pledged_pence = investments.aggregate(total=Coalesce(Sum("amount_pence"), 0))["total"] or 0
     total_pledged_gbp = (Decimal(total_pledged_pence) / Decimal("100")).quantize(Decimal("0.01"))
+    total_pledged_gbp_formatted = f"£{total_pledged_gbp:,.2f}"
+
 
     active_investments = investments.values("listing_id").distinct().count()
     active_listings = listings.filter(status=Listing.Status.ACTIVE).count()
@@ -120,7 +122,7 @@ def dashboard_view(request):
         {
             "listings": listings,
             "investments": investments,
-            "total_pledged": total_pledged_gbp,
+            "total_pledged": total_pledged_gbp_formatted,
             "active_investments": active_investments,
             "active_listings": active_listings,
             "draft_waiting_payment": draft_waiting_payment,

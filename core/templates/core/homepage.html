@@ -21,7 +21,7 @@
         </p>
 
         <div class="d-flex flex-wrap gap-2">
-          <a href="{% url 'listings:search_listings' %}" class="btn btn-outline-light btn-lg">
+          <a href="{% url 'users:register' %}" class="btn btn-outline-light btn-lg">
             Explore opportunities
           </a>
           <a href="{% url 'users:register' %}" class="btn btn-outline-light btn-lg">
@@ -30,7 +30,7 @@
         </div>
 
         <div class="d-flex flex-wrap gap-3 mt-4 text-white-50 small">
-          <div><span class="fw-semibold text-white">Transparent</span> pricing & terms</div>
+          <div><span class="fw-semibold text-white">Transparent</span> pricing &amp; terms</div>
           <div><span class="fw-semibold text-white">Fast</span> pledging experience</div>
           <div><span class="fw-semibold text-white">Secure</span> platform flows</div>
         </div>
@@ -63,6 +63,7 @@
           </div>
         </div>
       </div>
+
     </div>
   </div>
 
@@ -70,8 +71,7 @@
 </section>
 
 <!-- STATS STRIP -->
-<section class="gsc-stats-strip py-4 py-lg-5"
-  style="background: linear-gradient(135deg, #0f6f45 25%, #0f6f45 75%) !important;">
+<section class="gsc-stats-strip py-4 py-lg-5">
   <div class="container">
     <div class="row g-3 text-center">
 
@@ -145,7 +145,7 @@
         <div class="homepage-card border-success shadow-sm rounded-xxl h-100">
           <div class="card-body p-4">
             <div class="gsc-icon-bubble mb-3">3</div>
-            <h3 class="h5 fw-semibold text-success mb-2">Track & manage</h3>
+            <h3 class="h5 fw-semibold text-success mb-2">Track &amp; manage</h3>
             <p class="text-muted mb-0">
               Monitor pledges and listing progress from your dashboard with a clean, transparent view.
             </p>
@@ -155,7 +155,7 @@
     </div>
 
     <div class="text-center mt-4 mt-lg-5">
-      <a href="{% url 'listings:search_listings' %}" class="btn btn-outline-success btn-lg">
+      <a href="{% url 'users:register' %}" class="btn btn-outline-success btn-lg">
         Browse live opportunities
       </a>
     </div>
@@ -171,23 +171,24 @@
       <div>
         <span class="badge bg-success text-white border rounded-pill px-3 py-2">Featured</span>
         <h2 class="h3 mt-3 text-success mb-1">Opportunities live right now</h2>
-        <p class="text-muted mb-0">A quick snapshot — view all to see the full market.</p>
+        <p class="text-muted mb-0">A quick snapshot — create an account to view full details and pledge.</p>
       </div>
-      <a href="{% url 'listings:search_listings' %}" class="btn btn-outline-success btn-lg">
+      <a href="{% url 'users:register' %}" class="btn btn-outline-success btn-lg">
         View all opportunities
       </a>
     </div>
 
     {% if featured_listings %}
-      <div class="row g-4">
+      {# px-2 adds side breathing room on mobile; removed from md+ #}
+      <div class="row g-4 mt-3 px-2 px-md-0">
         {% for listing in featured_listings %}
-          <div class="col-12 col-md-6 col-lg-4">
-            <div class="card border border-success shadow-sm rounded-xxl h-100">
+          <div class="col-12 col-md-4">
+            <div class="card gsc-form-card border border-success shadow-sm rounded-xxl h-100">
               <div class="card-body p-4 d-flex flex-column">
 
                 <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
                   <div class="min-w-0">
-                    <h3 class="h5 fw-semibold mb-1 text-truncate">
+                    <h3 class="h5 fw-semibold text-success mb-1 text-truncate">
                       {{ listing.source_use|capfirst }} → {{ listing.target_use|capfirst }}
                     </h3>
                     <p class="text-muted small mb-0 text-truncate">
@@ -212,12 +213,10 @@
                   </div>
                 </div>
 
-                <div class="mt-auto">
-                  <a class="btn border-success btn-white text-success"
-                     href="{% url 'users:opportunity_detail' listing.pk %}">
-                    View listing
-                  </a>
-                </div>
+                {# Public users go to register #}
+                <a href="{% url 'users:register' %}" class="btn btn-sm btn-outline-success rounded-pill px-3 mt-auto">
+                  View listing
+                </a>
 
               </div>
             </div>
@@ -229,11 +228,11 @@
         <div class="card-body p-4 p-md-5">
           <h3 class="h5 fw-semibold text-success mb-1">New opportunities added regularly</h3>
           <p class="text-muted mb-0">
-            Browse live opportunities to see what’s available now.
+            Create an account to browse live opportunities and pledge.
           </p>
           <div class="mt-3">
-            <a href="{% url 'listings:search_listings' %}" class="btn btn-outline-success btn-white">
-              Explore opportunities
+            <a href="{% url 'users:register' %}" class="btn btn-outline-success btn-white">
+              Create an account
             </a>
           </div>
         </div>
@@ -284,10 +283,10 @@
       <div class="row align-items-center g-3">
         <div class="col-12 col-lg-8">
           <h3 class="h4 mb-1 text-white">Ready to explore live opportunities?</h3>
-          <p class="mb-0 text-white">Search by location and return profile and pledge directly from listings.</p>
+          <p class="mb-0 text-white">Create an account to search by location, view details, and pledge.</p>
         </div>
         <div class="col-12 col-lg-4 d-grid d-lg-flex justify-content-lg-end gap-3">
-          <a href="{% url 'listings:search_listings' %}" class="btn btn-outline-light btn-lg">
+          <a href="{% url 'users:register' %}" class="btn btn-outline-light btn-lg">
             Explore opportunities
           </a>
           <a href="{% url 'users:register' %}" class="btn btn-outline-light btn-lg">
@@ -306,10 +305,10 @@
 
     <div class="d-flex flex-column flex-md-row align-items-md-end justify-content-between gap-2 mb-4">
       <div>
-        <h2 class="h3 text-success mb-1">Successful Projects</h2>
+        <h2 class="h2 text-success mb-1">Successful Projects</h2>
         <p class="text-muted mb-0">Examples of completed projects funded through Green Square Capital</p>
       </div>
-      <a href="{% url 'listings:search_listings' %}" class="btn btn-outline-success btn-white">
+      <a href="{% url 'users:register' %}" class="btn btn-outline-success btn-lg">
         View live opportunities
       </a>
     </div>
@@ -436,7 +435,7 @@
             <a href="{% url 'users:register' %}" class="btn btn-outline-success btn-lg">
               Create an account
             </a>
-            <a href="{% url 'listings:search_listings' %}" class="btn btn-outline-success btn-lg">
+            <a href="{% url 'users:register' %}" class="btn btn-outline-success btn-lg">
               Browse opportunities
             </a>
           </div>

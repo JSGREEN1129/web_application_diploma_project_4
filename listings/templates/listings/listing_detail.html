@@ -8,8 +8,7 @@
   <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
     <div>
       <span class="badge text-bg-success px-3 py-2 rounded-pill">Green Square Capital</span>
-      <h1 class="h2 fw-semibold text-success mb-1 mt-3">{{ listing.source_use|capfirst }} → {{
-        listing.target_use|capfirst }}</h1>
+      <h1 class="h2 fw-semibold text-success mb-1 mt-3">{{ listing.source_use|capfirst }} → {{ listing.target_use|capfirst }}</h1>
       <p class="text-muted small mb-0">
         {{ listing.country|capfirst }} • {{ listing.county }} • {{ listing.postcode_prefix }}
       </p>
@@ -43,12 +42,8 @@
         </a>
 
         {% if listing.status == "draft" %}
-        <a href="{% url 'users:listing_edit' listing.pk %}" class="btn btn-sm btn-success rounded-pill px-3">
+        <a href="{% url 'listings:edit_listing' listing.pk %}" class="btn btn-sm btn-success rounded-pill px-3">
           Edit listing
-        </a>
-
-        <a href="{% url 'users:listing_checkout' listing.pk %}" class="btn btn-sm btn-success rounded-pill px-3">
-          Continue to payment
         </a>
 
         <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3" data-bs-toggle="modal"
@@ -65,7 +60,7 @@
     aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content border-0 shadow-sm rounded-xxl">
-        <form method="post" action="{% url 'users:listing_delete' listing.pk %}">
+        <form method="post" action="{% url 'listings:listing_delete' listing.pk %}">
           {% csrf_token %}
           <div class="modal-header border-0 pb-0">
             <div>

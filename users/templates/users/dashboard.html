@@ -21,7 +21,7 @@
             <div class="card border-0 shadow-sm rounded-xxl bg-success text-white">
                 <div class="card-body p-3">
                     <div class="small text-white">Total pledged</div>
-                    <div class="h4 fw-semibold mb-0">£{{ total_pledged }}</div>
+                    <div class="h4 fw-semibold mb-0">{{ total_pledged }}</div>
                 </div>
             </div>
         </div>
@@ -75,7 +75,7 @@
 
                     <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
                         <div class="min-w-0">
-                            <h5 class="card-title mb-1 fw-semibold text-truncate">
+                            <h5 class="card-title mb-1 fw-semibold text-success text-truncate">
                                 {{ inv.listing.source_use|capfirst }} → {{ inv.listing.target_use|capfirst }}
                             </h5>
                             <p class="text-muted small mb-0 text-truncate">
@@ -102,8 +102,8 @@
                     </div>
 
                     <p class="small text-muted mb-3">
-                        {{ inv.listing.get_return_type_display }} ({{ inv.listing.get_return_band_display }}) •
-                        {{ inv.listing.duration_days }} days<br>
+                        {{ inv.listing.get_return_type_display }} ({{ inv.listing.get_return_band_display }})<br>
+                        Project Duration: {{ inv.listing.project_duration_days }} days<br>
                         Pledged: {{ inv.created_at|date:"d M Y" }}
                     </p>
 
@@ -118,7 +118,7 @@
             {% else %}
             <div class="card dashboard-card flex-shrink-0 border-success shadow-sm rounded-xxl">
                 <div class="card-body p-4 d-flex flex-column justify-content-center">
-                    <h5 class="card-title fw-semibold mb-1">No investments yet</h5>
+                    <h5 class="card-title fw-semibold text-success mb-1">No investments yet</h5>
                     <p class="text-muted small mb-0">
                         When you pledge into opportunities, they will appear here.
                     </p>
@@ -150,7 +150,7 @@
 
                     <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
                         <div class="min-w-0">
-                            <h5 class="card-title mb-1 fw-semibold text-truncate">
+                            <h5 class="card-title mb-1 fw-semibold text-success text-truncate">
                                 {{ listing.source_use|capfirst }} → {{ listing.target_use|capfirst }}
                             </h5>
                             <p class="text-muted small mb-0 text-truncate">
@@ -211,13 +211,9 @@
                             class="btn btn-sm btn-outline-success flex-grow-1">
                             View Draft
                         </a>
-                        <a href="{% url 'listings:listing_edit' listing.pk %}"
+                        <a href="{% url 'listings:edit_listing' listing.pk %}"
                             class="btn btn-sm btn-outline-success flex-grow-1">
                             Edit
-                        </a>
-                        <a href="{% url 'listings:listing_checkout' listing.pk %}"
-                            class="btn btn-sm btn-outline-success flex-grow-1">
-                            Pay
                         </a>
                     </div>
                     {% else %}
@@ -232,7 +228,7 @@
             {% else %}
             <div class="card dashboard-card flex-shrink-0 border-success shadow-sm rounded-xxl">
                 <div class="card-body p-4 d-flex flex-column justify-content-center">
-                    <h5 class="card-title fw-semibold mb-1">No listings yet</h5>
+                    <h5 class="card-title fw-semibold text-success mb-1">No listings yet</h5>
                     <p class="text-muted small mb-3">
                         Create a listing to start offering new opportunities.
                     </p>

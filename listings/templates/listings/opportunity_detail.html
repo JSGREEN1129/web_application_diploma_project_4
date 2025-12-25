@@ -1,4 +1,6 @@
 {% extends "core/base_users.html" %}
+{% load static %}
+
 {% block title %}Opportunity {{ listing.id }} – Green Square Capital{% endblock %}
 
 {% block content %}
@@ -96,10 +98,10 @@
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
           <div class="fw-semibold text-success">Funding progress</div>
           <div class="text-muted small">
-            Pledged: <span class="fw-semibold text-body">£{{ pledged_gbp }}</span>
+            Pledged: <span class="fw-semibold text-body">{{ pledged_gbp }}</span>
             {% if target_gbp %}
             • Target: <span class="fw-semibold text-body">£{{ target_gbp }}</span>
-            • Remaining: <span class="fw-semibold text-body">£{{ remaining_gbp }}</span>
+            • Remaining: <span class="fw-semibold text-body">{{ remaining_gbp }}</span>
             {% endif %}
           </div>
         </div>
@@ -252,33 +254,33 @@
 
         <div class="rounded-4 border border-success p-3 bg-light">
           <div class="d-flex justify-content-between small py-2">
-            <span class="text-muted">Funding</span>
+            <span class="fw-semibold">Funding</span>
             <span class="fw-semibold">{{ listing.get_funding_band_display }}</span>
           </div>
           <div class="d-flex justify-content-between small py-2 border-top">
-            <span class="text-muted">Return</span>
+            <span class="fw-semibold">Return</span>
             <span class="fw-semibold">{{ listing.get_return_band_display }}</span>
           </div>
           <div class="d-flex justify-content-between small py-2 border-top">
-            <span class="text-muted">Project duration</span>
+            <span class="fw-semibold">Project duration</span>
             <span class="fw-semibold">
               {% if listing.project_duration_days %}{{ listing.project_duration_days }} days{% else %}—{% endif %}
             </span>
           </div>
           <div class="d-flex justify-content-between small py-2 border-top">
-            <span class="text-muted">Listing duration</span>
+            <span class="fw-semibold">Listing duration</span>
             <span class="fw-semibold">
               {% if listing.duration_days %}{{ listing.duration_days }} days{% else %}—{% endif %}
             </span>
           </div>
           <div class="d-flex justify-content-between small py-2 border-top">
-            <span class="text-muted">Pledged</span>
-            <span class="fw-semibold">£{{ pledged_gbp }}</span>
+            <span class="fw-semibold">Pledged</span>
+            <span class="fw-semibold">{{ pledged_gbp }}</span>
           </div>
           {% if target_gbp %}
           <div class="d-flex justify-content-between small py-2 border-top">
-            <span class="text-muted">Remaining</span>
-            <span class="fw-semibold">£{{ remaining_gbp }}</span>
+            <span class="fw-semibold">Remaining</span>
+            <span class="fw-semibold">{{ remaining_gbp }}</span>
           </div>
           {% endif %}
         </div>
@@ -290,6 +292,8 @@
 {% endblock %}
 
 {% block extra_js %}
+{{ block.super }}
+
 <script src="{% static 'js/pledge_progress.js' %}"></script>
 
 {% endblock %}

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import timedelta
 from decimal import Decimal, ROUND_HALF_UP
 import logging
 
@@ -9,11 +10,12 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.db import transaction
+from django.db import transaction, models
 from django.db.models import Q, Sum
 from django.db.models.functions import Coalesce
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
+from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
 
@@ -142,11 +144,13 @@ def _step_flags_from_payload(
         and _is_filled(return_band)
         and _is_filled(duration_days)
     )
-    step4 = _is_filled(country) and _is_filled(county) and _is_filled(postcode_prefix)
+    step4 = _is_filled(country) and _is_filled(
+        county) and _is_filled(postcode_prefix)
     step5 = bool(has_media)
     step6 = bool(is_active)
 
-    can_activate = step1 and step2 and step3 and step4 and step5 and (not step6)
+    can_activate = step1 and step2 and step3 and step4 and step5 and (
+        not step6)
 
     return {
         "step1_done": step1,
@@ -218,6 +222,41 @@ def _money(x: Decimal) -> str:
     return str(x.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
 
 
+def _assign_field_from_raw(listing: Listing, field_name: str, raw) -> None:
+    """
+    Draft-safe assignment:
+    - Empty -> None OR "" depending on DB nullability (prevents NOT NULL crashes)
+    - duration_days/project_duration_days -> int coercion
+    - everything else -> raw string
+    """
+    if not hasattr(listing, field_name):
+        return
+
+    model_field = Listing._meta.get_field(field_name)
+
+    if raw is None:
+        raw = ""
+    if isinstance(raw, str):
+        raw = raw.strip()
+
+    if raw == "":
+        # If a CharField has null=False (common), never assign None.
+        if isinstance(model_field, models.CharField) and not model_field.null:
+            setattr(listing, field_name, "")
+        else:
+            setattr(listing, field_name, None)
+        return
+
+    if field_name in {"duration_days", "project_duration_days"}:
+        try:
+            setattr(listing, field_name, int(raw))
+        except Exception:
+            setattr(listing, field_name, None)
+        return
+
+    setattr(listing, field_name, raw)
+
+
 @login_required
 @require_POST
 def api_listing_stepper_flags(request, pk=None):
@@ -259,7 +298,12 @@ def api_listing_stepper_flags(request, pk=None):
         msg = "Steps 1–5 complete — activation is available."
         msg_class = "text-success"
     else:
-        if not (flags["step1_done"] and flags["step2_done"] and flags["step3_done"] and flags["step4_done"]):
+        if not (
+            flags["step1_done"]
+            and flags["step2_done"]
+            and flags["step3_done"]
+            and flags["step4_done"]
+        ):
             msg = "Complete steps 1–4 to enable activation. You can save a draft at any time."
         elif not flags["step5_done"]:
             msg = "Upload at least one image or document to complete Step 5."
@@ -285,8 +329,8 @@ def create_listing_view(request):
     - action=activate    -> requires full validation, saves draft, then proceeds to activation (Stripe checkout)
 
     NOTE:
-    This view now ALWAYS supplies step flags to the template (like edit_listing_view does),
-    so both pages use the same stepper logic.
+    This view supplies step flags to the template (like edit_listing_view does),
+    so both pages can use the same stepper logic.
     """
     if request.method == "POST":
         action = (request.POST.get("action") or "save_draft").strip()
@@ -333,24 +377,10 @@ def create_listing_view(request):
         if action == "save_draft":
             listing = Listing(owner=request.user, status=Listing.Status.DRAFT)
 
+            # Draft save: allow partial + avoid NOT NULL issues on CharFields.
             for field_name in form.fields.keys():
-                if not hasattr(listing, field_name):
-                    continue
-
-                raw = (request.POST.get(field_name) or "").strip()
-
-                if raw == "":
-                    setattr(listing, field_name, None)
-                    continue
-
-                if field_name in {"duration_days", "project_duration_days"}:
-                    try:
-                        setattr(listing, field_name, int(raw))
-                    except Exception:
-                        setattr(listing, field_name, None)
-                    continue
-
-                setattr(listing, field_name, raw)
+                raw = request.POST.get(field_name)
+                _assign_field_from_raw(listing, field_name, raw)
 
             listing.save()
 
@@ -360,7 +390,6 @@ def create_listing_view(request):
                     file=image,
                     media_type=ListingMedia.MediaType.IMAGE,
                 )
-
             for doc in documents:
                 ListingMedia.objects.create(
                     listing=listing,
@@ -368,12 +397,17 @@ def create_listing_view(request):
                     media_type=ListingMedia.MediaType.DOCUMENT,
                 )
 
-            messages.success(request, "Draft saved. You can edit it anytime from the dashboard.")
+            messages.success(
+                request,
+                "Draft saved. You can edit it anytime from the dashboard.",
+            )
             return redirect("users:dashboard")
 
         if action == "activate":
             if not form.is_valid():
-                messages.error(request, "Please complete the required fields before activating.")
+                messages.error(
+                    request, "Please complete the required fields before activating."
+                )
                 return render(
                     request,
                     "listings/create_listing.html",
@@ -392,7 +426,6 @@ def create_listing_view(request):
                     file=image,
                     media_type=ListingMedia.MediaType.IMAGE,
                 )
-
             for doc in documents:
                 ListingMedia.objects.create(
                     listing=listing,
@@ -401,7 +434,10 @@ def create_listing_view(request):
                 )
 
             if not _listing_ready_for_activation(listing):
-                messages.error(request, "Complete Steps 1–5 (including at least one upload) before activating.")
+                messages.error(
+                    request,
+                    "Complete Steps 1–5 (including at least one upload) before activating.",
+                )
                 return redirect("listings:listing_edit", pk=listing.pk)
 
             return redirect("listings:activate_listing", pk=listing.pk)
@@ -415,7 +451,6 @@ def create_listing_view(request):
 
     form = ListingCreateForm()
     media_form = ListingMediaForm()
-
     flags = _step_flags_from_payload({}, has_media=False, is_active=False)
 
     return render(
@@ -437,8 +472,12 @@ def edit_listing_view(request, pk):
         messages.error(request, "Only draft listings can be edited.")
         return redirect("listings:listing_detail", pk=listing.pk)
 
-    images_qs = listing.media.filter(media_type=ListingMedia.MediaType.IMAGE).order_by("uploaded_at")
-    documents_qs = listing.media.filter(media_type=ListingMedia.MediaType.DOCUMENT).order_by("uploaded_at")
+    images_qs = listing.media.filter(
+        media_type=ListingMedia.MediaType.IMAGE
+    ).order_by("uploaded_at")
+    documents_qs = listing.media.filter(
+        media_type=ListingMedia.MediaType.DOCUMENT
+    ).order_by("uploaded_at")
 
     if request.method == "POST":
         action = (request.POST.get("action") or "save_draft").strip()
@@ -485,25 +524,10 @@ def edit_listing_view(request, pk):
             )
 
         if action == "save_draft":
+            # Draft save: allow partial + avoid NOT NULL issues on CharFields.
             for field_name in ListingCreateForm.Meta.fields:
-                if not hasattr(listing, field_name):
-                    continue
-
-                raw = request.POST.get(field_name, "")
-                raw = raw.strip() if isinstance(raw, str) else raw
-
-                if raw in ("", None):
-                    setattr(listing, field_name, None)
-                    continue
-
-                if field_name in {"duration_days", "project_duration_days"}:
-                    try:
-                        setattr(listing, field_name, int(raw))
-                    except Exception:
-                        setattr(listing, field_name, None)
-                    continue
-
-                setattr(listing, field_name, raw)
+                raw = request.POST.get(field_name)
+                _assign_field_from_raw(listing, field_name, raw)
 
             reset_payment_state(listing)
             listing.save()
@@ -521,12 +545,15 @@ def edit_listing_view(request, pk):
                     media_type=ListingMedia.MediaType.DOCUMENT,
                 )
 
-            messages.success(request, "Draft updated. You can keep editing anytime.")
-            return redirect("listings:listing_edit", pk=listing.pk)
+            messages.success(
+                request, "Draft updated. You can keep editing anytime.")
+            return redirect("listings:edit_listing", pk=listing.pk)
 
         if action == "activate":
             if not form.is_valid():
-                messages.error(request, "Please complete the required fields before activating.")
+                messages.error(
+                    request, "Please complete the required fields before activating."
+                )
                 flags = _listing_step_flags(listing)
                 return render(
                     request,
@@ -559,13 +586,16 @@ def edit_listing_view(request, pk):
                 )
 
             if not _listing_ready_for_activation(listing):
-                messages.error(request, "Complete Steps 1–5 (including at least one upload) before activating.")
-                return redirect("listings:listing_edit", pk=listing.pk)
+                messages.error(
+                    request,
+                    "Complete Steps 1–5 (including at least one upload) before activating.",
+                )
+                return redirect("listings:edit_listing", pk=listing.pk)
 
             return redirect("listings:activate_listing", pk=listing.pk)
 
         messages.error(request, "Unknown action.")
-        return redirect("listings:listing_edit", pk=listing.pk)
+        return redirect("listings:edit_listing", pk=listing.pk)
 
     form = ListingCreateForm(instance=listing)
     media_form = ListingMediaForm()
@@ -593,8 +623,12 @@ def listing_detail_view(request, pk):
         owner=request.user,
     )
 
-    images = listing.media.filter(media_type=ListingMedia.MediaType.IMAGE).order_by("uploaded_at")
-    documents = listing.media.filter(media_type=ListingMedia.MediaType.DOCUMENT).order_by("uploaded_at")
+    images = listing.media.filter(
+        media_type=ListingMedia.MediaType.IMAGE
+    ).order_by("uploaded_at")
+    documents = listing.media.filter(
+        media_type=ListingMedia.MediaType.DOCUMENT
+    ).order_by("uploaded_at")
 
     return render(
         request,
@@ -606,7 +640,11 @@ def listing_detail_view(request, pk):
 @login_required
 @require_POST
 def listing_delete_view(request, pk):
-    listing = get_object_or_404(Listing.objects.prefetch_related("media"), pk=pk, owner=request.user)
+    listing = get_object_or_404(
+        Listing.objects.prefetch_related("media"),
+        pk=pk,
+        owner=request.user,
+    )
 
     if listing.status != Listing.Status.DRAFT:
         messages.error(request, "Only draft listings can be deleted.")
@@ -645,7 +683,7 @@ def listing_media_delete_view(request, pk, media_id):
     media.delete()
 
     messages.success(request, "File deleted.")
-    return redirect("listings:listing_edit", pk=listing.pk)
+    return redirect("listings:edit_listing", pk=listing.pk)
 
 
 @login_required
@@ -661,8 +699,10 @@ def activate_listing_view(request, pk):
         return redirect("listings:listing_detail", pk=listing.pk)
 
     if not _listing_ready_for_activation(listing):
-        messages.error(request, "Complete Steps 1–5 (including at least one upload) before activating.")
-        return redirect("listings:listing_edit", pk=listing.pk)
+        messages.error(
+            request, "Complete Steps 1–5 (including at least one upload) before activating."
+        )
+        return redirect("listings:edit_listing", pk=listing.pk)
 
     return start_listing_checkout_view(request, pk=listing.pk)
 
@@ -685,6 +725,13 @@ def start_listing_checkout_view(request, pk):
     if reused_url:
         return redirect(reused_url, permanent=False)
 
+    # Check if duration_days is None
+    if listing.duration_days is None:
+        messages.error(
+            request, "Duration days must be set before proceeding to checkout.")
+        return redirect("listings:listing_detail", pk=listing.pk)
+
+    # Now it is safe to convert duration_days to an integer
     duration_days = int(listing.duration_days)
 
     try:
@@ -693,7 +740,8 @@ def start_listing_checkout_view(request, pk):
             duration_days=duration_days,
         )
     except ValueError:
-        messages.error(request, "Pricing could not be calculated for this listing.")
+        messages.error(
+            request, "Pricing could not be calculated for this listing.")
         return redirect("listings:listing_detail", pk=listing.pk)
 
     success_url, cancel_url = build_stripe_urls(listing=listing)
@@ -724,7 +772,8 @@ def start_listing_checkout_view(request, pk):
 
     listing.expected_amount_pence = int(amount_pence)
     listing.stripe_checkout_session_id = session.id
-    listing.save(update_fields=["expected_amount_pence", "stripe_checkout_session_id"])
+    listing.save(update_fields=[
+                 "expected_amount_pence", "stripe_checkout_session_id"])
 
     return redirect(session.url, permanent=False)
 
@@ -735,7 +784,8 @@ def payment_success_view(request):
     session_id = (request.GET.get("session_id") or "").strip()
 
     if not (listing_id and session_id and settings.STRIPE_SECRET_KEY):
-        messages.success(request, "Payment received. Your listing will activate shortly.")
+        messages.success(
+            request, "Payment received. Your listing will activate shortly.")
         return redirect("users:dashboard")
 
     stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -743,20 +793,26 @@ def payment_success_view(request):
     try:
         session = stripe.checkout.Session.retrieve(session_id)
     except stripe.error.StripeError:
-        messages.success(request, "Payment received. Your listing will activate shortly.")
+        messages.success(
+            request, "Payment received. Your listing will activate shortly.")
         return redirect("users:dashboard")
 
     try:
         with transaction.atomic():
-            listing = Listing.objects.select_for_update().get(pk=listing_id, owner=request.user)
-            activated = activate_listing_from_paid_session(listing=listing, session=session)
+            listing = Listing.objects.select_for_update().get(
+                pk=listing_id, owner=request.user
+            )
+            activated = activate_listing_from_paid_session(
+                listing=listing, session=session)
     except Listing.DoesNotExist:
         activated = False
 
     if activated:
-        messages.success(request, "Payment received. Your listing is now active.")
+        messages.success(
+            request, "Payment received. Your listing is now active.")
     else:
-        messages.success(request, "Payment received. Your listing will activate shortly.")
+        messages.success(
+            request, "Payment received. Your listing will activate shortly.")
 
     return redirect("users:dashboard")
 
@@ -777,7 +833,8 @@ def payment_cancel_view(request, pk):
         ]
     )
 
-    messages.info(request, "Payment cancelled. Your listing is still saved as a draft.")
+    messages.info(
+        request, "Payment cancelled. Your listing is still saved as a draft.")
     return redirect("listings:listing_detail", pk=pk)
 
 
@@ -807,7 +864,9 @@ def stripe_webhook(request):
         if session.get("payment_status") != "paid":
             return HttpResponse(status=200)
 
-        listing_id = session.get("client_reference_id") or (session.get("metadata") or {}).get("listing_id")
+        listing_id = session.get("client_reference_id") or (
+            (session.get("metadata") or {}).get("listing_id")
+        )
         if not listing_id:
             return HttpResponse(status=200)
 
@@ -824,7 +883,8 @@ def stripe_webhook(request):
             if listing.stripe_checkout_session_id and session_id != listing.stripe_checkout_session_id:
                 return HttpResponse(status=200)
 
-            activate_listing_from_paid_session(listing=listing, session=session)
+            activate_listing_from_paid_session(
+                listing=listing, session=session)
 
     return HttpResponse(status=200)
 
@@ -923,9 +983,7 @@ def search_listings_view(request):
             "funding_band": funding_band,
             "return_type": return_type,
             "return_band": return_band,
-
             "page_obj": page_obj,
-
             "source_use_choices": source_use_choices,
             "target_use_choices": target_use_choices,
             "country_choices": Listing.Country.choices,
@@ -936,7 +994,6 @@ def search_listings_view(request):
     )
 
 
-
 @login_required
 def opportunity_detail_view(request, pk):
     listing = get_object_or_404(
@@ -945,8 +1002,12 @@ def opportunity_detail_view(request, pk):
         status=Listing.Status.ACTIVE,
     )
 
-    images = listing.media.filter(media_type=ListingMedia.MediaType.IMAGE).order_by("uploaded_at")
-    documents = listing.media.filter(media_type=ListingMedia.MediaType.DOCUMENT).order_by("uploaded_at")
+    images = listing.media.filter(
+        media_type=ListingMedia.MediaType.IMAGE
+    ).order_by("uploaded_at")
+    documents = listing.media.filter(
+        media_type=ListingMedia.MediaType.DOCUMENT
+    ).order_by("uploaded_at")
 
     pledged_pence = (
         Investment.objects.filter(
@@ -957,6 +1018,7 @@ def opportunity_detail_view(request, pk):
     )
 
     pledged_gbp = (Decimal(pledged_pence) / Decimal("100")).quantize(Decimal("0.01"))
+    pledged_gbp_formatted = f"£{pledged_gbp:,.2f}"
 
     target_gbp = None
     remaining_gbp = None
@@ -968,11 +1030,13 @@ def opportunity_detail_view(request, pk):
             if len(parts) >= 2:
                 target_int = int(parts[-1])
                 target_gbp = Decimal(target_int).quantize(Decimal("0.01"))
+                target_gbp_formatted = f"{target_gbp:,.2f}"
 
                 remaining = Decimal(target_int) - pledged_gbp
                 if remaining < 0:
                     remaining = Decimal("0")
                 remaining_gbp = remaining.quantize(Decimal("0.01"))
+                remaining_gbp_formatted = f"£{remaining_gbp:,.2f}"
 
                 if target_int > 0:
                     pct = (pledged_gbp / Decimal(target_int)) * Decimal("100")
@@ -993,9 +1057,9 @@ def opportunity_detail_view(request, pk):
             "listing": listing,
             "images": images,
             "documents": documents,
-            "pledged_gbp": pledged_gbp,
-            "target_gbp": target_gbp,
-            "remaining_gbp": remaining_gbp,
+            "pledged_gbp": pledged_gbp_formatted,  # Use the formatted pledged amount
+            "target_gbp": target_gbp_formatted,
+            "remaining_gbp": remaining_gbp_formatted,  # Use the formatted remaining amount
             "progress_pct": progress_pct,
         },
     )
@@ -1018,7 +1082,10 @@ def estimate_return_view(request, pk):
     try:
         min_pct, max_pct = get_return_pct_range(listing)
     except Exception:
-        return JsonResponse({"ok": False, "error": "Return band is not configured correctly."}, status=400)
+        return JsonResponse(
+            {"ok": False, "error": "Return band is not configured correctly."},
+            status=400,
+        )
 
     profit_min = amount * (min_pct / Decimal("100"))
     profit_max = amount * (max_pct / Decimal("100"))

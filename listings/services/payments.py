@@ -1,4 +1,3 @@
-# listings/services/payments.py
 from datetime import timedelta
 import logging
 
@@ -12,7 +11,6 @@ from ..models import Listing
 
 logger = logging.getLogger(__name__)
 
-
 def reset_payment_state(listing: Listing) -> None:
     listing.status = Listing.Status.DRAFT
     listing.expected_amount_pence = 0
@@ -21,12 +19,12 @@ def reset_payment_state(listing: Listing) -> None:
     listing.stripe_checkout_session_id = ""
     listing.stripe_payment_intent_id = ""
 
-
 def activate_listing_from_paid_session(*, listing: Listing, session: dict) -> bool:
     session_id = session.get("id")
     amount_total = session.get("amount_total")
     payment_intent = session.get("payment_intent")
 
+    # Check if payment is successful
     if session.get("payment_status") != "paid":
         return False
 
@@ -36,22 +34,31 @@ def activate_listing_from_paid_session(*, listing: Listing, session: dict) -> bo
     if listing.status == Listing.Status.ACTIVE:
         return True
 
+    # Ensure the session ID matches
     if listing.stripe_checkout_session_id and session_id != listing.stripe_checkout_session_id:
         return False
 
     if amount_total is None:
         return False
 
+    # Check if the amount paid matches the expected amount
     if int(amount_total) != int(listing.expected_amount_pence):
         return False
 
+    # Ensure that duration_days is not None before proceeding with activation
+    if listing.duration_days is None:
+        raise ValueError("Listing duration is required to activate the listing.")
+    
     now = timezone.now()
     listing.paid_amount_pence = int(amount_total)
     listing.paid_at = now
     listing.stripe_payment_intent_id = str(payment_intent or "")
     listing.status = Listing.Status.ACTIVE
+
+    # Safely convert duration_days to integer
+    duration_days = int(listing.duration_days)
     listing.active_from = now
-    listing.active_until = now + timedelta(days=int(listing.duration_days))
+    listing.active_until = now + timedelta(days=duration_days)
 
     listing.save(
         update_fields=[
@@ -65,8 +72,8 @@ def activate_listing_from_paid_session(*, listing: Listing, session: dict) -> bo
     )
     return True
 
-
 def build_stripe_urls(*, listing: Listing) -> tuple[str, str]:
+    # Construct the success and cancel URLs for Stripe
     success_url = (
         settings.SITE_URL
         + reverse("listings:payment_success")
@@ -75,12 +82,11 @@ def build_stripe_urls(*, listing: Listing) -> tuple[str, str]:
     cancel_url = settings.SITE_URL + reverse("listings:payment_cancel", kwargs={"pk": listing.pk})
     return success_url, cancel_url
 
-
 def ensure_stripe_configured() -> None:
+    # Ensure Stripe is properly configured
     if not settings.STRIPE_SECRET_KEY:
         raise RuntimeError("Stripe is not configured on the server.")
     stripe.api_key = settings.STRIPE_SECRET_KEY
-
 
 def try_reuse_existing_checkout_session(*, listing: Listing) -> str | None:
     """

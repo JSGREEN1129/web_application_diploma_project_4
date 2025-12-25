@@ -1,97 +1,49 @@
 /* Horizontal scrolling rows for dashboard cards */
 .dashboard-scroll {
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding-bottom: 0.5rem;
-    -webkit-overflow-scrolling: touch;
-    cursor: grab;
-    scroll-snap-type: x mandatory;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 0.5rem;
+  -webkit-overflow-scrolling: touch;
+  cursor: grab;
+  scroll-snap-type: x mandatory;
 }
 
-/* Cards should never shrink to squeeze into the viewport */
+/* Cards should never shrink */
 .dashboard-card {
-    flex: 0 0 auto;              /* important: prevents "all fit in one view" */
-    scroll-snap-align: start;    /* pairs with scroll-snap-type */
-
-    /* sensible default for small screens */
-    width: 85%;
-    max-width: 420px;
+  flex: 0 0 auto;
+  scroll-snap-align: start;
 }
 
-/* Tablet: 2 cards visible */
+/* Width rules that currently win in your dashboard */
+.dashboard-scroll .card.dashboard-card {
+  width: 340px;
+}
+
 @media (min-width: 768px) {
-    .dashboard-card {
-        width: calc((100% - 1rem) / 2); /* 2 cards, 1 gap (gap-3 ~ 1rem) */
-        max-width: none;
-    }
-}
-
-/* Desktop / large screens: 3 cards visible */
-@media (min-width: 992px) {
-    .dashboard-card {
-        width: calc((100% - 2rem) / 3); /* 3 cards, 2 gaps */
-        max-width: none;
-    }
+  .dashboard-scroll .card.dashboard-card {
+    width: 380px;
+  }
 }
 
 /* Optional: nicer scrollbar on WebKit browsers */
 .dashboard-scroll::-webkit-scrollbar {
-    height: 6px;
+  height: 6px;
 }
 
 .dashboard-scroll::-webkit-scrollbar-track {
-    background: #f1f1f1;
+  background: #f1f1f1;
 }
 
 .dashboard-scroll::-webkit-scrollbar-thumb {
-    background: #2f6f3a;
-    border-radius: 3px;
+  background: var(--gsc-green);
+  border-radius: 3px;
 }
 
 .dashboard-scroll.is-dragging {
-    cursor: grabbing;
-    user-select: none;
+  cursor: grabbing;
+  user-select: none;
 }
 
 .dashboard-scroll.is-dragging * {
-    user-select: none;
+  user-select: none;
 }
-
-@media (min-width: 992px) {
-  .edit-two-col > .col-lg-6 {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .existing-images-card {
-    flex: 1 1 auto !important;
-    min-height: 320px;
-  }
-
-  .existing-images-scroll {
-    flex: 1 1 auto;
-    overflow-y: auto;
-    max-height: 420px;
-    padding-right: 0.25rem;
-  }
-}
-
-    .rounded-xxl {
-        border-radius: 1.25rem !important;
-    }
-
-    .min-w-0 {
-        min-width: 0;
-    }
-
-    .dashboard-scroll .card.dashboard-card {
-        width: 340px;
-    }
-
-    @media (min-width: 768px) {
-        .dashboard-scroll .card.dashboard-card {
-            width: 380px;
-        }
-    }
-
-

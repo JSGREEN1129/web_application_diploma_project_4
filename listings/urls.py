@@ -6,7 +6,7 @@ app_name = "listings"
 urlpatterns = [
     path("create-listing/", views.create_listing_view, name="create_listing"),
     path("<int:pk>/", views.listing_detail_view, name="listing_detail"),
-    path("<int:pk>/edit/", views.edit_listing_view, name="listing_edit"),
+    path("<int:pk>/edit/", views.edit_listing_view, name="edit_listing"),
     path("<int:pk>/delete/", views.listing_delete_view, name="listing_delete"),
     path(
         "<int:pk>/media/<int:media_id>/delete/",
