@@ -76,4 +76,22 @@
   }
 }
 
+    .rounded-xxl {
+        border-radius: 1.25rem !important;
+    }
+
+    .min-w-0 {
+        min-width: 0;
+    }
+
+    .dashboard-scroll .card.dashboard-card {
+        width: 340px;
+    }
+
+    @media (min-width: 768px) {
+        .dashboard-scroll .card.dashboard-card {
+            width: 380px;
+        }
+    }
+
 

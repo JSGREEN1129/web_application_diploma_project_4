@@ -79,7 +79,7 @@
                                 {{ inv.listing.source_use|capfirst }} → {{ inv.listing.target_use|capfirst }}
                             </h5>
                             <p class="text-muted small mb-0 text-truncate">
-                                {{ inv.listing.country|capfirst }} • {{ inv.listing.county }} • 
+                                {{ inv.listing.country|capfirst }} • {{ inv.listing.county }} •
                                 {{ inv.listing.postcode_prefix }}
                             </p>
                         </div>
@@ -211,7 +211,8 @@
                             class="btn btn-sm btn-outline-success flex-grow-1">
                             View Draft
                         </a>
-                        <a href="{% url 'listings:listing_edit' listing.pk %}" class="btn btn-sm btn-outline-success flex-grow-1">
+                        <a href="{% url 'listings:listing_edit' listing.pk %}"
+                            class="btn btn-sm btn-outline-success flex-grow-1">
                             Edit
                         </a>
                         <a href="{% url 'listings:listing_checkout' listing.pk %}"
@@ -220,8 +221,7 @@
                         </a>
                     </div>
                     {% else %}
-                    <a href="{% url 'listings:listing_detail' listing.pk %}"
-                        class="btn btn-sm btn-success w-100">
+                    <a href="{% url 'listings:listing_detail' listing.pk %}" class="btn btn-sm btn-success w-100">
                         View Listing
                     </a>
                     {% endif %}
@@ -249,27 +249,8 @@
 {% endblock %}
 
 {% block extra_js %}
-  {{ block.super }}
-  
-  <script src="{% static 'js/click_hold_drag_scroll.js' %}"></script>
+{{ block.super }}
 
-<style>
-    .rounded-xxl {
-        border-radius: 1.25rem !important;
-    }
+<script src="{% static 'js/click_hold_drag_scroll.js' %}"></script>
 
-    .min-w-0 {
-        min-width: 0;
-    }
-
-    .dashboard-scroll .card.dashboard-card {
-        width: 340px;
-    }
-
-    @media (min-width: 768px) {
-        .dashboard-scroll .card.dashboard-card {
-            width: 380px;
-        }
-    }
-</style>
 {% endblock %}
