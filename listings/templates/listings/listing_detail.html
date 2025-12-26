@@ -1,4 +1,6 @@
 {% extends "core/base_users.html" %}
+{% load static %}
+
 {% block title %}Listing {{ listing.id }} – Green Square Capital{% endblock %}
 
 {% block content %}
@@ -8,7 +10,8 @@
   <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
     <div>
       <span class="badge text-bg-success px-3 py-2 rounded-pill">Green Square Capital</span>
-      <h1 class="h2 fw-semibold text-success mb-1 mt-3">{{ listing.source_use|capfirst }} → {{ listing.target_use|capfirst }}</h1>
+      <h1 class="h2 fw-semibold text-success mb-1 mt-3">{{ listing.source_use|capfirst }} → {{
+        listing.target_use|capfirst }}</h1>
       <p class="text-muted small mb-0">
         {{ listing.country|capfirst }} • {{ listing.county }} • {{ listing.postcode_prefix }}
       </p>
@@ -64,14 +67,14 @@
           {% csrf_token %}
           <div class="modal-header border-0 pb-0">
             <div>
-              <h5 class="modal-title fw-semibold" id="deleteListingModalLabel">Confirm delete</h5>
+              <h5 class="modal-title fw-semibold text-success" id="deleteListingModalLabel">Confirm delete</h5>
               <p class="text-muted small mb-0">This action cannot be undone.</p>
             </div>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
 
           <div class="modal-body pt-3">
-            <div class="rounded-4 bg-light p-3 mb-3">
+            <div class="rounded-4 alert alert-danger p-3 mb-3">
               <p class="mb-0 small">
                 This will permanently delete this draft listing and its uploaded files.
               </p>
@@ -124,8 +127,8 @@
               <span class="fw-semibold">{{ listing.get_return_band_display }}</span>
             </div>
             <div class="d-flex justify-content-between small mt-2">
-              <span class="text-muted">Duration</span>
-              <span class="fw-semibold">{{ listing.duration_days }} days</span>
+              <span class="text-muted">Project Duration</span>
+              <span class="fw-semibold">{{ listing.project_duration_days }} days</span>
             </div>
 
             {% if listing.active_until %}
@@ -139,12 +142,37 @@
 
           {# Push footer to bottom to feel like a proper sidebar #}
           <div class="mt-auto pt-4">
+
+            {# --- FUNDING PROGRESS --- #}
             <div class="border-top pt-3">
+              <div class="mt-3">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                  <div class="fw-semibold text-success">Funding progress</div>
+                  <div class="text-muted small">
+                    Pledged: <span class="fw-semibold text-body">{{ pledged_gbp }}</span>
+                    {% if target_gbp %}
+                    • Target: <span class="fw-semibold text-body">£{{ target_gbp }}</span>
+                    • Remaining: <span class="fw-semibold text-body">{{ remaining_gbp }}</span>
+                    {% endif %}
+                  </div>
+                </div>
+
+                <div class="progress rounded-pill mt-2" style="height: 12px;">
+                  <div class="progress-bar bg-success" role="progressbar"
+                    style="width: {{ progress_pct|default:'0' }}%;" aria-valuenow="{{ progress_pct|default:'0' }}"
+                    aria-valuemin="0" aria-valuemax="100">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="border-top pt-3 mt-3">
               <a href="{% url 'users:dashboard' %}" class="btn btn-outline-success w-100 rounded-pill">
                 ← Back to Dashboard
               </a>
             </div>
           </div>
+
         </div>
       </div>
     </div>
@@ -219,4 +247,11 @@
   </div>
 
 </div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+
+<script src="{% static 'js/pledge_progress.js' %}"></script>
+
 {% endblock %}
