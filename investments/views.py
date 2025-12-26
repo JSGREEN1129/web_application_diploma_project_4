@@ -11,23 +11,12 @@ from listings.models import Listing, ListingMedia
 from listings.services.pricing import get_return_pct_range
 from .forms import InvestmentPledgeForm
 from .models import Investment
+from .services import calculate_expected_return_pence
+
 
 
 def _gbp_to_pence(gbp: Decimal) -> int:
     return int((gbp * Decimal("100")).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
-
-
-def _calc_expected_total_return(amount_pence: int, pct: Decimal) -> tuple[int, int]:
-    """
-    Treat pct as TOTAL return percent for the opportunity (NOT annualised, NOT pro-rated).
-    Returns (expected_return_pence, expected_total_back_pence).
-    """
-    expected_return = (Decimal(amount_pence) * (pct / Decimal("100"))).quantize(
-        Decimal("1"), rounding=ROUND_HALF_UP
-    )
-    expected_return_pence = int(expected_return)
-    expected_total_back_pence = amount_pence + expected_return_pence
-    return expected_return_pence, expected_total_back_pence
 
 
 @require_POST
@@ -70,10 +59,12 @@ def pledge_investment_view(request, listing_id: int):
             messages.error(request, "This listing has expired.")
             return redirect("users:search_listings")
 
-        expected_return_pence, expected_total_back_pence = _calc_expected_total_return(
+        result = calculate_expected_return_pence(
             amount_pence=amount_pence,
-            pct=mid_pct,
+            total_return_percent=mid_pct,
         )
+        expected_return_pence = result.expected_return_pence
+        expected_total_back_pence = result.expected_total_back_pence
 
         investment = Investment.objects.create(
             investor=request.user,
