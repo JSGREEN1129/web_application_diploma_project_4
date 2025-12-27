@@ -67,6 +67,68 @@ OUTCODES_BY_COUNTY = {
 }
 
 
+def _parse_target_int_from_funding_band(funding_band) -> int:
+    """
+    Listing.FundingBand values look like "10000_20000" (low_high).
+    This returns the HIGH end as the target amount in GBP.
+    """
+    if not funding_band:
+        return 0
+    try:
+        low_str, high_str = str(funding_band).split("_", 1)
+        return int(high_str)
+    except Exception:
+        return 0
+
+
+def _pledge_progress_for_listing(listing: Listing) -> dict:
+    """
+    Computes pledged/remaining/target/progress for a single listing.
+    Returned keys are safe and always present.
+    """
+    pledged_pence = (
+        Investment.objects.filter(
+            listing=listing,
+            status=Investment.Status.PLEDGED,
+        ).aggregate(total=Coalesce(Sum("amount_pence"), 0))["total"]
+        or 0
+    )
+
+    pledged_gbp = (Decimal(pledged_pence) / Decimal("100")).quantize(Decimal("0.01"))
+    pledged_gbp_formatted = f"£{pledged_gbp:,.2f}"
+
+    target_int = _parse_target_int_from_funding_band(listing.funding_band)
+
+    # Defaults (always defined)
+    target_gbp_formatted = None
+    remaining_gbp_formatted = None
+    progress_pct = 0
+
+    if target_int > 0:
+        target_gbp = Decimal(target_int).quantize(Decimal("0.01"))
+        target_gbp_formatted = f"{target_gbp:,.2f}"
+
+        remaining = Decimal(target_int) - pledged_gbp
+        if remaining < 0:
+            remaining = Decimal("0")
+        remaining_gbp = remaining.quantize(Decimal("0.01"))
+        remaining_gbp_formatted = f"£{remaining_gbp:,.2f}"
+
+        pct = (pledged_gbp / Decimal(target_int)) * Decimal("100")
+        if pct < 0:
+            pct = Decimal("0")
+        if pct > 100:
+            pct = Decimal("100")
+        progress_pct = int(pct)
+
+    return {
+        "pledged_gbp": pledged_gbp_formatted,
+        "target_gbp": target_gbp_formatted,
+        "remaining_gbp": remaining_gbp_formatted,
+        "progress_pct": progress_pct,
+    }
+
+
 def validate_uploaded_files(
     files,
     *,
@@ -144,13 +206,11 @@ def _step_flags_from_payload(
         and _is_filled(return_band)
         and _is_filled(duration_days)
     )
-    step4 = _is_filled(country) and _is_filled(
-        county) and _is_filled(postcode_prefix)
+    step4 = _is_filled(country) and _is_filled(county) and _is_filled(postcode_prefix)
     step5 = bool(has_media)
     step6 = bool(is_active)
 
-    can_activate = step1 and step2 and step3 and step4 and step5 and (
-        not step6)
+    can_activate = step1 and step2 and step3 and step4 and step5 and (not step6)
 
     return {
         "step1_done": step1,
@@ -384,7 +444,6 @@ def create_listing_view(request):
         if action == "save_draft":
             listing = Listing(owner=request.user, status=Listing.Status.DRAFT)
 
-            # Draft save: allow partial + avoid NOT NULL issues on CharFields.
             for field_name in form.fields.keys():
                 raw = request.POST.get(field_name)
                 _assign_field_from_raw(listing, field_name, raw)
@@ -531,7 +590,6 @@ def edit_listing_view(request, pk):
             )
 
         if action == "save_draft":
-            # Draft save: allow partial + avoid NOT NULL issues on CharFields.
             for field_name in ListingCreateForm.Meta.fields:
                 raw = request.POST.get(field_name)
                 _assign_field_from_raw(listing, field_name, raw)
@@ -552,8 +610,7 @@ def edit_listing_view(request, pk):
                     media_type=ListingMedia.MediaType.DOCUMENT,
                 )
 
-            messages.success(
-                request, "Draft updated. You can keep editing anytime.")
+            messages.success(request, "Draft updated. You can keep editing anytime.")
             return redirect("listings:edit_listing", pk=listing.pk)
 
         if action == "activate":
@@ -637,10 +694,17 @@ def listing_detail_view(request, pk):
         media_type=ListingMedia.MediaType.DOCUMENT
     ).order_by("uploaded_at")
 
+    pledge_ctx = _pledge_progress_for_listing(listing)
+
     return render(
         request,
         "listings/listing_detail.html",
-        {"listing": listing, "images": images, "documents": documents},
+        {
+            "listing": listing,
+            "images": images,
+            "documents": documents,
+            **pledge_ctx,
+        },
     )
 
 
@@ -732,13 +796,12 @@ def start_listing_checkout_view(request, pk):
     if reused_url:
         return redirect(reused_url, permanent=False)
 
-    # Check if duration_days is None
     if listing.duration_days is None:
         messages.error(
-            request, "Duration days must be set before proceeding to checkout.")
+            request, "Duration days must be set before proceeding to checkout."
+        )
         return redirect("listings:listing_detail", pk=listing.pk)
 
-    # Now it is safe to convert duration_days to an integer
     duration_days = int(listing.duration_days)
 
     try:
@@ -747,8 +810,7 @@ def start_listing_checkout_view(request, pk):
             duration_days=duration_days,
         )
     except ValueError:
-        messages.error(
-            request, "Pricing could not be calculated for this listing.")
+        messages.error(request, "Pricing could not be calculated for this listing.")
         return redirect("listings:listing_detail", pk=listing.pk)
 
     success_url, cancel_url = build_stripe_urls(listing=listing)
@@ -779,8 +841,7 @@ def start_listing_checkout_view(request, pk):
 
     listing.expected_amount_pence = int(amount_pence)
     listing.stripe_checkout_session_id = session.id
-    listing.save(update_fields=[
-                 "expected_amount_pence", "stripe_checkout_session_id"])
+    listing.save(update_fields=["expected_amount_pence", "stripe_checkout_session_id"])
 
     return redirect(session.url, permanent=False)
 
@@ -791,8 +852,7 @@ def payment_success_view(request):
     session_id = (request.GET.get("session_id") or "").strip()
 
     if not (listing_id and session_id and settings.STRIPE_SECRET_KEY):
-        messages.success(
-            request, "Payment received. Your listing will activate shortly.")
+        messages.success(request, "Payment received. Your listing will activate shortly.")
         return redirect("users:dashboard")
 
     stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -800,8 +860,7 @@ def payment_success_view(request):
     try:
         session = stripe.checkout.Session.retrieve(session_id)
     except stripe.error.StripeError:
-        messages.success(
-            request, "Payment received. Your listing will activate shortly.")
+        messages.success(request, "Payment received. Your listing will activate shortly.")
         return redirect("users:dashboard")
 
     try:
@@ -809,17 +868,14 @@ def payment_success_view(request):
             listing = Listing.objects.select_for_update().get(
                 pk=listing_id, owner=request.user
             )
-            activated = activate_listing_from_paid_session(
-                listing=listing, session=session)
+            activated = activate_listing_from_paid_session(listing=listing, session=session)
     except Listing.DoesNotExist:
         activated = False
 
     if activated:
-        messages.success(
-            request, "Payment received. Your listing is now active.")
+        messages.success(request, "Payment received. Your listing is now active.")
     else:
-        messages.success(
-            request, "Payment received. Your listing will activate shortly.")
+        messages.success(request, "Payment received. Your listing will activate shortly.")
 
     return redirect("users:dashboard")
 
@@ -840,8 +896,7 @@ def payment_cancel_view(request, pk):
         ]
     )
 
-    messages.info(
-        request, "Payment cancelled. Your listing is still saved as a draft.")
+    messages.info(request, "Payment cancelled. Your listing is still saved as a draft.")
     return redirect("listings:listing_detail", pk=pk)
 
 
@@ -890,8 +945,7 @@ def stripe_webhook(request):
             if listing.stripe_checkout_session_id and session_id != listing.stripe_checkout_session_id:
                 return HttpResponse(status=200)
 
-            activate_listing_from_paid_session(
-                listing=listing, session=session)
+            activate_listing_from_paid_session(listing=listing, session=session)
 
     return HttpResponse(status=200)
 
@@ -972,6 +1026,13 @@ def search_listings_view(request):
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
+
+    for l in page_obj.object_list:
+        try:
+            l.progress_pct = _pledge_progress_for_listing(l)["progress_pct"]
+        except Exception:
+            l.progress_pct = 0
+
     source_use_choices = Listing._meta.get_field("source_use").choices
     target_use_choices = Listing._meta.get_field("target_use").choices
     return_band_choices = Listing._meta.get_field("return_band").choices
@@ -1016,46 +1077,8 @@ def opportunity_detail_view(request, pk):
         media_type=ListingMedia.MediaType.DOCUMENT
     ).order_by("uploaded_at")
 
-    pledged_pence = (
-        Investment.objects.filter(
-            listing=listing,
-            status=Investment.Status.PLEDGED,
-        ).aggregate(total=Coalesce(Sum("amount_pence"), 0))["total"]
-        or 0
-    )
-
-    pledged_gbp = (Decimal(pledged_pence) / Decimal("100")).quantize(Decimal("0.01"))
-    pledged_gbp_formatted = f"£{pledged_gbp:,.2f}"
-
-    target_gbp = None
-    remaining_gbp = None
-    progress_pct = 0
-
-    try:
-        if listing.funding_band:
-            parts = str(listing.funding_band).split("_")
-            if len(parts) >= 2:
-                target_int = int(parts[-1])
-                target_gbp = Decimal(target_int).quantize(Decimal("0.01"))
-                target_gbp_formatted = f"{target_gbp:,.2f}"
-
-                remaining = Decimal(target_int) - pledged_gbp
-                if remaining < 0:
-                    remaining = Decimal("0")
-                remaining_gbp = remaining.quantize(Decimal("0.01"))
-                remaining_gbp_formatted = f"£{remaining_gbp:,.2f}"
-
-                if target_int > 0:
-                    pct = (pledged_gbp / Decimal(target_int)) * Decimal("100")
-                    if pct < 0:
-                        pct = Decimal("0")
-                    if pct > 100:
-                        pct = Decimal("100")
-                    progress_pct = int(pct)
-    except Exception:
-        target_gbp = None
-        remaining_gbp = None
-        progress_pct = 0
+    # Pledge progress context (shared helper)
+    pledge_ctx = _pledge_progress_for_listing(listing)
 
     return render(
         request,
@@ -1064,10 +1087,7 @@ def opportunity_detail_view(request, pk):
             "listing": listing,
             "images": images,
             "documents": documents,
-            "pledged_gbp": pledged_gbp_formatted,  # Use the formatted pledged amount
-            "target_gbp": target_gbp_formatted,
-            "remaining_gbp": remaining_gbp_formatted,  # Use the formatted remaining amount
-            "progress_pct": progress_pct,
+            **pledge_ctx,
         },
     )
 
@@ -1084,7 +1104,9 @@ def estimate_return_view(request, pk):
         return JsonResponse({"ok": False, "error": "Invalid amount."}, status=400)
 
     if amount <= 0:
-        return JsonResponse({"ok": False, "error": "Amount must be greater than 0."}, status=400)
+        return JsonResponse(
+            {"ok": False, "error": "Amount must be greater than 0."}, status=400
+        )
 
     try:
         min_pct, max_pct = get_return_pct_range(listing)
