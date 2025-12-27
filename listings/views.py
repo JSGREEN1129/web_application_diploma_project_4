@@ -504,7 +504,7 @@ def create_listing_view(request):
                     request,
                     "Complete Steps 1–5 (including at least one upload) before activating.",
                 )
-                return redirect("listings:listing_edit", pk=listing.pk)
+                return redirect("listings:edit_listing", pk=listing.pk)
 
             return redirect("listings:activate_listing", pk=listing.pk)
 
@@ -1022,7 +1022,7 @@ def search_listings_view(request):
     if return_band:
         qs = qs.filter(return_band=return_band)
 
-    paginator = Paginator(qs, 12)
+    paginator = Paginator(qs, 6)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 

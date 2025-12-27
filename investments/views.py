@@ -26,17 +26,17 @@ def pledge_investment_view(request, listing_id: int):
 
     if listing.owner_id == request.user.id:
         messages.error(request, "You cannot invest in your own listing.")
-        return redirect("users:search_listings")
+        return redirect("listings:search_listings")
 
     form = InvestmentPledgeForm(request.POST)
     if not form.is_valid():
         messages.error(request, "Enter a valid amount.")
-        return redirect("users:search_listings")
+        return redirect("listings:search_listings")
 
     amount_gbp: Decimal = form.cleaned_data["amount_gbp"]
     if amount_gbp <= 0:
         messages.error(request, "Enter a valid amount.")
-        return redirect("users:search_listings")
+        return redirect("listings:search_listings")
 
     amount_pence = _gbp_to_pence(amount_gbp)
 
@@ -44,7 +44,7 @@ def pledge_investment_view(request, listing_id: int):
         min_pct, max_pct = get_return_pct_range(listing)
     except Exception:
         messages.error(request, "This listing does not have a valid return band configured.")
-        return redirect("users:search_listings")
+        return redirect("listings:search_listings")
 
     mid_pct = (min_pct + max_pct) / Decimal("2")
 
@@ -52,12 +52,12 @@ def pledge_investment_view(request, listing_id: int):
         listing = Listing.objects.select_for_update().get(pk=listing.pk)
         if listing.status != Listing.Status.ACTIVE:
             messages.error(request, "This listing is no longer available.")
-            return redirect("users:search_listings")
+            return redirect("listings:search_listings")
 
         now = timezone.now()
         if listing.active_until and listing.active_until <= now:
             messages.error(request, "This listing has expired.")
-            return redirect("users:search_listings")
+            return redirect("listings:search_listings")
 
         result = calculate_expected_return_pence(
             amount_pence=amount_pence,
