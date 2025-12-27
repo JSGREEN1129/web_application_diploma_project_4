@@ -371,7 +371,14 @@ def create_listing_view(request):
             return render(
                 request,
                 "listings/create_listing.html",
-                {"form": form, "media_form": media_form, **flags},
+                {
+                    "form": form,
+                    "media_form": media_form,
+                    "posted_country": (request.POST.get("country") or "").strip(),
+                    "posted_county": (request.POST.get("county") or "").strip(),
+                    "posted_outcode": (request.POST.get("postcode_prefix") or "").strip(),
+                    **flags,
+                },
             )
 
         if action == "save_draft":

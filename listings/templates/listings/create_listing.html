@@ -68,7 +68,7 @@
             <span class="text-muted small">Draft can be saved anytime</span>
           </div>
 
-          <div id="js-stepper-msg" class="mt-2 small {% if can_activate %}text-success{% else %}text-muted{% endif %}">
+          <div id="js-stepper-msg" class="mt-2 small {% if can_activate %}text-success{% else %}fw-bold{% endif %}">
             {% if can_activate %}
             Steps 1–5 complete — activation is available.
             {% else %}
@@ -356,7 +356,7 @@
                 </p>
 
                 <p id="js-step6-msg"
-                  class="small mt-2 mb-0 {% if can_activate %}text-success{% else %}text-muted{% endif %}">
+                  class="small mt-2 mb-0 {% if can_activate %}text-success{% else %}fw-bold{% endif %}">
                   {% if can_activate %}
                   Ready to activate — you’ll be taken to payment.
                   {% else %}
@@ -382,6 +382,12 @@
 
 <div id="js-listing-endpoints" data-counties-url="{% url 'listings:api_counties' %}"
   data-outcodes-url="{% url 'listings:api_outcodes' %}">
+</div>
+
+<div id="js-listing-state"
+  data-country="{{ posted_country|default:form.country.value|default:'' }}"
+  data-county="{{ posted_county|default:form.county.value|default:'' }}"
+  data-outcode="{{ posted_outcode|default:form.postcode_prefix.value|default:'' }}">
 </div>
 
 <script src="{% static 'js/listing_stepper.js' %}"></script>
