@@ -59,6 +59,23 @@ body {
   border-color: #198754;
 }
 
+.homepage-card-final-cta {
+  border: 1px solid #0f6f45;
+  background-color: #0f6f45;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease,
+    border-color 0.3s ease;
+}
+
+.homepage-card-final-cta:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.15);
+  border-color: #0f6f45;
+}
+
+
+
 .gsc-card {
   border: 0;
   border-radius: var(--gsc-radius);
