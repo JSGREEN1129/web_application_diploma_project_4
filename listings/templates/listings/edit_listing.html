@@ -335,10 +335,8 @@
                     <p class="text-muted small mb-0">Review and remove uploaded images and documents.</p>
                   </div>
                   <div class="d-flex gap-2">
-                    <span class="badge bg-success text-white border rounded-pill px-3">{{ images|length }} image{{
-                      images|length|pluralize }}</span>
-                    <span class="badge bg-success text-white border rounded-pill px-3">{{ documents|length }} doc{{
-                      documents|length|pluralize:"s" }}</span>
+                    <span class="badge bg-success text-white border rounded-pill px-3">{{ images|length }} image {{ images|length|pluralize }}</span>
+                    <span class="badge bg-success text-white border rounded-pill px-3">{{ documents|length }} doc {{ documents|length|pluralize:"s" }}</span>
                   </div>
                 </div>
 
