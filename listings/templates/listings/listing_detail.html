@@ -10,13 +10,16 @@
   <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
     <div>
       <span class="badge text-bg-success px-3 py-2 rounded-pill">Green Square Capital</span>
+      <!-- Listing headline -->
       <h1 class="h2 fw-semibold text-success mb-1 mt-3">{{ listing.source_use|capfirst }} → {{ listing.target_use|capfirst }}</h1>
+      <!-- Location summary -->
       <p class="text-muted small mb-0">
         {{ listing.country|capfirst }} • {{ listing.county }} • {{ listing.postcode_prefix }}
       </p>
     </div>
 
     <div class="d-flex align-items-center gap-2">
+      <!-- Listing status badge -->
       {% if listing.status == "draft" %}
       <span class="badge text-bg-secondary rounded-pill px-3">Draft</span>
       {% elif listing.status == "active" %}
@@ -38,12 +41,14 @@
         <div class="text-muted small">Manage your listing and access uploaded files.</div>
       </div>
 
+      <!-- Action buttons (dependent on listing status) -->
       <div class="d-flex gap-2 flex-wrap justify-content-md-end">
         <a href="{% url 'users:dashboard' %}" class="btn btn-sm btn-outline-success rounded-pill px-3">
           ← Back to Dashboard
         </a>
 
         {% if listing.status == "draft" %}
+        <!-- Draft-only actions: edit and delete -->
         <a href="{% url 'listings:edit_listing' listing.pk %}" class="btn btn-sm btn-success rounded-pill px-3">
           Edit listing
         </a>
@@ -58,6 +63,7 @@
   </div>
 
   {% if listing.status == "draft" %}
+  <!-- Delete confirmation modal -->
   <div class="modal fade" id="deleteListingModal" tabindex="-1" aria-labelledby="deleteListingModalLabel"
     aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -79,6 +85,7 @@
               </p>
             </div>
 
+            <!-- Password confirmation field -->
             <div class="mb-2">
               <label for="deletePassword" class="form-label small fw-semibold">Enter your password to confirm</label>
               <input type="password" class="form-control" id="deletePassword" name="password" required
@@ -97,10 +104,10 @@
   </div>
   {% endif %}
 
-  {# --- Content grid (summary matches combined height of images+documents on lg+) --- #}
+  {# --- Content grid (summary + media) --- #}
   <div class="row g-4 align-items-stretch">
 
-    {# LEFT: Summary fills full column height #}
+    {# LEFT: Summary column (includes funding progress) #}
     <div class="col-12 col-lg-4 d-flex">
       <div class="card border border-success shadow-sm rounded-xxl h-100 w-100">
         <div class="card-body p-4 p-md-5 d-flex flex-column">
@@ -112,6 +119,7 @@
             <span class="badge bg-success text-white border rounded-pill px-3">Details</span>
           </div>
 
+          <!-- Key listing attributes -->
           <div class="rounded-4 border border-success bg-light p-3">
             <div class="d-flex justify-content-between small">
               <span class="text-muted">Funding</span>
@@ -131,6 +139,7 @@
             </div>
 
             {% if listing.active_until %}
+            <!-- Active-until date -->
             <hr class="my-3">
             <div class="d-flex justify-content-between small">
               <span class="text-muted">Active until</span>
@@ -156,6 +165,7 @@
                   </div>
                 </div>
 
+                <!-- Progress bar percentage, driven by progress_pct context value -->
                 <div class="progress rounded-pill mt-2" style="height: 12px;">
                   <div class="progress-bar bg-success" role="progressbar"
                     style="width: {{ progress_pct|default:'0' }}%;" aria-valuenow="{{ progress_pct|default:'0' }}"
@@ -165,6 +175,7 @@
               </div>
             </div>
 
+            <!-- Back link repeated at bottom for easier navigation -->
             <div class="border-top pt-3 mt-3">
               <a href="{% url 'users:dashboard' %}" class="btn btn-outline-success w-100 rounded-pill">
                 ← Back to Dashboard
@@ -176,7 +187,7 @@
       </div>
     </div>
 
-    {# RIGHT: Images + Documents stack and define total column height #}
+    {# RIGHT: Images + Documents #}
     <div class="col-12 col-lg-8 d-flex flex-column gap-4">
 
       {# --- Images --- #}
@@ -187,9 +198,11 @@
               <h2 class="h3 fw-semibold text-success mb-1">Images</h2>
               <p class="text-muted small mb-0">Click an image to open it in a new tab.</p>
             </div>
+            <!-- Image count badge -->
             <span class="badge bg-success text-white border rounded-pill px-3">{{ images|length }}</span>
           </div>
 
+          <!-- Image grid -->
           <div class="row g-3">
             {% for img in images %}
             <div class="col-6 col-md-4 col-lg-3">
@@ -218,9 +231,11 @@
               <h2 class="h3 fw-semibold text-success mb-1">Documents</h2>
               <p class="text-muted small mb-0">Open documents in a new tab.</p>
             </div>
+            <!-- Document count badge -->
             <span class="badge bg-success text-white border rounded-pill px-3">{{ documents|length }}</span>
           </div>
 
+          <!-- Document list -->
           <div class="list-group list-group-flush">
             {% for doc in documents %}
             <div class="list-group-item px-0 py-3 d-flex justify-content-between align-items-center">
@@ -251,6 +266,7 @@
 {% block extra_js %}
 {{ block.super }}
 
+<!-- JS for Progress bar behaviour -->
 <script src="{% static 'js/pledge_progress.js' %}"></script>
 
 {% endblock %}

@@ -1,4 +1,4 @@
-/* Shared components + utilities */
+/* SHARED COMPONENTS AND UTILITIES */
 
 /* Utilities */
 .rounded-xxl {
@@ -31,6 +31,7 @@
   opacity: 0.9;
 }
 
+/* CTA cards */
 .gsc-cta-card {
   background:
     radial-gradient(900px 500px at 20% 20%, rgba(25, 135, 84, 0.18), transparent 55%),
@@ -38,6 +39,7 @@
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
+/* Lift on hover */
 .gsc-form-card:hover,
 .gsc-cta-card:hover {
   transform: translateY(-2px);
@@ -99,6 +101,7 @@
   }
 }
 
+/* Fill height helpers */
 .gsc-card-fill {
   height: 100%;
 }
@@ -107,6 +110,7 @@
   overflow: auto;
 }
 
+/* Thumbnail hover overlay */
 .gsc-thumb-overlay {
   position: absolute;
   inset: 0;
@@ -121,6 +125,7 @@
   opacity: 1;
 }
 
+/* File icons */
 .gsc-file-icon {
   width: 40px;
   height: 40px;
@@ -129,20 +134,23 @@
   border: 1px solid rgba(15, 23, 42, 0.1);
 }
 
+/* Progress bar background */
 .progress {
   background: rgba(15, 23, 42, 0.08);
 }
 
+/* Pagination pills */
 .page-link.rounded-pill.px-3 {
-  border: 1px solid #198754; 
-  color: #198754;            
-  background-color: transparent; 
-  padding: 0.375rem 1.25rem; 
-  border-radius: 50rem;     
+  border: 1px solid #198754;
+  color: #198754;
+  background-color: transparent;
+  padding: 0.375rem 1.25rem;
+  border-radius: 50rem;
   transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out;
 }
 
+/* Pagination hover state */
 .page-link.rounded-pill.px-3:hover {
-  background-color: #198754; 
-  color: white;              
+  background-color: #198754;
+  color: white;
 }

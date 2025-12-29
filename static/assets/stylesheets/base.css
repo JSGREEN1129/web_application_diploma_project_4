@@ -1,3 +1,6 @@
+/* BRAND STYLES */
+
+/* Brand variables */
 :root {
   --gsc-green: #2f6f3a;
   --gsc-green-dark: #275f31;
@@ -6,6 +9,9 @@
   --gsc-white: #ffffff;
 }
 
+/* TOP BAR */
+
+/* Top bar background and text colour */
 .gsc-bar {
   background: linear-gradient(180deg, var(--gsc-green) 0%, var(--gsc-green-dark) 100%);
   color: var(--gsc-green-ink);
@@ -13,19 +19,25 @@
   backdrop-filter: saturate(140%) blur(6px);
 }
 
+/* Navigation separator line */
 .gsc-nav {
   border-bottom: 1px solid #2f6f3a;
 }
 
+/* Footer separator line */
 .gsc-footer {
   border-top: 1px solid #2f6f3a;
 }
 
+/* BAR INNER SPACING */
+
+/* Default bar inner padding */
 .gsc-bar-inner {
   padding-left: 1rem;
   padding-right: 1rem;
 }
 
+/* Bar inner padding on lg+ */
 @media (min-width: 992px) {
   .gsc-bar-inner {
     padding-left: 1.5rem;
@@ -33,6 +45,7 @@
   }
 }
 
+/* Bar inner padding on xxl */
 @media (min-width: 1400px) {
   .gsc-bar-inner {
     padding-left: 2rem;
@@ -40,7 +53,9 @@
   }
 }
 
-/* Brand */
+/* BRANDING */
+
+/* Brand badge styling */
 .gsc-brand-badge {
   background-color: #1f7a35;
   color: #fff;
@@ -48,51 +63,63 @@
   padding: 0.45rem 0.8rem;
 }
 
+/* Brand title spacing */
 .gsc-brand-title {
   letter-spacing: -0.02em;
   line-height: 1.1;
 }
 
+/* Brand subtitle styling */
 .gsc-brand-subtitle {
   font-size: 0.825rem;
   color: var(--gsc-green-ink-soft);
   margin-top: 0.15rem;
 }
 
-/* Links/chips */
+/* LINKS / CHIPS */
+
+/* Standard nav links */
 .gsc-nav-link {
   color: var(--gsc-green-ink);
   text-decoration: none;
 }
 
+/* Nav link hover state */
 .gsc-nav-link:hover {
   color: #fff;
   text-decoration: none;
 }
 
+/* Pill-style navigation chips */
 .gsc-nav-chip {
   padding: 0.5rem 1rem;
   border-radius: 999px;
   font-weight: 600;
   color: var(--gsc-green-ink);
   text-decoration: none;
-  background: rgba(255,255,255,0.10);
-  border: 1px solid rgba(255,255,255,0.22);
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.22);
   transition: transform .08s ease, background-color .12s ease, border-color .12s ease;
 }
 
+/* Chip hover state */
 .gsc-nav-chip:hover {
-  background: rgba(255,255,255,0.16);
-  border-color: rgba(255,255,255,0.30);
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.30);
   transform: translateY(-1px);
   color: #fff;
 }
 
+/* ALERTS */
+
+/* Site-wide alert styling */
 .gsc-alert {
   border: 0;
   border-radius: 1.25rem;
   box-shadow: 0 10px 28px rgba(15, 23, 42, 0.10);
 }
+
+/* FOOTER */
 
 /* Footer links */
 .gsc-footer-link {
@@ -100,11 +127,13 @@
   text-decoration: none;
 }
 
+/* Footer link hover state */
 .gsc-footer-link:hover {
   color: #fff;
   text-decoration: underline;
 }
 
+/* Footer bottom layout */
 .gsc-footer-bottom {
   margin-top: 1.5rem;
   padding-top: 1rem;
@@ -115,6 +144,7 @@
   font-size: 0.875rem;
 }
 
+/* Footer bottom layout on md+ */
 @media (min-width: 768px) {
   .gsc-footer-bottom {
     flex-direction: row;
@@ -123,6 +153,9 @@
   }
 }
 
+/* STATS STRIP */
+
+/* Homepage stats strip background */
 section.gsc-stats-strip {
   background-color: transparent !important;
   background-image:

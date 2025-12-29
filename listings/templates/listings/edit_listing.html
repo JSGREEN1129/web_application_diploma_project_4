@@ -9,6 +9,7 @@
   <div class="row justify-content-center">
     <div class="col-12 col-xl-10">
 
+      <!-- Page header -->
       <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
         <div>
           <h1 class="h2 fw-semibold mb-1 mt-3 text-success">Edit Draft Listing</h1>
@@ -19,35 +20,41 @@
         </a>
       </div>
 
+      <!-- Stepper summary (shows progress across steps 1–6) -->
       <div class="card border-0 shadow-sm rounded-xxl mb-4">
         <div class="card-body p-3 p-md-4">
           <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
             <div class="d-flex flex-wrap gap-2 align-items-center">
 
+              <!-- Step 1 status badge (details) -->
               <span id="js-stepper-1"
                 class="badge {% if step1_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %} rounded-pill px-3 py-2">
                 1. Details
               </span>
               <span class="text-muted small">→</span>
 
+              <!-- Step 2 status badge (project type) -->
               <span id="js-stepper-2"
                 class="badge {% if step2_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %} rounded-pill px-3 py-2">
                 2. Project type
               </span>
               <span class="text-muted small">→</span>
 
+              <!-- Step 3 status badge (funding) -->
               <span id="js-stepper-3"
                 class="badge {% if step3_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %} rounded-pill px-3 py-2">
                 3. Funding
               </span>
               <span class="text-muted small">→</span>
 
+              <!-- Step 4 status badge (location) -->
               <span id="js-stepper-4"
                 class="badge {% if step4_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %} rounded-pill px-3 py-2">
                 4. Location
               </span>
               <span class="text-muted small">→</span>
 
+              <!-- Step 5 status badge (uploads) -->
               <span id="js-stepper-5"
                 class="badge {% if step5_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %} rounded-pill px-3 py-2"
                 data-has-existing="{% if step5_done %}1{% else %}0{% endif %}">
@@ -55,15 +62,18 @@
               </span>
               <span class="text-muted small">→</span>
 
+              <!-- Step 6 status badge (activation) -->
               <span id="js-stepper-6"
                 class="badge {% if step6_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %} rounded-pill px-3 py-2">
                 6. Activate listing
               </span>
             </div>
 
+            <!-- Reminder that draft can be saved anytime -->
             <span class="text-muted small">Save as a draft at any step</span>
           </div>
 
+          <!-- Stepper guidance message (activation readiness) -->
           <div id="js-stepper-msg" class="mt-2 small {% if can_activate %}text-success{% else %}text-muted{% endif %}">
             {% if can_activate %}
             Steps 1–5 complete — activation is available.
@@ -74,15 +84,18 @@
         </div>
       </div>
 
+      <!-- Listing edit form (includes media uploads and delete actions) -->
       <form method="post" enctype="multipart/form-data" novalidate>
         {% csrf_token %}
 
+        <!-- Form-level errors (main listing form) -->
         {% if form.non_field_errors %}
         <div class="alert alert-danger rounded-xxl border-0 shadow-sm">
           {{ form.non_field_errors }}
         </div>
         {% endif %}
 
+        <!-- Form-level errors (media form) -->
         {% if media_form.non_field_errors %}
         <div class="alert alert-danger rounded-xxl border-0 shadow-sm">
           {{ media_form.non_field_errors }}
@@ -93,6 +106,7 @@
 
           <div class="col-12 col-lg-6">
 
+            <!-- Step 1: Project details -->
             <div class="card gsc-form-card border border-success shadow-sm rounded-xxl mb-4">
               <div class="card-body p-4 p-md-5">
                 <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
@@ -101,6 +115,7 @@
                     <p class="text-muted small mb-0">Update the name and expected project duration.</p>
                   </div>
 
+                  <!-- Step badge (Conforms to stepper state) -->
                   <span id="js-card-1"
                     class="badge {% if step1_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %} rounded-pill px-3">
                     Step 1
@@ -130,6 +145,7 @@
               </div>
             </div>
 
+            <!-- Step 2: Project type -->
             <div class="card gsc-form-card border border-success shadow-sm rounded-xxl mb-4">
               <div class="card-body p-4 p-md-5">
                 <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
@@ -138,6 +154,7 @@
                     <p class="text-muted small mb-0">Adjust the asset’s transition details.</p>
                   </div>
 
+                  <!-- Step badge (Conforms to stepper state) -->
                   <span id="js-card-2"
                     class="badge {% if step2_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %} rounded-pill px-3">
                     Step 2
@@ -164,6 +181,7 @@
               </div>
             </div>
 
+            <!-- Step 3: Funding and returns -->
             <div class="card gsc-form-card border border-success shadow-sm rounded-xxl">
               <div class="card-body p-4 p-md-5">
                 <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
@@ -172,6 +190,7 @@
                     <p class="text-muted small mb-0">Update expected bands and listing duration.</p>
                   </div>
 
+                  <!-- Step badge (Conforms to stepper state) -->
                   <span id="js-card-3"
                     class="badge {% if step3_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %} rounded-pill px-3">
                     Step 3
@@ -212,6 +231,7 @@
                   </div>
                 </div>
 
+                <!-- Helper text for duration behaviour -->
                 <div class="mt-3 small text-muted">
                   Your listing will remain active for the selected duration once it’s published.
                 </div>
@@ -222,6 +242,7 @@
 
           <div class="col-12 col-lg-6">
 
+            <!-- Step 4: Location -->
             <div class="card gsc-form-card border border-success shadow-sm rounded-xxl mb-4">
               <div class="card-body p-4 p-md-5">
                 <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
@@ -230,6 +251,7 @@
                     <p class="text-muted small mb-0">Keep it accurate for investor discovery.</p>
                   </div>
 
+                  <!-- Step badge (Conforms to stepper state) -->
                   <span id="js-card-4"
                     class="badge {% if step4_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %} rounded-pill px-3">
                     Step 4
@@ -239,6 +261,7 @@
                 <div class="row g-3">
                   <div class="col-md-4 col-lg-12">
                     <label for="id_country" class="form-label small fw-semibold">Country</label>
+                    <!-- widget_tweaks used to attach data-selected for JS -->
                     {% render_field form.country class="form-select" data-selected=listing.country %}
                     {% if form.country.errors %}
                     <div class="text-danger small mt-1">{{ form.country.errors }}</div>
@@ -247,6 +270,7 @@
 
                   <div class="col-md-4 col-lg-12">
                     <label for="id_county" class="form-label small fw-semibold">County</label>
+                    <!-- widget_tweaks used to attach data-selected for JS -->
                     {% render_field form.county class="form-select" data-selected=listing.county %}
                     {% if form.county.errors %}
                     <div class="text-danger small mt-1">{{ form.county.errors }}</div>
@@ -255,6 +279,7 @@
 
                   <div class="col-md-4 col-lg-12">
                     <label for="id_postcode_prefix" class="form-label small fw-semibold">Postcode prefix</label>
+                    <!-- widget_tweaks used to attach data-selected for JS -->
                     {% render_field form.postcode_prefix class="form-select" data-selected=listing.postcode_prefix %}
                     {% if form.postcode_prefix.errors %}
                     <div class="text-danger small mt-1">{{ form.postcode_prefix.errors }}</div>
@@ -262,6 +287,7 @@
                   </div>
                 </div>
 
+                <!-- Location guidance tip -->
                 <div class="mt-3 rounded-4 bg-light p-3">
                   <div class="d-flex gap-2 align-items-start">
                     <div class="badge bg-white text-dark border rounded-pill px-3">Tip</div>
@@ -273,6 +299,7 @@
               </div>
             </div>
 
+            <!-- Step 5: Media uploads -->
             <div class="card gsc-form-card border border-success shadow-sm rounded-xxl mb-4">
               <div class="card-body p-4 p-md-5">
                 <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
@@ -281,6 +308,7 @@
                     <p class="text-muted small mb-0">Add images and documents to support your opportunity.</p>
                   </div>
 
+                  <!-- Step badge (Conforms to stepper state) -->
                   <span id="js-card-5"
                     class="badge {% if step5_done %}bg-success text-white{% else %}bg-light text-dark border{% endif %} rounded-pill px-3"
                     data-has-existing="{% if step5_done %}1{% else %}0{% endif %}">
@@ -290,6 +318,7 @@
 
                 <div class="row g-3">
                   <div class="col-12 col-lg-6">
+                    <!-- Image upload input -->
                     <div class="p-3 p-md-4 rounded-4 bg-light h-100">
                       <label class="form-label small fw-semibold" for="{{ media_form.images.id_for_label }}">
                         {{ media_form.images.label }}
@@ -303,6 +332,7 @@
                   </div>
 
                   <div class="col-12 col-lg-6">
+                    <!-- Document upload input -->
                     <div class="p-3 p-md-4 rounded-4 bg-light h-100">
                       <label class="form-label small fw-semibold" for="{{ media_form.documents.id_for_label }}">
                         {{ media_form.documents.label }}
@@ -316,6 +346,7 @@
                   </div>
                 </div>
 
+                <!-- Step 5 reminder -->
                 {% if not step5_done %}
                 <div class="alert alert-warning mt-3 mb-0 rounded-4 border-0">
                   <div class="small">
@@ -326,6 +357,7 @@
               </div>
             </div>
 
+            <!-- Existing media management (view and delete) -->
             <div class="card gsc-form-card border border-success shadow-sm rounded-xxl">
               <div class="card-body p-4 p-md-5">
 
@@ -334,12 +366,15 @@
                     <h2 class="h5 fw-semibold text-success mb-1">Existing media</h2>
                     <p class="text-muted small mb-0">Review and remove uploaded images and documents.</p>
                   </div>
+
+                  <!-- Quick counts -->
                   <div class="d-flex gap-2">
                     <span class="badge bg-success text-white border rounded-pill px-3">{{ images|length }} image {{ images|length|pluralize }}</span>
                     <span class="badge bg-success text-white border rounded-pill px-3">{{ documents|length }} doc {{ documents|length|pluralize:"s" }}</span>
                   </div>
                 </div>
 
+                <!-- Tabs for existing uploads -->
                 <ul class="nav nav-pills gsc-inner-tabs mb-3" role="tablist">
                   <li class="nav-item" role="presentation">
                     <button class="nav-link active rounded-pill px-3" id="tab-existing-images" data-bs-toggle="pill"
@@ -357,12 +392,14 @@
 
                 <div class="tab-content">
 
+                  <!-- Existing images -->
                   <div class="tab-pane fade show active" id="pane-existing-images" role="tabpanel"
                     aria-labelledby="tab-existing-images">
                     <div class="existing-images-scroll">
                       <div class="row g-3">
                         {% for img in images %}
                         <div class="col-6 col-md-4">
+                          <!-- Thumbnail links to full media file -->
                           <a class="d-block text-decoration-none" href="{{ img.file.url }}" target="_blank"
                             rel="noopener">
                             <div class="gsc-thumb rounded-4 overflow-hidden bg-light border-subtle mb-2">
@@ -370,6 +407,7 @@
                             </div>
                           </a>
 
+                          <!-- Delete button posts to listing_media_delete -->
                           <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill w-100"
                             formaction="{% url 'listings:listing_media_delete' listing.pk img.pk %}" formmethod="post">
                             Delete
@@ -386,17 +424,20 @@
                     </div>
                   </div>
 
+                  <!-- Existing documents -->
                   <div class="tab-pane fade" id="pane-existing-docs" role="tabpanel"
                     aria-labelledby="tab-existing-docs">
                     <div class="list-group list-group-flush">
                       {% for doc in documents %}
                       <div class="list-group-item px-0 py-3 d-flex justify-content-between align-items-center">
+                        <!-- Document link -->
                         <a class="text-decoration-none min-w-0" href="{{ doc.file.url }}" target="_blank"
                           rel="noopener">
                           <div class="fw-semibold small text-truncate">{{ doc.file.name }}</div>
                           <div class="text-muted small">Document</div>
                         </a>
 
+                        <!-- Delete button posts to listing_media_delete -->
                         <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3 flex-shrink-0"
                           formaction="{% url 'listings:listing_media_delete' listing.pk doc.pk %}" formmethod="post">
                           Delete
@@ -417,6 +458,7 @@
 
           </div>
 
+          <!-- Step 6 CTA band (save changes and activate) -->
           <div class="col-12">
             <div class="card gsc-cta-card border border-success shadow-sm rounded-xxl mt-1">
               <div class="card-body p-4 p-md-5">
@@ -442,6 +484,7 @@
                   </div>
                 </div>
 
+                <!-- Activation readiness message -->
                 <p id="js-step6-msg"
                   class="fw-bold small mt-3 mb-0 text-center {% if can_activate %}text-success{% else %}text-muted{% endif %}">
                   {% if can_activate %}
@@ -465,10 +508,12 @@
 {% block extra_js %}
 {{ block.super }}
 
+<!-- Endpoints used by listing_stepper.js to populate dependent dropdowns -->
 <div id="js-listing-endpoints" data-counties-url="{% url 'listings:api_counties' %}"
   data-outcodes-url="{% url 'listings:api_outcodes' %}">
 </div>
 
+<!-- JS for Stepper and  dropdown behaviour -->
 <script src="{% static 'js/listing_stepper.js' %}"></script>
 
 {% endblock %}

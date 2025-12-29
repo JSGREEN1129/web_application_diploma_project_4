@@ -11,6 +11,7 @@ User = get_user_model()
 
 class StripeWebhookTests(TestCase):
     def setUp(self):
+        # Create a listing owner and a draft listing with a known checkout session id
         self.owner = User.objects.create_user(
             username="owner", email="owner@example.com", password="Password123!"
         )
@@ -21,15 +22,22 @@ class StripeWebhookTests(TestCase):
         )
 
     def test_webhook_returns_400_if_not_configured(self):
+        # Webhook should fail fast if Stripe keys/secrets are not configured
         url = reverse("listings:stripe_webhook")
 
         with self.settings(STRIPE_WEBHOOK_SECRET="", STRIPE_SECRET_KEY=""):
-            resp = self.client.post(url, data=b"{}", content_type="application/json", HTTP_STRIPE_SIGNATURE="sig")
+            resp = self.client.post(
+                url,
+                data=b"{}",
+                content_type="application/json",
+                HTTP_STRIPE_SIGNATURE="sig"
+            )
             self.assertEqual(resp.status_code, 400)
 
     @patch("listings.views.activate_listing_from_paid_session")
     @patch("listings.views.stripe.Webhook.construct_event")
     def test_webhook_activates_on_paid_session_completed(self, mock_construct, mock_activate):
+        # Paid checkout.session.completed should trigger activation
         url = reverse("listings:stripe_webhook")
 
         event = {
@@ -53,12 +61,14 @@ class StripeWebhookTests(TestCase):
                 HTTP_STRIPE_SIGNATURE="sig",
             )
 
+        # Webhook should return 200 and call activation helper
         self.assertEqual(resp.status_code, 200)
         mock_activate.assert_called_once()
 
     @patch("listings.views.activate_listing_from_paid_session")
     @patch("listings.views.stripe.Webhook.construct_event")
     def test_webhook_ignores_unpaid(self, mock_construct, mock_activate):
+        # Unpaid sessions should not activate a listing
         url = reverse("listings:stripe_webhook")
 
         event = {
@@ -74,14 +84,21 @@ class StripeWebhookTests(TestCase):
         mock_construct.return_value = event
 
         with self.settings(STRIPE_WEBHOOK_SECRET="whsec_x", STRIPE_SECRET_KEY="sk_test_x"):
-            resp = self.client.post(url, data=b"{}", content_type="application/json", HTTP_STRIPE_SIGNATURE="sig")
+            resp = self.client.post(
+                url,
+                data=b"{}",
+                content_type="application/json",
+                HTTP_STRIPE_SIGNATURE="sig"
+            )
 
+        # Webhook should still return 200, but no activation should occur
         self.assertEqual(resp.status_code, 200)
         mock_activate.assert_not_called()
 
     @patch("listings.views.activate_listing_from_paid_session")
     @patch("listings.views.stripe.Webhook.construct_event")
     def test_webhook_ignores_if_session_id_mismatch(self, mock_construct, mock_activate):
+        # Paid sessions should be ignored if the session id does not match the listing record
         url = reverse("listings:stripe_webhook")
 
         event = {
@@ -97,7 +114,13 @@ class StripeWebhookTests(TestCase):
         mock_construct.return_value = event
 
         with self.settings(STRIPE_WEBHOOK_SECRET="whsec_x", STRIPE_SECRET_KEY="sk_test_x"):
-            resp = self.client.post(url, data=b"{}", content_type="application/json", HTTP_STRIPE_SIGNATURE="sig")
+            resp = self.client.post(
+                url,
+                data=b"{}",
+                content_type="application/json",
+                HTTP_STRIPE_SIGNATURE="sig"
+            )
 
+        # Webhook should return 200, but no activation should occur
         self.assertEqual(resp.status_code, 200)
         mock_activate.assert_not_called()

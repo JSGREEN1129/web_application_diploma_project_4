@@ -4,7 +4,7 @@ from django import forms
 from .models import Listing
 
 
-# Keep your explicit duration choices (these are UI choices, not model choices)
+# Keep your explicit duration choices
 LISTING_DURATION_CHOICES = [
     (7, "7 days"),
     (14, "14 days"),
@@ -12,6 +12,7 @@ LISTING_DURATION_CHOICES = [
     (60, "60 days"),
 ]
 
+# Project duration options 
 PROJECT_DURATION_CHOICES = [
     (60, "60 days"),
     (120, "120 days"),
@@ -22,10 +23,13 @@ PROJECT_DURATION_CHOICES = [
 
 class ListingCreateForm(forms.ModelForm):
     """
-    - duration_days = listing active duration (marketplace visibility)
-    - project_duration_days = project duration (term to completion)
+    ListingCreateForm is used for both create/edit draft flows.
+
+    - duration_days = how long the listing stays ACTIVE (marketplace visibility)
+    - project_duration_days = how long the underlying project is expected to take (term to completion)
     """
 
+    # Listing active duration 
     duration_days = forms.TypedChoiceField(
         choices=LISTING_DURATION_CHOICES,
         coerce=int,
@@ -33,6 +37,7 @@ class ListingCreateForm(forms.ModelForm):
         required=True,
     )
 
+    # Project completion duration 
     project_duration_days = forms.TypedChoiceField(
         choices=PROJECT_DURATION_CHOICES,
         coerce=int,
@@ -42,6 +47,8 @@ class ListingCreateForm(forms.ModelForm):
 
     class Meta:
         model = Listing
+
+        # The order here matches the stepper flow in the template
         fields = [
             "project_name",
             "project_duration_days",
@@ -55,6 +62,8 @@ class ListingCreateForm(forms.ModelForm):
             "return_band",
             "duration_days",
         ]
+
+        # Explicit widgets keep everything as <select> where expected
         widgets = {
             "source_use": forms.Select(),
             "target_use": forms.Select(),
@@ -70,6 +79,10 @@ class ListingCreateForm(forms.ModelForm):
         """
         Add a blank placeholder option to every dropdown so the browser
         doesn't auto-select the first option and falsely mark steps complete.
+
+        Note:
+        - This applies to both ModelChoice/Choice fields and TypedChoiceFields.
+        - Keeping the empty option first also plays nicely with your JS stepper logic.
         """
         super().__init__(*args, **kwargs)
 
@@ -94,16 +107,21 @@ class ListingCreateForm(forms.ModelForm):
             # Works for TypedChoiceField and ModelChoice / Choice fields
             if hasattr(field, "choices"):
                 choices = list(field.choices)
+
+                # Only insert the placeholder if an empty option doesn't already exist
                 if not choices or choices[0][0] != "":
                     field.choices = [("", placeholder)] + choices
 
     def clean_project_name(self):
+        # Normalise whitespace so "  Old Police Station  " saves cleanly
         name = (self.cleaned_data.get("project_name") or "").strip()
         return name
 
     def clean_postcode_prefix(self):
         """
         Basic validation for UK postcode outcodes (SW, CF, EH, etc.)
+        - Normalises to uppercase
+        - Guards against obviously invalid short values
         """
         value = (self.cleaned_data.get("postcode_prefix") or "").strip().upper()
         if value and len(value) < 2:
@@ -113,6 +131,11 @@ class ListingCreateForm(forms.ModelForm):
         return value
 
     def clean_duration_days(self):
+        """
+        Safety check:
+        - TypedChoiceField already coerces to int
+        - This ensures only the allowed UI options are accepted
+        """
         value = self.cleaned_data["duration_days"]
         allowed = {7, 14, 30, 60}
         if value not in allowed:
@@ -120,6 +143,9 @@ class ListingCreateForm(forms.ModelForm):
         return value
 
     def clean_project_duration_days(self):
+        """
+        Safety check to keep project duration within your allowed UI options.
+        """
         value = self.cleaned_data["project_duration_days"]
         allowed = {60, 120, 200, 365}
         if value not in allowed:
@@ -141,24 +167,39 @@ class ListingCreateForm(forms.ModelForm):
                     "project_duration_days",
                     "Project duration should be greater than or equal to the listing duration.",
                 )
+
         return cleaned
 
 
 class MultiFileInput(forms.ClearableFileInput):
+    # Enables <input type="file" multiple> behaviour for Django forms
     allow_multiple_selected = True
 
 
 class ListingMediaForm(forms.Form):
+    """
+    Separate form for uploads so you can validate and handle files independently
+    from the listing draft fields.
+    """
+
     images = forms.FileField(
         required=False,
         widget=MultiFileInput(
-            attrs={"multiple": True, "accept": "image/jpeg,image/png,image/webp"}
+            attrs={
+                "multiple": True,
+                "accept": "image/jpeg,image/png,image/webp",
+            }
         ),
         label="Property images",
     )
 
     documents = forms.FileField(
         required=False,
-        widget=MultiFileInput(attrs={"multiple": True, "accept": ".pdf,.doc,.docx"}),
+        widget=MultiFileInput(
+            attrs={
+                "multiple": True,
+                "accept": ".pdf,.doc,.docx",
+            }
+        ),
         label="Plans / documents (PDF, DOC, DOCX)",
     )

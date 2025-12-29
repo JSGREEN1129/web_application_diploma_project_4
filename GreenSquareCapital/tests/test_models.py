@@ -15,6 +15,7 @@ User = get_user_model()
 
 class InvestmentModelTests(TestCase):
     def setUp(self):
+        # Create users for testing
         self.investor = User.objects.create_user(
             username="investor1",
             email="investor1@example.com",
@@ -25,9 +26,13 @@ class InvestmentModelTests(TestCase):
             email="owner1@example.com",
             password="Password123!",
         )
+
+        # Minimal listing for linking investments
         self.listing = Listing.objects.create(owner=self.owner)
 
     def test_pence_to_gbp_rounds_to_2dp(self):
+        # _pence_to_gbp should format pence into Decimal GBP with 2dp
+
         # 199p -> £1.99
         self.assertEqual(Investment._pence_to_gbp(199), Decimal("1.99"))
 
@@ -38,6 +43,7 @@ class InvestmentModelTests(TestCase):
         self.assertEqual(Investment._pence_to_gbp(0), Decimal("0.00"))
 
     def test_gbp_properties(self):
+        # GBP convenience properties should return Decimal values at 2dp
         inv = Investment.objects.create(
             investor=self.investor,
             listing=self.listing,
@@ -51,6 +57,7 @@ class InvestmentModelTests(TestCase):
         self.assertEqual(inv.expected_total_back_gbp, Decimal("130.23"))
 
     def test_default_status_is_pledged(self):
+        # New investments should default to PLEDGED
         inv = Investment.objects.create(
             investor=self.investor,
             listing=self.listing,
@@ -59,6 +66,7 @@ class InvestmentModelTests(TestCase):
         self.assertEqual(inv.status, Investment.Status.PLEDGED)
 
     def test_str_includes_ids_and_amount(self):
+        # __str__ should include investor/listing IDs and formatted amount
         inv = Investment.objects.create(
             investor=self.investor,
             listing=self.listing,
@@ -72,6 +80,7 @@ class InvestmentModelTests(TestCase):
 
 class ListingModelTests(TestCase):
     def setUp(self):
+        # Create listing owner for model tests
         self.owner = User.objects.create_user(
             username="owner1",
             email="owner1@example.com",
@@ -79,33 +88,41 @@ class ListingModelTests(TestCase):
         )
 
     def test_listing_active_days_safe_int(self):
+        # listing_active_days should return 0 when duration_days is missing
         listing = Listing.objects.create(owner=self.owner, duration_days=None)
         self.assertEqual(listing.listing_active_days(), 0)
 
+        # Should return the duration when set
         listing.duration_days = 30
         self.assertEqual(listing.listing_active_days(), 30)
 
     def test_project_days_safe_int(self):
+        # project_days should return 0 when project_duration_days is missing
         listing = Listing.objects.create(owner=self.owner, project_duration_days=None)
         self.assertEqual(listing.project_days(), 0)
 
+        # Should return the duration when set
         listing.project_duration_days = 180
         self.assertEqual(listing.project_days(), 180)
 
     def test_total_price_pence_returns_0_when_no_duration(self):
+        # total_price_pence should return 0 if duration is missing
         listing = Listing.objects.create(owner=self.owner, duration_days=None, price_per_day_pence=199)
         self.assertEqual(listing.total_price_pence(), 0)
 
     def test_total_price_pence_calculates_correctly(self):
+        # total_price_pence should be duration_days * price_per_day_pence
         listing = Listing.objects.create(owner=self.owner, duration_days=10, price_per_day_pence=199)
         self.assertEqual(listing.total_price_pence(), 1990)
 
     def test_activate_raises_if_no_duration_days(self):
+        # activate should fail if duration_days is missing
         listing = Listing.objects.create(owner=self.owner, duration_days=None)
         with self.assertRaises(ValueError):
             listing.activate()
 
     def test_activate_sets_status_and_dates(self):
+        # activate should set status and populate active_from/active_until
         listing = Listing.objects.create(owner=self.owner, duration_days=7)
 
         before = timezone.now()
@@ -118,29 +135,32 @@ class ListingModelTests(TestCase):
         self.assertIsNotNone(listing.active_from)
         self.assertIsNotNone(listing.active_until)
 
-        # active_from should be "around now"
         self.assertTrue(before <= listing.active_from <= after)
 
-        # active_until should be active_from + duration_days
+        # active_until should be active_from and duration_days
         expected_until_start = listing.active_from + timedelta(days=7)
         # allow tiny differences due to save timing
-        self.assertTrue(expected_until_start - timedelta(seconds=2) <= listing.active_until <= expected_until_start + timedelta(seconds=2))
+        self.assertTrue(
+            expected_until_start - timedelta(seconds=2) <= listing.active_until <= expected_until_start + timedelta(seconds=2)
+        )
 
     def test_str_uses_project_name_when_present(self):
+        # __str__ should show project name when provided
         listing = Listing.objects.create(owner=self.owner, project_name="Old Police Station", status=Listing.Status.DRAFT)
         self.assertIn("Old Police Station", str(listing))
         self.assertIn("Draft", str(listing))
 
     def test_str_falls_back_to_listing_pk_when_no_project_name(self):
+        # __str__ should fall back to "Listing <pk>" when project name is blank
         listing = Listing.objects.create(owner=self.owner, project_name="", status=Listing.Status.DRAFT)
         s = str(listing)
         self.assertIn("Draft", s)
-        # should contain "Listing <pk>"
         self.assertIn(f"Listing {listing.pk}", s)
 
 
 class ListingMediaModelTests(TestCase):
     def setUp(self):
+        # Create owner and listing for media tests
         self.owner = User.objects.create_user(
             username="owner1",
             email="owner1@example.com",
@@ -149,11 +169,13 @@ class ListingMediaModelTests(TestCase):
         self.listing = Listing.objects.create(owner=self.owner)
 
     def test_upload_path_function(self):
+        # listing_media_upload_to should store files under listing_media/listing_<id>/
         media = ListingMedia(listing=self.listing, media_type=ListingMedia.MediaType.IMAGE)
         path = listing_media_upload_to(media, "photo.jpg")
         self.assertEqual(path, f"listing_media/listing_{self.listing.id}/photo.jpg")
 
     def test_str(self):
+        # __str__ should include media type and listing id
         uploaded = SimpleUploadedFile("doc.pdf", b"fake-pdf-bytes", content_type="application/pdf")
         media = ListingMedia.objects.create(
             listing=self.listing,

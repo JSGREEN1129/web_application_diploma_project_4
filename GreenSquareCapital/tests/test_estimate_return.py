@@ -12,6 +12,7 @@ User = get_user_model()
 
 class EstimateReturnTests(TestCase):
     def setUp(self):
+        # Create users for testing
         self.owner = User.objects.create_user(
             username="owner", email="owner@example.com", password="Password123!"
         )
@@ -19,6 +20,7 @@ class EstimateReturnTests(TestCase):
             username="investor", email="investor@example.com", password="Password123!"
         )
 
+        # Create an active listing with a known return band/type for estimate tests
         self.listing = Listing.objects.create(
             owner=self.owner,
             status=Listing.Status.ACTIVE,
@@ -28,11 +30,13 @@ class EstimateReturnTests(TestCase):
         )
 
     def test_estimate_requires_login(self):
+        # Unauthenticated users should be redirected
         url = reverse("listings:estimate_return", args=[self.listing.pk])
         resp = self.client.get(url, {"amount": "100"})
         self.assertEqual(resp.status_code, 302)
 
     def test_estimate_invalid_amount(self):
+        # Invalid amount should return 400 with ok=false
         self.client.force_login(self.investor)
         url = reverse("listings:estimate_return", args=[self.listing.pk])
         resp = self.client.get(url, {"amount": "not-a-number"})
@@ -40,6 +44,7 @@ class EstimateReturnTests(TestCase):
         self.assertEqual(resp.json()["ok"], False)
 
     def test_estimate_amount_must_be_positive(self):
+        # Zero/negative amounts should return 400 with ok=false
         self.client.force_login(self.investor)
         url = reverse("listings:estimate_return", args=[self.listing.pk])
         resp = self.client.get(url, {"amount": "0"})
@@ -48,11 +53,13 @@ class EstimateReturnTests(TestCase):
 
     @patch("listings.views.get_return_pct_range", return_value=(Decimal("5"), Decimal("9")))
     def test_estimate_success(self, mock_range):
+        # Successful estimate returns JSON with calculated min/max totals
         self.client.force_login(self.investor)
         url = reverse("listings:estimate_return", args=[self.listing.pk])
         resp = self.client.get(url, {"amount": "100"})
         self.assertEqual(resp.status_code, 200)
 
+        # Confirm response structure and values
         data = resp.json()
         self.assertTrue(data["ok"])
         self.assertEqual(data["min_pct"], "5")
@@ -65,6 +72,7 @@ class EstimateReturnTests(TestCase):
 
     @patch("listings.views.get_return_pct_range", side_effect=Exception("bad band"))
     def test_estimate_bad_return_band(self, mock_range):
+        # If return band calculation fails, endpoint should return 400 with ok=false
         self.client.force_login(self.investor)
         url = reverse("listings:estimate_return", args=[self.listing.pk])
         resp = self.client.get(url, {"amount": "100"})

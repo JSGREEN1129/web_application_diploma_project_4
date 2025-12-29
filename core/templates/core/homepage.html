@@ -5,21 +5,24 @@
 
 {% block content %}
 
-<!-- HERO -->
+<!-- HERO MAIN -->
 <section class="gsc-hero position-relative overflow-hidden">
   <div class="container py-5 py-lg-6 position-relative">
     <div class="row align-items-center g-4">
       <div class="col-12 col-lg-7 text-white">
 
+        <!-- Main heading -->
         <h1 class="display-5 fw-semibold lh-sm mb-3">
           Where Real Estate Investors Meet Real Estate Investment Opportunities
         </h1>
 
+        <!-- Intro -->
         <p class="lead text-white mb-4">
           Browse vetted opportunities, pledge with confidence, and track expected returns, all in one
           secure and transparent platform.
         </p>
 
+        <!-- Hero buttons -->
         <div class="d-flex flex-wrap gap-2">
           <a href="{% url 'users:register' %}" class="btn btn-outline-light btn-lg">
             Explore opportunities
@@ -29,6 +32,7 @@
           </a>
         </div>
 
+        <!-- Highlights -->
         <div class="d-flex flex-wrap gap-3 mt-4 text-white-50 small">
           <div><span class="fw-semibold text-white">Transparent</span> pricing &amp; terms</div>
           <div><span class="fw-semibold text-white">Fast</span> pledging experience</div>
@@ -37,7 +41,7 @@
       </div>
 
       <div class="col-12 col-lg-5">
-        <!-- “Glass” info panels -->
+        <!-- Info panels -->
         <div class="row g-3">
           <div class="col-12">
             <div class="card gsc-glass border-0 shadow-sm">
@@ -67,14 +71,16 @@
     </div>
   </div>
 
+  <!-- Decorative divider -->
   <div class="gsc-hero-divider" aria-hidden="true"></div>
 </section>
 
-<!-- STATS STRIP -->
+<!-- STATS STRIP  -->
 <section class="gsc-stats-strip py-4 py-lg-5">
   <div class="container">
     <div class="row g-3 text-center">
 
+      <!-- Stat 1 -->
       <div class="col-6 col-lg-3">
         <div class="gsc-stat">
           <div class="h3 mb-0 text-white fw-semibold">Fast</div>
@@ -82,6 +88,7 @@
         </div>
       </div>
 
+      <!-- Stat 2 -->
       <div class="col-6 col-lg-3">
         <div class="gsc-stat">
           <div class="h3 mb-0 text-white fw-semibold">Clear</div>
@@ -89,6 +96,7 @@
         </div>
       </div>
 
+      <!-- Stat 3 -->
       <div class="col-6 col-lg-3">
         <div class="gsc-stat">
           <div class="h3 mb-0 text-white fw-semibold">Secure</div>
@@ -96,6 +104,7 @@
         </div>
       </div>
 
+      <!-- Stat 4 -->
       <div class="col-6 col-lg-3">
         <div class="gsc-stat">
           <div class="h3 mb-0 text-white fw-semibold">UK</div>
@@ -111,12 +120,15 @@
 <section class="py-5 py-lg-6 bg-body-tertiary">
   <div class="container">
 
+    <!-- Section heading -->
     <div class="text-center mb-4 mb-lg-5">
       <h2 class="h2 mt-3 text-success mb-2">Invest in 3 simple steps</h2>
       <p class="text-muted mb-0">A streamlined process designed for clarity and confidence.</p>
     </div>
 
     <div class="row g-4">
+
+      <!-- Step 1 -->
       <div class="col-12 col-md-4">
         <div class="homepage-card border-success shadow-sm rounded-xxl h-100">
           <div class="card-body p-4">
@@ -129,6 +141,7 @@
         </div>
       </div>
 
+      <!-- Step 2 -->
       <div class="col-12 col-md-4">
         <div class="homepage-card border-success shadow-sm rounded-xxl h-100">
           <div class="card-body p-4">
@@ -141,6 +154,7 @@
         </div>
       </div>
 
+      <!-- Step 3 -->
       <div class="col-12 col-md-4">
         <div class="homepage-card border-success shadow-sm rounded-xxl h-100">
           <div class="card-body p-4">
@@ -152,8 +166,10 @@
           </div>
         </div>
       </div>
+
     </div>
 
+    <!-- Section CTA -->
     <div class="text-center mt-4 mt-lg-5">
       <a href="{% url 'users:register' %}" class="btn btn-outline-success btn-lg">
         Browse live opportunities
@@ -163,10 +179,11 @@
   </div>
 </section>
 
-<!-- FEATURED OPPORTUNITIES -->
+<!-- FEATURED OPPORTUNITIES (Dynamic preview cards) -->
 <section class="py-5 py-lg-6 bg-white">
   <div class="container">
 
+    <!-- Section heading and CTA -->
     <div class="d-flex flex-column flex-md-row align-items-md-end justify-content-between gap-2 mb-4">
       <div>
         <span class="badge bg-success text-white border rounded-pill px-3 py-2">Featured</span>
@@ -179,13 +196,16 @@
     </div>
 
     {% if featured_listings %}
-      {# px-2 adds side breathing room on mobile; removed from md+ #}
+      <!-- Listings grid -->
       <div class="row g-4 mt-3 px-2 px-md-0">
         {% for listing in featured_listings %}
+
+          <!-- Listing card -->
           <div class="col-12 col-md-4">
             <div class="card gsc-form-card border border-success shadow-sm rounded-xxl h-100">
               <div class="card-body p-4 d-flex flex-column">
 
+                <!-- Listing header (title and location and status badge) -->
                 <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
                   <div class="min-w-0">
                     <h3 class="h5 fw-semibold text-success mb-1 text-truncate">
@@ -198,6 +218,7 @@
                   <span class="badge text-bg-success rounded-pill px-3">Active</span>
                 </div>
 
+                <!-- Listing  details -->
                 <div class="rounded-4 bg-light p-3 my-3">
                   <div class="d-flex justify-content-between small">
                     <span class="text-muted">Funding</span>
@@ -213,7 +234,7 @@
                   </div>
                 </div>
 
-                {# Public users go to register #}
+                <!-- Public users go to register -->
                 <a href="{% url 'users:register' %}" class="btn btn-sm btn-outline-success rounded-pill px-3 mt-auto">
                   View listing
                 </a>
@@ -221,9 +242,11 @@
               </div>
             </div>
           </div>
+
         {% endfor %}
       </div>
     {% else %}
+      <!-- Empty state when there are no featured listings -->
       <div class="card border-success shadow-sm rounded-xxl">
         <div class="card-body p-4 p-md-5">
           <h3 class="h5 fw-semibold text-success mb-1">New opportunities added regularly</h3>
@@ -246,12 +269,15 @@
 <section class="py-5 py-lg-6 bg-body-tertiary">
   <div class="container">
 
+    <!-- Section heading -->
     <div class="text-center mb-4 mb-lg-5">
       <h2 class="h2 mt-3 text-success mb-2">Built for clarity and confidence</h2>
       <p class="text-muted mb-0">A platform experience that keeps investing straightforward.</p>
     </div>
 
     <div class="row g-4">
+
+      <!-- Benefit 1 -->
       <div class="col-12 col-md-4">
         <div class="homepage-card border-success shadow-sm rounded-xxl h-100">
           <div class="card-body p-4">
@@ -260,6 +286,8 @@
           </div>
         </div>
       </div>
+
+      <!-- Benefit 2 -->
       <div class="col-12 col-md-4">
         <div class="homepage-card border-success shadow-sm rounded-xxl h-100">
           <div class="card-body p-4">
@@ -268,6 +296,8 @@
           </div>
         </div>
       </div>
+
+      <!-- Benefit 3 -->
       <div class="col-12 col-md-4">
         <div class="homepage-card border-success shadow-sm rounded-xxl h-100">
           <div class="card-body p-4">
@@ -276,9 +306,10 @@
           </div>
         </div>
       </div>
+
     </div>
 
-    <!-- CTA band inside section -->
+    <!-- CTA section -->
     <div class="gsc-cta-band mt-4 mt-lg-5">
       <div class="row align-items-center g-3">
         <div class="col-12 col-lg-8">
@@ -286,12 +317,15 @@
           <p class="mb-0 text-white">Create an account to search by location, view details, and pledge.</p>
         </div>
         <div class="col-12 col-lg-4 d-grid d-lg-flex justify-content-lg-end gap-3">
+
+          <!-- CTA buttons -->
           <a href="{% url 'users:register' %}" class="btn btn-outline-light btn-lg">
             Explore opportunities
           </a>
           <a href="{% url 'users:register' %}" class="btn btn-outline-light btn-lg">
             List a project
           </a>
+
         </div>
       </div>
     </div>
@@ -299,10 +333,11 @@
   </div>
 </section>
 
-<!-- SUCCESSFUL PROJECTS -->
+<!-- SUCCESSFUL PROJECTS (static examples) -->
 <section class="py-5 py-lg-6 bg-white">
   <div class="container">
 
+    <!-- Section heading and CTA -->
     <div class="d-flex flex-column flex-md-row align-items-md-end justify-content-between gap-2 mb-4">
       <div>
         <h2 class="h2 text-success mb-1">Successful Projects</h2>
@@ -324,15 +359,18 @@
               <span class="badge text-bg-success bg-opacity-75 rounded-pill">Completed</span>
             </div>
 
+            <!-- Project title -->
             <h3 class="h5 fw-semibold mb-2">
               Old Cotton Factory Works, Manchester
             </h3>
 
+            <!-- Project summary -->
             <p class="mb-0">
               A former commercial building transformed into four modern, refurbished residential flats —
               turning underutilised space into high-quality rental accommodation.
             </p>
 
+            <!-- Project location -->
             <div class="mt-auto pt-3">
               <span class="text-white small">117 Green Street • Manchester</span>
             </div>
@@ -349,15 +387,18 @@
               <span class="badge text-bg-success bg-opacity-75 rounded-pill">Completed</span>
             </div>
 
+            <!-- Project title -->
             <h3 class="h5 fw-semibold mb-2">
               Bedford Police Station, Bristol
             </h3>
 
+            <!-- Project summary -->
             <p class="mb-0">
               A former police station converted into residential flats with an exclusive residents’ gym —
               improving value and long-term rental income.
             </p>
 
+            <!-- Project location -->
             <div class="mt-auto pt-3">
               <span class="text-white small">99b Walkaway • Bristol</span>
             </div>
@@ -374,15 +415,18 @@
               <span class="badge text-bg-success bg-opacity-75 rounded-pill">Completed</span>
             </div>
 
+            <!-- Project title -->
             <h3 class="h5 fw-semibold mb-2">
               The Willow House, Leeds
             </h3>
 
+            <!-- Project summary -->
             <p class="mb-0">
               A derelict property renovated into a comfortable family home — increasing market value and
               enabling stable rental potential.
             </p>
 
+            <!-- Project location -->
             <div class="mt-auto pt-3">
               <span class="text-white small">22 Meadow Lane • Leeds</span>
             </div>
@@ -399,15 +443,18 @@
               <span class="badge text-bg-success bg-opacity-75 rounded-pill">Completed</span>
             </div>
 
+            <!-- Project title -->
             <h3 class="h5 fw-semibold mb-2">
               Hawthorne Manor, Oxford
             </h3>
 
+            <!-- Project summary -->
             <p class="mb-0">
               A historic manor converted into modern serviced offices — preserving character while creating
               consistent commercial income.
             </p>
 
+            <!-- Project location -->
             <div class="mt-auto pt-3">
               <span class="text-white small">15 Kingsway • Oxford</span>
             </div>
@@ -426,11 +473,18 @@
       <div class="card-body p-4 p-md-5">
         <div class="row align-items-center g-4">
           <div class="col-12 col-lg-8">
+
+            <!-- Final CTA heading -->
             <h2 class="h3 mt-3 text-white mb-2">Join Green Square Capital today</h2>
+
+            <!-- Final CTA message -->
             <p class="text-white mb-0">
               Create your account to browse opportunities, pledge, and manage activity in your dashboard.
             </p>
+
           </div>
+
+          <!-- Final CTA buttons -->
           <div class="col-12 col-lg-4 d-grid gap-2">
             <a href="{% url 'users:register' %}" class="btn btn-outline-light btn-lg">
               Create an account
@@ -439,6 +493,7 @@
               Browse opportunities
             </a>
           </div>
+
         </div>
       </div>
     </div>

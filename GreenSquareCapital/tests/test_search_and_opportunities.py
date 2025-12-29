@@ -9,6 +9,7 @@ User = get_user_model()
 
 class SearchAndOpportunitiesTests(TestCase):
     def setUp(self):
+        # Create users for testing
         self.owner = User.objects.create_user(
             username="owner", email="owner@example.com", password="Password123!"
         )
@@ -16,6 +17,7 @@ class SearchAndOpportunitiesTests(TestCase):
             username="investor", email="investor@example.com", password="Password123!"
         )
 
+        # Create one active listing
         self.active = Listing.objects.create(
             owner=self.owner,
             status=Listing.Status.ACTIVE,
@@ -31,6 +33,7 @@ class SearchAndOpportunitiesTests(TestCase):
             duration_days=7,
         )
 
+        # Create one draft listing
         self.draft = Listing.objects.create(
             owner=self.owner,
             status=Listing.Status.DRAFT,
@@ -38,12 +41,14 @@ class SearchAndOpportunitiesTests(TestCase):
         )
 
     def test_search_requires_login(self):
+        # Search page should redirect to login when user is not authenticated
         url = reverse("listings:search_listings")
         resp = self.client.get(url)
         self.assertEqual(resp.status_code, 302)
         self.assertIn(reverse("users:login"), resp.url)
 
     def test_search_shows_active_listings_excluding_own(self):
+        # Investor should see active listings
         self.client.force_login(self.investor)
         url = reverse("listings:search_listings")
         resp = self.client.get(url)
@@ -54,6 +59,7 @@ class SearchAndOpportunitiesTests(TestCase):
         self.assertNotIn(self.draft, listings)
 
     def test_search_excludes_listings_owned_by_request_user(self):
+        # Owner should not see their own listings in investor search results
         self.client.force_login(self.owner)
         url = reverse("listings:search_listings")
         resp = self.client.get(url)
@@ -63,25 +69,30 @@ class SearchAndOpportunitiesTests(TestCase):
         self.assertNotIn(self.active, listings)
 
     def test_search_filters_by_project_name(self):
+        # Search should filter by project name keywords
         self.client.force_login(self.investor)
         url = reverse("listings:search_listings")
+
+        # Matching filter should include the active listing
         resp = self.client.get(url, {"project_name": "Police"})
         self.assertEqual(resp.status_code, 200)
-
         listings = list(resp.context["page_obj"].object_list)
         self.assertIn(self.active, listings)
 
+        # Non-matching filter should exclude the active listing
         resp2 = self.client.get(url, {"project_name": "DoesNotExist"})
         listings2 = list(resp2.context["page_obj"].object_list)
         self.assertNotIn(self.active, listings2)
 
     def test_opportunity_detail_requires_login(self):
+        # Opportunity detail should redirect to login when user is not authenticated
         url = reverse("listings:opportunity_detail", args=[self.active.pk])
         resp = self.client.get(url)
         self.assertEqual(resp.status_code, 302)
         self.assertIn(reverse("users:login"), resp.url)
 
     def test_opportunity_detail_only_for_active(self):
+        # Opportunity detail should only be available for active listings
         self.client.force_login(self.investor)
 
         url_active = reverse("listings:opportunity_detail", args=[self.active.pk])

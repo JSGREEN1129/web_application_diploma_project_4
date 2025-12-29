@@ -10,17 +10,20 @@
   <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
     <div>
       <span class="badge text-bg-success px-3 py-2 rounded-pill">Green Square Capital</span>
+      <!-- Page heading -->
       <h1 class="h4 fw-semibold text-success mb-1 mt-3">Find investment opportunities</h1>
       <p class="text-muted small mb-0">
         Search by project, type, location, funding and returns. Pledge directly from results.
       </p>
     </div>
+    <!-- Back to dashboard shortcut -->
     <a href="{% url 'users:dashboard' %}" class="btn btn-outline-success btn-sm rounded-pill px-3">
       ← Back to dashboard
     </a>
   </div>
 
   {# --- Search / Filters --- #}
+  <!-- GET form so filters are shareable/bookmarkable in the URL -->
   <form method="get" class="card gsc-form-card border border-success shadow-sm rounded-xxl mb-4">
     <div class="card-body p-4 p-md-5">
 
@@ -37,6 +40,7 @@
         {# Project Name (Free text) #}
         <div class="col-12 col-lg-4">
           <label for="id_project_name" class="form-label small fw-semibold">Project Name</label>
+          <!-- project_name value is kept from the view context -->
           <input id="id_project_name" type="text" name="project_name" value="{{ project_name }}" class="form-control"
             placeholder="e.g. Riverside Apartments">
         </div>
@@ -44,6 +48,7 @@
         {# Listed by (Free text: name/email) #}
         <div class="col-12 col-lg-4">
           <label for="id_listed_by" class="form-label small fw-semibold">Listed by</label>
+          <!-- listed_by value is kept from the view context -->
           <input id="id_listed_by" type="text" name="listed_by" value="{{ listed_by }}" class="form-control"
             placeholder="Name or email">
         </div>
@@ -76,6 +81,7 @@
         {# Location (Dropdowns) #}
         <div class="col-6 col-lg-2">
           <label for="id_country" class="form-label small fw-semibold">Country</label>
+          <!-- data-selected helps JS initialise the dependent dropdowns -->
           <select id="id_country" name="country" class="form-select" data-selected="{{ country }}">
             <option value="">Any country</option>
             {% for value,label in country_choices %}
@@ -88,6 +94,7 @@
 
         <div class="col-6 col-lg-2">
           <label for="id_county" class="form-label small fw-semibold">County</label>
+          <!-- Populated by JS once a country is chosen -->
           <select id="id_county" name="county" class="form-select" data-selected="{{ county }}" disabled>
             <option value="">Any county</option>
           </select>
@@ -95,6 +102,7 @@
 
         <div class="col-6 col-lg-2">
           <label for="id_postcode_prefix" class="form-label small fw-semibold">Postcode prefix</label>
+          <!-- Populated by JS once a county is chosen -->
           <select id="id_postcode_prefix" name="postcode_prefix" class="form-select"
             data-selected="{{ postcode_prefix }}" disabled>
             <option value="">Any prefix</option>
@@ -138,12 +146,14 @@
           </select>
         </div>
 
+        <!-- Submit keeps all selected filter values in the URL -->
         <div class="col-12 col-lg-2 d-grid">
           <button class="btn btn-outline-success rounded-pill" type="submit">
             Search
           </button>
         </div>
 
+        <!-- Clear resets filters back to the base search URL -->
         <div class="col-12 col-lg-2 d-grid">
           <a class="btn btn-outline-success rounded-pill" href="{% url 'listings:search_listings' %}">
             Clear
@@ -157,6 +167,7 @@
   {# --- Results summary --- #}
   <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
     {% if page_obj.object_list %}
+    <!-- Per-page result count and pagination info -->
     <div class="text-muted small">
       Showing <span class="fw-semibold">{{ page_obj.object_list|length }}</span>
       opportunity{{ page_obj.object_list|length|pluralize }} on this page.
@@ -169,6 +180,7 @@
   </div>
 
   {% if page_obj.object_list %}
+  <!-- Results grid -->
   <div class="row g-4">
     {% for listing in page_obj.object_list %}
     <div class="col-12 col-md-6 col-lg-4">
@@ -177,9 +189,12 @@
 
           <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
             <div class="min-w-0">
+              <!-- Listing headline -->
               <h2 class="h5 fw-semibold mb-1 text-success text-truncate">
                 {{ listing.source_use|capfirst }} → {{ listing.target_use|capfirst }}
               </h2>
+
+              <!-- Listing location -->
               <p class="text-muted small mb-0 text-truncate">
                 {{ listing.country|capfirst }} • {{ listing.county }} • {{ listing.postcode_prefix }}
               </p>
@@ -192,6 +207,7 @@
               {% endif %}
 
               {% if listing.owner %}
+              <!-- Owner display -->
               <p class="text-muted small mb-0">
                 Listed by
                 {% if listing.owner.get_full_name %}
@@ -204,9 +220,12 @@
               </p>
               {% endif %}
             </div>
+
+            <!-- Active badge -->
             <span class="badge text-bg-success rounded-pill px-3">Active</span>
           </div>
 
+          <!-- Quick stats card -->
           <div class="rounded-4 bg-light p-3 my-3">
             <div class="d-flex justify-content-between small">
               <span class="fw-semibold">Funding</span>
@@ -222,6 +241,7 @@
             </div>
           </div>
 
+          <!-- Media count and listing duration -->
           <div class="d-flex justify-content-between align-items-center small text-muted mb-3">
             <span>{{ listing.media.count }} file{{ listing.media.count|pluralize }} uploaded</span>
             <span class="badge bg-light text-dark border rounded-pill px-3">
@@ -229,25 +249,31 @@
             </span>
           </div>
 
+          <!-- Opportunity detail link -->
           <a class="btn btn-sm btn-outline-success rounded-pill px-3 mt-auto"
             href="{% url 'listings:opportunity_detail' listing.pk %}">
             View listing
           </a>
 
+          <!-- Inline pledge form -->
           <form method="post" action="{% url 'investments:pledge' listing.pk %}" class="mt-3">
             {% csrf_token %}
 
             <label class="form-label small fw-semibold mb-2">Pledge amount</label>
             <div class="input-group input-group-sm">
               <span class="input-group-text">£</span>
+
+              <!-- JS uses data-estimate-url to fetch estimate_return as the user types -->
               <input type="number" name="amount_gbp" class="form-control js-pledge-amount" step="0.01" min="1"
                 placeholder="Amount" required data-listing-id="{{ listing.id }}"
                 data-estimate-url="{% url 'listings:estimate_return' listing.pk %}">
+
               <button type="submit" class="btn btn-success">
                 Pledge
               </button>
             </div>
 
+            <!-- Live estimate output (filled by JS) -->
             <div class="mt-2 text-muted small js-return-estimate" data-listing-id="{{ listing.id }}">
               Expected return will be calculated based on this listing’s return and duration.
             </div>
@@ -259,8 +285,10 @@
     {% endfor %}
   </div>
 
+  <!-- Pagination (preserves current filters) -->
   <nav class="mt-4">
     <ul class="pagination justify-content-center">
+
       {% if page_obj.has_previous %}
       <li class="page-item mx-2">
         <a class="page-link rounded-pill px-3"
@@ -292,10 +320,12 @@
         <span class="page-link rounded-pill px-3">Next</span>
       </li>
       {% endif %}
+
     </ul>
   </nav>
 
   {% else %}
+  <!-- Empty state -->
   <div class="card gsc-form-card border border-success shadow-sm rounded-xxl">
     <div class="card-body p-4 p-md-5">
       <h2 class="h5 fw-semibold text-success mb-1">No listings found</h2>
@@ -313,10 +343,12 @@
 {% block extra_js %}
 {{ block.super }}
 
+<!-- API endpoints for dependent country/county/outcode dropdowns -->
 <div id="js-search-endpoints" data-counties-url="{% url 'listings:api_counties' %}"
   data-outcodes-url="{% url 'listings:api_outcodes' %}">
 </div>
 
+<!-- JS for search filters -->
 <script src="{% static 'js/search_filters.js' %}"></script>
 
 {% endblock %}

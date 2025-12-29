@@ -1,3 +1,5 @@
+/* DASHBOARD STYLES */
+
 /* Horizontal scrolling rows for dashboard cards */
 .dashboard-scroll {
   overflow-x: auto;
@@ -14,7 +16,7 @@
   scroll-snap-align: start;
 }
 
-/* Width rules that currently win in your dashboard */
+/* Dashboard card width rules */
 .dashboard-scroll .card.dashboard-card {
   width: 340px;
 }
@@ -25,7 +27,7 @@
   }
 }
 
-/* Optional: nicer scrollbar on WebKit browsers */
+/* Optional: custom scrollbar (WebKit) */
 .dashboard-scroll::-webkit-scrollbar {
   height: 6px;
 }
@@ -39,6 +41,7 @@
   border-radius: 3px;
 }
 
+/* Drag-to-scroll state */
 .dashboard-scroll.is-dragging {
   cursor: grabbing;
   user-select: none;

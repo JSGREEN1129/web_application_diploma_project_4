@@ -1,6 +1,8 @@
 from django.urls import path
 from . import views
 
+# Namespace for investment-related routes
+
 app_name = "investments"
 
 urlpatterns = [

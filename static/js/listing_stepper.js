@@ -1,22 +1,29 @@
+// EDIT LISTING HELPERS
 document.addEventListener("DOMContentLoaded", function () {
+  // COUNTRY AND COUNTY AND OUTCODE CASCADE
   (function () {
+    // Form selects
     const countryEl = document.getElementById("id_country");
     const countyEl = document.getElementById("id_county");
     const outcodeEl = document.getElementById("id_postcode_prefix");
 
+    // API endpoints from data attributes
     const endpointsEl = document.getElementById("js-listing-endpoints");
     const COUNTIES_URL = endpointsEl?.dataset?.countiesUrl || "";
     const OUTCODES_URL = endpointsEl?.dataset?.outcodesUrl || "";
 
+    // Pre-saved values for edit flows
     const stateEl = document.getElementById("js-listing-state");
     const savedCountry = (stateEl?.dataset?.country || "").trim();
     const savedCounty = (stateEl?.dataset?.county || "").trim();
     const savedOutcode = (stateEl?.dataset?.outcode || "").trim();
 
+    // Initial values
     const initialCountry = String(countryEl?.value || countryEl?.dataset?.selected || savedCountry || "").trim();
     const initialCounty = String(countyEl?.value || countyEl?.dataset?.selected || savedCounty || "").trim();
     const initialOutcode = String(outcodeEl?.value || outcodeEl?.dataset?.selected || savedOutcode || "").trim();
 
+    // Replace a select’s options and optionally select a value
     function setOptions(selectEl, items, placeholder, selectedValue = "") {
       if (!selectEl) return;
       selectEl.innerHTML = "";
@@ -38,9 +45,11 @@ document.addEventListener("DOMContentLoaded", function () {
       if (selectedValue) selectEl.value = selectedValue;
     }
 
+    // Load postcode prefixes for a selected county
     async function loadOutcodes(selectedOutcode = "", countyOverride = "") {
       const county = (countyOverride || countyEl?.value || "").trim();
 
+      // Reset outcodes when county changes
       setOptions(outcodeEl, [], "Select postcode prefix");
       window.gscEditListingSync?.();
 
@@ -55,9 +64,11 @@ document.addEventListener("DOMContentLoaded", function () {
       window.gscEditListingSync?.();
     }
 
+    // Load counties for a selected country
     async function loadCounties(selectedCounty = "") {
       const country = (countryEl?.value || "").trim();
 
+      // Reset dependent selects when country changes
       setOptions(countyEl, [], "Select county");
       setOptions(outcodeEl, [], "Select postcode prefix");
       window.gscEditListingSync?.();
@@ -72,6 +83,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       window.gscEditListingSync?.();
 
+      // If we have a county, load outcodes and preserve the initial outcode where possible
       const countyNow = (selectedCounty || countyEl?.value || "").trim();
       if (countyNow) {
         countyEl.value = countyNow;
@@ -80,9 +92,11 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
 
+    // User-driven changes
     countryEl?.addEventListener("change", () => loadCounties(""));
     countyEl?.addEventListener("change", () => loadOutcodes("", (countyEl?.value || "").trim()));
 
+    // Initial hydrate (edit mode and persisted state)
     if (initialCountry) {
       countryEl.value = initialCountry;
       loadCounties(initialCounty);
@@ -92,7 +106,9 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   })();
 
+  // STEPPER AND ACTIVATE BUTTON GATING
   (function () {
+    // Stepper pill elements
     const stepper = {
       s1: document.getElementById("js-stepper-1"),
       s2: document.getElementById("js-stepper-2"),
@@ -103,6 +119,7 @@ document.addEventListener("DOMContentLoaded", function () {
       msg: document.getElementById("js-stepper-msg"),
     };
 
+    // Card header pills (Conforms to the stepper status)
     const cards = {
       c1: document.getElementById("js-card-1"),
       c2: document.getElementById("js-card-2"),
@@ -113,8 +130,10 @@ document.addEventListener("DOMContentLoaded", function () {
       msg6: document.getElementById("js-step6-msg"),
     };
 
+    // Activation button (enabled only when all steps are complete)
     const activateBtn = document.getElementById("js-activate-btn");
 
+    // Required fields for each step
     const required = {
       step1: ["#id_project_duration_days"],
       step2: ["#id_source_use", "#id_target_use"],
@@ -122,25 +141,30 @@ document.addEventListener("DOMContentLoaded", function () {
       step4: ["#id_country", "#id_county", "#id_postcode_prefix"],
     };
 
+    // Media inputs (step 5)
     const imgInput = document.getElementById("id_images");
     const docInput = document.getElementById("id_documents");
 
+    // Check if a field has a non-empty value
     function hasValue(sel) {
       const el = document.querySelector(sel);
       if (!el) return false;
       return String(el.value || "").trim() !== "";
     }
 
+    // Validate a full step
     function stepOk(selectors) {
       return (selectors || []).every(hasValue);
     }
 
+    // Step 5: at least one media file added
     function mediaSelected() {
       const imgCount = imgInput?.files?.length || 0;
       const docCount = docInput?.files?.length || 0;
       return imgCount + docCount > 0;
     }
 
+    // Apply success and neutral classes to a pill element
     function setPill(el, ok) {
       if (!el) return;
       el.classList.remove("bg-success", "text-white", "bg-light", "text-dark", "border");
@@ -148,6 +172,7 @@ document.addEventListener("DOMContentLoaded", function () {
       else el.classList.add("bg-light", "text-dark", "border");
     }
 
+    // Sync UI state for stepper, cards, and activation button
     function sync() {
       const ok1 = stepOk(required.step1);
       const ok2 = stepOk(required.step2);
@@ -163,6 +188,7 @@ document.addEventListener("DOMContentLoaded", function () {
       setPill(stepper.s5, ok5); setPill(cards.c5, ok5);
       setPill(stepper.s6, okAll); setPill(cards.c6, okAll);
 
+      // Stepper message
       if (stepper.msg) {
         stepper.msg.classList.remove("text-success", "text-muted");
         if (okAll) {
@@ -174,6 +200,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       }
 
+      // Step 6 message
       if (cards.msg6) {
         cards.msg6.classList.remove("text-success", "text-muted");
         if (okAll) {
@@ -188,13 +215,16 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       }
 
+      // Activate button enabled only when all steps are complete
       if (activateBtn) {
         activateBtn.disabled = !okAll;
       }
     }
 
+    // Expose sync so other scripts can trigger updates
     window.gscEditListingSync = sync;
 
+    // Watch required fields for changes
     const watch = [
       ...required.step1, ...required.step2, ...required.step3, ...required.step4,
     ];
@@ -205,9 +235,11 @@ document.addEventListener("DOMContentLoaded", function () {
       el?.addEventListener("input", sync);
     });
 
+    // Watch media inputs
     imgInput?.addEventListener("change", sync);
     docInput?.addEventListener("change", sync);
 
+    // Initial render
     sync();
   })();
 });

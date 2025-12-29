@@ -1,4 +1,5 @@
 from django.urls import path
+
 from .views import (
     register_view,
     login_view,
@@ -6,6 +7,7 @@ from .views import (
     dashboard_view,
 )
 
+# URL namespace for user-related routes
 app_name = "users"
 
 urlpatterns = [

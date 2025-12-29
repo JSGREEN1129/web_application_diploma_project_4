@@ -6,21 +6,25 @@
 {% block content %}
 <div class="container-xl py-5">
 
+  <!-- Opportunity header card -->
   <div class="card border border-success shadow-sm rounded-xxl mb-4 overflow-hidden">
     <div class="card-body p-4 p-md-5">
 
       <div class="d-flex flex-wrap align-items-start justify-content-between gap-3">
         <div class="min-w-0">
           <div class="d-flex flex-wrap align-items-center gap-2">
+            <!-- Project name badge -->
             <span class="badge bg-success px-3 py-2 rounded-pill">
               {{ listing.project_name }}
             </span>
           </div>
 
+          <!-- Opportunity title -->
           <h1 class="h4 fw-semibold text-success mb-1 mt-3 text-truncate">
             {{ listing.source_use|capfirst }} → {{ listing.target_use|capfirst }}
           </h1>
 
+          <!-- Location -->
           <div class="d-flex flex-wrap gap-2 mt-2 text-muted small">
             <span>{{ listing.country|capfirst }}</span>
             <span>•</span>
@@ -30,6 +34,7 @@
           </div>
 
           {% if listing.owner %}
+          <!-- Listing owner -->
           <div class="text-muted small mt-2">
             Posted by
             <span class="fw-semibold text-body">
@@ -40,6 +45,7 @@
         </div>
 
         <div class="d-flex flex-column align-items-start align-items-md-end gap-2">
+          <!-- Active badge (opportunity_detail should only show ACTIVE listings) -->
           <span class="badge text-bg-success rounded-pill px-3 py-2">Active</span>
           <a href="{% url 'listings:search_listings' %}" class="btn btn-outline-success rounded-pill px-3">
             ← Back to search
@@ -49,24 +55,31 @@
 
       {# --- TOP METRICS (now includes Project duration + Listing duration) --- #}
       <div class="row g-3 mt-4">
+        <!-- Funding band -->
         <div class="col-6 col-lg-2">
           <div class="rounded-4 bg-success text-white border-subtle p-3 h-100">
             <div class="text-white small">Funding</div>
             <div class="fw-semibold">{{ listing.get_funding_band_display }}</div>
           </div>
         </div>
+
+        <!-- Return type -->
         <div class="col-6 col-lg-2">
           <div class="rounded-4 bg-success text-white border-subtle p-3 h-100">
             <div class="text-white small">Return Type</div>
             <div class="fw-semibold">{{ listing.get_return_type_display }}</div>
           </div>
         </div>
+
+        <!-- Return band -->
         <div class="col-6 col-lg-2">
           <div class="rounded-4 bg-success text-white border-subtle p-3 h-100">
             <div class="text-white small">Potential Return</div>
             <div class="fw-semibold">{{ listing.get_return_band_display }}</div>
           </div>
         </div>
+
+        <!-- Project duration -->
         <div class="col-6 col-lg-3">
           <div class="rounded-4 bg-success text-white border-subtle p-3 h-100">
             <div class="text-white small">Project duration</div>
@@ -79,6 +92,8 @@
             </div>
           </div>
         </div>
+
+        <!-- Listing duration -->
         <div class="col-12 col-lg-3">
           <div class="rounded-4 bg-success text-white border-subtle p-3 h-100">
             <div class="text-white small">Listing duration</div>
@@ -97,6 +112,7 @@
       <div class="mt-4">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
           <div class="fw-semibold text-success">Funding progress</div>
+          <!-- pledged_gbp / target_gbp / remaining_gbp / progress_pct are passed from the view -->
           <div class="text-muted small">
             Pledged: <span class="fw-semibold text-body">{{ pledged_gbp }}</span>
             {% if target_gbp %}
@@ -106,6 +122,7 @@
           </div>
         </div>
 
+        <!-- Progress bar uses progress_pct to set width/aria values -->
         <div class="progress rounded-pill mt-2" style="height: 12px;">
           <div class="progress-bar bg-success" role="progressbar" style="width: {{ progress_pct|default:'0' }};"
             aria-valuenow="{{ progress_pct|default:'0' }}" aria-valuemin="0" aria-valuemax="100">
@@ -122,6 +139,7 @@
       </div>
 
       {% if listing.active_until %}
+      <!-- Active-until date -->
       <div class="text-muted small mt-3">
         Active until <span class="fw-semibold text-body">{{ listing.active_until|date:"d M Y" }}</span>
       </div>
@@ -130,6 +148,7 @@
     </div>
   </div>
 
+  <!-- Four-card grid -->
   <div class="gsc-quad">
 
     {# --- IMAGES --- #}
@@ -140,12 +159,15 @@
             <h2 class="h5 fw-semibold text-success mb-1">Images</h2>
             <p class="text-muted small mb-0">Click an image to open it in a new tab.</p>
           </div>
+          <!-- Image count badge -->
           <span class="badge bg-success text-white border rounded-pill px-3">{{ images|length }}</span>
         </div>
 
+        <!-- Scrollable image area -->
         <div class="row g-3 gsc-scroll-area">
           {% for img in images %}
           <div class="col-6 col-md-4 col-xl-3">
+            <!-- Each image opens in a new tab -->
             <a href="{{ img.file.url }}" target="_blank" class="text-decoration-none">
               <div class="gsc-thumb gsc-lift rounded-4 overflow-hidden bg-light border-subtle">
                 <img src="{{ img.file.url }}" alt="">
@@ -156,6 +178,7 @@
             </a>
           </div>
           {% empty %}
+          <!-- Empty state (no images) -->
           <div class="col-12">
             <div class="rounded-4 bg-light border-subtle p-4 text-center">
               <div class="fw-semibold">No images uploaded</div>
@@ -175,24 +198,29 @@
             <h2 class="h5 fw-semibold text-success mb-1">Documents</h2>
             <p class="text-muted small mb-0">Open documents in a new tab.</p>
           </div>
+          <!-- Document count badge -->
           <span class="badge bg-success text-white border rounded-pill px-3">{{ documents|length }}</span>
         </div>
 
+        <!-- Scrollable document list -->
         <div class="list-group list-group-flush gsc-scroll-area">
           {% for doc in documents %}
           <div class="list-group-item px-0 py-3 d-flex justify-content-between align-items-center gap-3">
             <div class="min-w-0 d-flex align-items-center gap-3">
+              <!-- Decorative file icon -->
               <div class="gsc-file-icon rounded-4 border-subtle bg-light"></div>
               <div class="min-w-0">
                 <div class="fw-semibold small text-truncate">{{ doc.file.name }}</div>
                 <div class="text-muted small">Document</div>
               </div>
             </div>
+            <!-- Open link -->
             <a href="{{ doc.file.url }}" target="_blank" class="btn btn-sm btn-outline-success rounded-pill px-3">
               Open
             </a>
           </div>
           {% empty %}
+          <!-- Empty state (no documents) -->
           <div class="px-0 py-3">
             <div class="rounded-4 bg-light border-subtle p-4 text-center">
               <div class="fw-semibold">No documents uploaded</div>
@@ -215,9 +243,12 @@
           <span class="badge bg-success text-white border rounded-pill px-3">Invest</span>
         </div>
 
+        <!-- Pledge form -->
         <form method="post" action="{% url 'investments:pledge' listing.pk %}" class="mt-3">
           {% csrf_token %}
           <label class="form-label small fw-semibold">Pledge amount</label>
+
+          <!-- Amount input and pledge submit -->
           <div class="input-group">
             <span class="input-group-text bg-light border-subtle">£</span>
             <input type="number" name="amount_gbp" class="form-control js-pledge-amount border-subtle" step="0.01"
@@ -226,6 +257,7 @@
             <button type="submit" class="btn btn-success px-4">Pledge</button>
           </div>
 
+          <!-- Live estimate output (filled by JS using estimate_return endpoint) -->
           <div class="mt-3 rounded-4 bg-light border-subtle p-3">
             <div class="text-muted small js-return-estimate" data-listing-id="{{ listing.id }}">
               Expected return will be calculated based on this listing’s return and duration.
@@ -233,6 +265,7 @@
           </div>
         </form>
 
+        <!-- Back link pinned to the bottom of the card -->
         <div class="mt-auto pt-3">
           <a href="{% url 'listings:search_listings' %}" class="btn btn-outline-success w-100 rounded-pill">
             ← Back to search
@@ -252,6 +285,7 @@
           <span class="badge bg-success text-white border rounded-pill px-3">Details</span>
         </div>
 
+        <!-- Repeats key numbers for quick scanning -->
         <div class="rounded-4 border border-success p-3 bg-light">
           <div class="d-flex justify-content-between small py-2">
             <span class="fw-semibold">Funding</span>
@@ -294,6 +328,7 @@
 {% block extra_js %}
 {{ block.super }}
 
+<!-- JS for Funding progress and return estimate behaviour -->
 <script src="{% static 'js/pledge_progress.js' %}"></script>
 
 {% endblock %}

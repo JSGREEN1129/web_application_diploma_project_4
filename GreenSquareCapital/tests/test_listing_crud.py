@@ -11,6 +11,7 @@ User = get_user_model()
 
 class ListingCrudTests(TestCase):
     def setUp(self):
+        # Create users for testing
         self.owner = User.objects.create_user(
             username="owner", email="owner@example.com", password="Password123!"
         )
@@ -18,6 +19,7 @@ class ListingCrudTests(TestCase):
             username="other", email="other@example.com", password="Password123!"
         )
 
+        # Create a draft listing to use across CRUD tests
         self.listing = Listing.objects.create(
             owner=self.owner,
             status=Listing.Status.DRAFT,
@@ -25,27 +27,32 @@ class ListingCrudTests(TestCase):
         )
 
     def test_listing_delete_requires_login(self):
+        # Delete should redirect to login when user is not authenticated
         url = reverse("listings:listing_delete", args=[self.listing.pk])
         resp = self.client.post(url, data={"password": "Password123!"})
         self.assertEqual(resp.status_code, 302)
         self.assertIn(reverse("users:login"), resp.url)
 
     def test_listing_delete_only_owner(self):
+        # Non-owners should not be able to delete someone else’s listing
         self.client.force_login(self.other)
         url = reverse("listings:listing_delete", args=[self.listing.pk])
         resp = self.client.post(url, data={"password": "Password123!"})
         self.assertEqual(resp.status_code, 404)
 
     def test_listing_delete_requires_correct_password(self):
+        # Delete should fail if password confirmation is incorrect
         self.client.force_login(self.owner)
         url = reverse("listings:listing_delete", args=[self.listing.pk])
         resp = self.client.post(url, data={"password": "WRONG"}, follow=True)
 
+        # Listing should still exist and user should see an error message
         self.assertTrue(Listing.objects.filter(pk=self.listing.pk).exists())
         msgs = [m.message for m in get_messages(resp.wsgi_request)]
         self.assertTrue(any("incorrect password" in m.lower() for m in msgs))
 
     def test_listing_delete_only_for_drafts(self):
+        # Active listings should not be deletable
         self.listing.status = Listing.Status.ACTIVE
         self.listing.save()
 
@@ -53,13 +60,16 @@ class ListingCrudTests(TestCase):
         url = reverse("listings:listing_delete", args=[self.listing.pk])
         resp = self.client.post(url, data={"password": "Password123!"}, follow=True)
 
+        # Listing should still exist and user should see a guidance message
         self.assertTrue(Listing.objects.filter(pk=self.listing.pk).exists())
         msgs = [m.message for m in get_messages(resp.wsgi_request)]
         self.assertTrue(any("only draft listings can be deleted" in m.lower() for m in msgs))
 
     def test_listing_delete_removes_media_and_listing(self):
+        # Deleting a draft listing should remove both listing and attached media
         self.client.force_login(self.owner)
 
+        # Add a document to confirm media is removed with the listing
         upload = SimpleUploadedFile("doc.pdf", b"fake", content_type="application/pdf")
         media = ListingMedia.objects.create(
             listing=self.listing,
@@ -70,13 +80,16 @@ class ListingCrudTests(TestCase):
         url = reverse("listings:listing_delete", args=[self.listing.pk])
         resp = self.client.post(url, data={"password": "Password123!"}, follow=True)
 
+        # Confirm deletion in database
         self.assertFalse(Listing.objects.filter(pk=self.listing.pk).exists())
         self.assertFalse(ListingMedia.objects.filter(pk=media.pk).exists())
 
+        # Confirm user feedback message
         msgs = [m.message for m in get_messages(resp.wsgi_request)]
         self.assertTrue(any("listing deleted" in m.lower() for m in msgs))
 
     def test_media_delete_requires_draft(self):
+        # Media delete should be blocked once a listing is active
         self.client.force_login(self.owner)
 
         upload = SimpleUploadedFile("pic.jpg", b"fake", content_type="image/jpeg")
@@ -86,12 +99,14 @@ class ListingCrudTests(TestCase):
             media_type=ListingMedia.MediaType.IMAGE,
         )
 
+        # Make listing active to trigger the restriction
         self.listing.status = Listing.Status.ACTIVE
         self.listing.save()
 
         url = reverse("listings:listing_media_delete", args=[self.listing.pk, media.pk])
         resp = self.client.post(url, follow=True)
 
+        # Media should still exist and user should see a guidance message
         self.assertTrue(ListingMedia.objects.filter(pk=media.pk).exists())
         msgs = [m.message for m in get_messages(resp.wsgi_request)]
         self.assertTrue(any("only draft listings can be edited" in m.lower() for m in msgs))

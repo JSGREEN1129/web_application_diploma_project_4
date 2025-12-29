@@ -1,14 +1,19 @@
-:root{
+/* HOMEPAGE STYLES */
+
+/* Design tokens */
+:root {
   --gsc-radius: 1.25rem;
   --gsc-radius-sm: .9rem;
   --gsc-shadow: 0 .75rem 2rem rgba(0,0,0,.08);
   --gsc-shadow-sm: 0 .35rem 1rem rgba(0,0,0,.08);
 }
 
+/* Page background */
 body {
   background-color: #f7f8fa;
 }
 
+/* Page header */
 .gsc-page-header {
   background:
     radial-gradient(1200px 600px at 10% 10%, rgba(25,135,84,.20), transparent 60%),
@@ -17,6 +22,7 @@ body {
   border-radius: calc(var(--gsc-radius) + .25rem);
 }
 
+/* Hero background image */
 .gsc-hero-bg {
   background: url('/static/images/gsc_homepage_greyscale_green_overlay.png');
   background-size: cover;
@@ -24,19 +30,22 @@ body {
   background-repeat: no-repeat;
 }
 
-.gsc-hero{
+/* Hero section */
+.gsc-hero {
   background:
     radial-gradient(1200px 600px at 20% 20%, rgba(25,135,84,0.35), transparent 60%),
     radial-gradient(900px 500px at 80% 30%, rgba(0,0,0,0.35), transparent 60%),
     linear-gradient(135deg, #0b2b1f 0%, #0f3b2a 40%, #0b2b1f 100%);
 }
 
-.gsc-hero-divider{
+/* Hero bottom divider */
+.gsc-hero-divider {
   height: 36px;
   background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, #0f6f45 100%);
 }
 
-.gsc-glass{
+/* Glass panels */
+.gsc-glass {
   background: rgba(255,255,255,0.08);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -44,6 +53,7 @@ body {
   border-radius: 1.25rem;
 }
 
+/* Homepage feature cards */
 .homepage-card {
   border: 1px solid #198754;
   background-color: #ffffff;
@@ -59,6 +69,7 @@ body {
   border-color: #198754;
 }
 
+/* Final CTA card */
 .homepage-card-final-cta {
   border: 1px solid #0f6f45;
   background-color: #0f6f45;
@@ -74,8 +85,7 @@ body {
   border-color: #0f6f45;
 }
 
-
-
+/* Generic cards */
 .gsc-card {
   border: 0;
   border-radius: var(--gsc-radius);
@@ -88,20 +98,25 @@ body {
   box-shadow: var(--gsc-shadow);
 }
 
+/* Section spacing */
 .gsc-section {
   padding: 3rem 0;
 }
 
+/* Soft background panels */
 .gsc-soft {
   background: rgba(255,255,255,.8);
   backdrop-filter: blur(8px);
 }
 
-.form-control, .form-select {
+/* Form controls */
+.form-control,
+.form-select {
   border-radius: var(--gsc-radius-sm);
   padding: .75rem 1rem;
 }
 
+/* Buttons */
 .btn {
   border-radius: var(--gsc-radius-sm);
 }
@@ -111,14 +126,16 @@ body {
 }
 
 .btn-outline-light:hover {
-    color: #0b4a0d;
+  color: #0b4a0d;
 }
 
+/* Badges */
 .badge {
   border-radius: 999px;
 }
 
-.gsc-project-card{
+/* Completed project cards */
+.gsc-project-card {
   border-radius: 1.75rem;
   color: white;
   position: relative;
@@ -138,6 +155,7 @@ body {
   box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, 0.15);
 }
 
+/* Project content overlay */
 .gsc-project-content {
   position: relative;
   z-index: 1;
@@ -152,6 +170,7 @@ body {
   border: 1px solid rgba(255,255,255,.18);
 }
 
+/* Step indicator icon */
 .gsc-icon-bubble {
   width: 40px;
   height: 40px;
@@ -165,7 +184,8 @@ body {
   border: 2px solid #198754;
 }
 
-.gsc-cta-band{
+/* CTA band */
+.gsc-cta-band {
   border-radius: 1.25rem;
   padding: 1.25rem;
   background: #0f6f45;

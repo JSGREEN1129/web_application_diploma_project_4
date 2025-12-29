@@ -8,6 +8,7 @@ from django.utils import timezone
 
 
 class Listing(models.Model):
+    # --- Choice sets ---
     class UseType(models.TextChoices):
         COMMERCIAL = "commercial", "Commercial"
         RESIDENTIAL = "residential", "Residential"
@@ -44,12 +45,14 @@ class Listing(models.Model):
         ACTIVE = "active", "Active"
         EXPIRED = "expired", "Expired"
 
+    # --- Ownership ---
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="listings",
     )
 
+    # --- Project identity ---
     project_name = models.CharField(
         max_length=120,
         blank=True,
@@ -57,6 +60,7 @@ class Listing(models.Model):
         help_text="Optional project name shown in dashboards and opportunities (e.g. Old Police Station).",
     )
 
+    # --- Project type ---
     source_use = models.CharField(
         max_length=20,
         choices=UseType.choices,
@@ -70,6 +74,7 @@ class Listing(models.Model):
         null=True,
     )
 
+    # --- Location ---
     country = models.CharField(
         max_length=20,
         choices=Country.choices,
@@ -87,6 +92,7 @@ class Listing(models.Model):
         null=True,
     )
 
+    # --- Investor-facing bands ---
     funding_band = models.CharField(
         max_length=20,
         choices=FundingBand.choices,
@@ -106,6 +112,7 @@ class Listing(models.Model):
         null=True,
     )
 
+    # --- Time windows ---
     duration_days = models.PositiveIntegerField(
         blank=True,
         null=True,
@@ -118,18 +125,22 @@ class Listing(models.Model):
         help_text="How long the underlying project is expected to run (days).",
     )
 
+    # --- Pricing ---
     price_per_day_pence = models.PositiveIntegerField(default=199)
 
+    # --- Lifecycle status ---
     status = models.CharField(
         max_length=20,
         choices=Status.choices,
         default=Status.DRAFT,
     )
 
+    # --- Timestamps ---
     created_at = models.DateTimeField(auto_now_add=True)
     active_from = models.DateTimeField(null=True, blank=True)
     active_until = models.DateTimeField(null=True, blank=True)
 
+    # --- Payment tracking ---
     expected_amount_pence = models.PositiveIntegerField(default=0)
     paid_amount_pence = models.PositiveIntegerField(default=0)
     paid_at = models.DateTimeField(null=True, blank=True)
@@ -146,6 +157,7 @@ class Listing(models.Model):
         default="",
     )
 
+    # --- Convenience helpers ---
     def listing_active_days(self) -> int:
         """Safe int value for listing active duration."""
         return int(self.duration_days or 0)
@@ -166,6 +178,10 @@ class Listing(models.Model):
         """
         Activate the listing. This uses duration_days (listing active duration),
         NOT project_duration_days (project term).
+
+        Notes:
+        - Sets ACTIVE window: active_from = now, active_until = now + duration_days
+        - Saves only the fields that change to keep DB writes tight
         """
         if not self.duration_days:
             raise ValueError("Cannot activate listing without duration_days.")
@@ -177,12 +193,14 @@ class Listing(models.Model):
         self.save(update_fields=["status", "active_from", "active_until"])
 
     def __str__(self) -> str:
+        # Prefer a clean project name; otherwise fall back to "Listing <pk>"
         name = self.project_name.strip() if self.project_name else ""
         label = name or f"Listing {self.pk}"
         return f"{label} ({self.get_status_display()})"
 
 
 def listing_media_upload_to(instance: "ListingMedia", filename: str) -> str:
+    # Upload path keeps media grouped by listing id
     return f"listing_media/listing_{instance.listing_id}/{filename}"
 
 
@@ -191,13 +209,17 @@ class ListingMedia(models.Model):
         IMAGE = "image", "Image"
         DOCUMENT = "document", "Document"
 
+    # Link each file to a single listing; deleting a listing cleans up media rows
     listing = models.ForeignKey(
         Listing,
         on_delete=models.CASCADE,
         related_name="media",
     )
 
+    # File stored using listing_media_upload_to() path scheme
     file = models.FileField(upload_to=listing_media_upload_to)
+
+    # Distinguishes images vs documents for UI grouping and validation
     media_type = models.CharField(
         max_length=20,
         choices=MediaType.choices,

@@ -1,6 +1,6 @@
-/* Authentication styles */
+/* AUTHENTICATION STYLES */
 
-/* Legacy container (keep if still used anywhere) */
+/* login and register container */
 .login-register-container {
   max-width: 400px;
   margin: 50px auto;
@@ -11,6 +11,7 @@
   border: 2px solid var(--gsc-green);
 }
 
+/* Responsive adjustments for legacy container */
 @media (max-width: 767.98px) {
   .login-register-container {
     max-width: 90%;
@@ -19,26 +20,29 @@
   }
 }
 
+/* Override: ensure primary borders match brand green */
 .border-primary {
   border-color: var(--gsc-green) !important;
   border-width: 2px !important;
 }
 
-/* Legacy card title (scoped to legacy container only) */
+/* Legacy card title styling */
 .login-register-container .card-title {
   font-size: 1.8rem;
   color: var(--gsc-green) !important;
 }
 
-/* Tabs */
+/* AUTH TABS */
+
+/* Default tab appearance */
 .nav-pills .nav-link {
   color: var(--gsc-green) !important;
   border-color: var(--gsc-green) !important;
 }
 
+/* Active tab state */
 .nav-pills .nav-link.active {
   background-color: var(--gsc-green) !important;
   border-color: var(--gsc-green) !important;
   color: #ffffff !important;
 }
-
