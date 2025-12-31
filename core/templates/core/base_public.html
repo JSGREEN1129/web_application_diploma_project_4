@@ -73,26 +73,7 @@
   </nav>
 
   <!-- Flash Messages -->
-  {% if messages %}
-  <div class="container-xxl mt-3">
-    {% for message in messages %}
-
-    <!-- Message box -->
-    <div class="alert alert-{{ message.tags }} alert-dismissible fade show gsc-alert">
-
-      <!-- Message icon and text -->
-      <div class="d-flex gap-2 align-items-start">
-        <i class="bi bi-info-circle mt-1"></i>
-        <div class="flex-grow-1">{{ message }}</div>
-      </div>
-
-      <!-- Close button -->
-      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-
-    {% endfor %}
-  </div>
-  {% endif %}
+  {% include "core/messages.html" %}
 
   <!-- Main page content -->
   <main class="flex-grow-1">

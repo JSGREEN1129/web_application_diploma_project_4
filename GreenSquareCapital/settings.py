@@ -1,6 +1,7 @@
 from pathlib import Path
 import os
 
+from django.contrib.messages import constants as messages
 from django.urls import reverse_lazy
 import dj_database_url
 
@@ -187,3 +188,12 @@ if not DEBUG:
     SECURE_CONTENT_TYPE_NOSNIFF = True
     SECURE_REFERRER_POLICY = "same-origin"
     X_FRAME_OPTIONS = "DENY"
+
+    # MESSAGE TAGS 
+    MESSAGE_TAGS = {
+    messages.DEBUG:    'secondary',
+    messages.INFO:     'info',
+    messages.SUCCESS:  'success',
+    messages.WARNING:  'warning',
+    messages.ERROR:    'danger', 
+}

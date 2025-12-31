@@ -1,13 +1,11 @@
 {% if messages %}
-<!-- Flash messages (shows the latest message only) -->
 <div class="container-fluid mt-2 mb-3 px-0">
 
-    <!-- Loop through messages (only the last message is displayed) -->
+    {# Loop through messages, only displays the last looped messages #}
     {% for message in messages %}
     {% if forloop.last %}
-
-    <!-- Message alert (Bootstrap classes decided by tags/level) -->
     <div class="alert
+        {# Determine the Bootstrap alert class based on message type or level #} 
         {% if message.tags %}alert-{{ message.tags }}
         {% elif message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}alert-danger
         {% elif message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}alert-success
@@ -16,31 +14,25 @@
         {% elif message.level == DEFAULT_MESSAGE_LEVELS.DEBUG %}alert-secondary
         {% else %}alert-primary
         {% endif %}
-        alert-dismissible fade show" role="alert" id="main-message-alert">
+        alert-dismissible fade show gsc-alert" role="alert" id="main-message-alert">
 
         <div class="d-flex align-items-center">
-
-            <!-- Message icon (changes depending on success/error/warning/info) -->
+            {# Use Bootstrap icons based on message type #}
             <i class="bi {% if message.tags == 'success' or message.level == 25 %}bi-check-circle-fill text-success
                 {% elif message.tags == 'error' or message.level == 40 %}bi-exclamation-triangle-fill text-danger
                 {% elif message.tags == 'warning' or message.level == 30 %}bi-exclamation-circle-fill text-warning
                 {% else %}bi-info-circle-fill text-info
                 {% endif %} me-2"></i>
-
-            <!-- Message text -->
             <div class="flex-grow-1">{{ message }}</div>
-
-            <!-- Close button -->
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     </div>
-
     {% endif %}
     {% endfor %}
 </div>
 
 <style>
-    /* Alert styling (animation and subtle shadow) */
+    /* Ensure smooth animations */
     #main-message-alert {
         animation: slideInDown 0.3s ease-out;
         box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
@@ -48,7 +40,7 @@
         border-radius: 0.375rem;
     }
 
-    /* Slide-down animation when message appears */
+    /* Custom animation for message appearance */
     @keyframes slideInDown {
         from {
             opacity: 0;
@@ -60,39 +52,36 @@
             transform: translateY(0);
         }
     }
+
 </style>
 
 <script>
-    // Auto-hide messages
+    // Auto-hide success messages after 5 seconds, keep errors visible longer
     document.addEventListener('DOMContentLoaded', function () {
         const alertElement = document.getElementById('main-message-alert');
         if (alertElement) {
-
-            // Identify message type by Bootstrap alert class
+            // Check if it's a success message
             const isSuccess = alertElement.classList.contains('alert-success');
             const isError = alertElement.classList.contains('alert-danger');
 
-            // Set how long the message stays visible
             let autoHideDelay = isSuccess ? 5000 : (isError ? 10000 : 7000);
 
-            // Close alert after delay (Bootstrap dismiss)
             setTimeout(function () {
                 const bsAlert = new bootstrap.Alert(alertElement);
                 bsAlert.close();
             }, autoHideDelay);
 
-            // Optional hook when alert fully closes
+            // Listen for close event to remove from storage
             alertElement.addEventListener('closed.bs.alert', function () {
             });
         }
     });
 
-    // Prevent multiple alerts from showing at once (keeps the newest only)
+    // Prevent multiple messages from showing simultaneously
     function ensureSingleMessage() {
         const alerts = document.querySelectorAll('.alert');
         if (alerts.length > 1) {
-
-            // Hide all alerts except the last one
+            // Hide all but the last one
             alerts.forEach((alert, index) => {
                 if (index < alerts.length - 1) {
                     alert.style.display = 'none';
