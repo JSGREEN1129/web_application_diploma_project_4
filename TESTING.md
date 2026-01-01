@@ -13,8 +13,8 @@ I have used the [PEP8 Code Institute Validator](https://pep8ci.herokuapp.com/) t
 | listings | listings-models.py | --- | ![screenshot](./documentation/test_reports/listings_app_linted/listings_models_CI_linted.png) |
 | listings | listings-urls.py | --- | ![screenshot](./documentation/test_reports/listings_app_linted/listings_urls_CI_linted.png) |
 | listings | listings-views.py | --- | ![screenshot](./documentation/test_reports/listings_app_linted/listings_views_CI_linted.png) |
-| users | users-forms.py | --- | ![screenshot](./documentation/test_reports/tasks_app_linted/tasks_forms_CI_linted.png) |
-| users | users-views.py | --- | ![screenshot](./documentation/test_reports/tasks_app_linted/tasks_views_CI_linted.png) |
+| users | users-forms.py | --- | ![screenshot](./documentation/test_reports/users_app_linted/users_forms_CI_linted.png) |
+| users | users-views.py | --- | ![screenshot](./documentation/test_reports/users_app_linted/users_views_CI_linted.png) |
 | users | users-backends.py | --- | ![screenshot](./documentation/test_reports/users_app_linted/users_backends_CI_linted.png) |
 
 ### CSS
