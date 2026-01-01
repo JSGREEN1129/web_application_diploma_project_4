@@ -12,7 +12,7 @@ LISTING_DURATION_CHOICES = [
     (60, "60 days"),
 ]
 
-# Project duration options 
+# Project duration options
 PROJECT_DURATION_CHOICES = [
     (60, "60 days"),
     (120, "120 days"),
@@ -25,11 +25,13 @@ class ListingCreateForm(forms.ModelForm):
     """
     ListingCreateForm is used for both create/edit draft flows.
 
-    - duration_days = how long the listing stays ACTIVE (marketplace visibility)
-    - project_duration_days = how long the underlying project is expected to take (term to completion)
+    - duration_days = how long the listing stays ACTIVE
+    (marketplace visibility)
+    - project_duration_days = how long the underlying project is
+    expected to take (term to completion)
     """
 
-    # Listing active duration 
+    # Listing active duration
     duration_days = forms.TypedChoiceField(
         choices=LISTING_DURATION_CHOICES,
         coerce=int,
@@ -37,7 +39,7 @@ class ListingCreateForm(forms.ModelForm):
         required=True,
     )
 
-    # Project completion duration 
+    # Project completion duration
     project_duration_days = forms.TypedChoiceField(
         choices=PROJECT_DURATION_CHOICES,
         coerce=int,
@@ -82,7 +84,8 @@ class ListingCreateForm(forms.ModelForm):
 
         Note:
         - This applies to both ModelChoice/Choice fields and TypedChoiceFields.
-        - Keeping the empty option first also plays nicely with your JS stepper logic.
+        - Keeping the empty option first
+        also plays nicely with your JS stepper logic.
         """
         super().__init__(*args, **kwargs)
 
@@ -108,7 +111,7 @@ class ListingCreateForm(forms.ModelForm):
             if hasattr(field, "choices"):
                 choices = list(field.choices)
 
-                # Only insert the placeholder if an empty option doesn't already exist
+                # Only insert placeholder if  empty option doesn't exist
                 if not choices or choices[0][0] != "":
                     field.choices = [("", placeholder)] + choices
 
@@ -123,7 +126,9 @@ class ListingCreateForm(forms.ModelForm):
         - Normalises to uppercase
         - Guards against obviously invalid short values
         """
-        value = (self.cleaned_data.get("postcode_prefix") or "").strip().upper()
+        value = (
+            self.cleaned_data.get("postcode_prefix") or ""
+        ).strip().upper()
         if value and len(value) < 2:
             raise forms.ValidationError(
                 "Please select a valid postcode prefix (e.g. SW, CF, EH)."
@@ -165,7 +170,8 @@ class ListingCreateForm(forms.ModelForm):
             if project_days < listing_days:
                 self.add_error(
                     "project_duration_days",
-                    "Project duration should be greater than or equal to the listing duration.",
+                    "Project duration should be greater "
+                    "than or equal to the listing duration.",
                 )
 
         return cleaned
@@ -178,7 +184,8 @@ class MultiFileInput(forms.ClearableFileInput):
 
 class ListingMediaForm(forms.Form):
     """
-    Separate form for uploads so you can validate and handle files independently
+    Separate form for uploads so you can
+    validate and handle files independently
     from the listing draft fields.
     """
 

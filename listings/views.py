@@ -4,42 +4,58 @@ from datetime import timedelta
 from decimal import Decimal, ROUND_HALF_UP
 import logging
 
-import stripe  # Stripe SDK used for checkout and webhook verification
+# Stripe SDK used for checkout and webhook verification
+import stripe
 
 from django.conf import settings
-from django.contrib import messages  # Django messages framework
+# Django messages framework
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.core.paginator import Paginator  # Pagination for search results
+# Pagination for search results
+from django.core.paginator import Paginator
 from django.db import transaction, models
 from django.db.models import Q, Sum
-from django.db.models.functions import Coalesce  # Safer SUM default (0) when no rows
+# Safer SUM default (0) when no rows
+from django.db.models.functions import Coalesce
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
-from django.views.decorators.csrf import csrf_exempt  # Stripe webhook is CSRF-exempt
+# Stripe webhook is CSRF-exempt
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
-
-from investments.models import Investment  # Used for pledge progress aggregation
-
-from .forms import ListingCreateForm, ListingMediaForm  # Draft form and multi-upload form
+# Used for pledge progress aggregation
+from investments.models import Investment
+# Draft form and multi-upload form
+from .forms import ListingCreateForm, ListingMediaForm
 from .models import Listing, ListingMedia
-from .services.pricing import calculate_listing_price_pence, get_return_pct_range  # Fee pricing and return band %
-from .services.payments import (
-    reset_payment_state,                       # Clears payment fields and status back to DRAFT
-    activate_listing_from_paid_session,         # Activates listing once Stripe confirms paid
-    ensure_stripe_configured,                  # Guards missing Stripe secrets
-    build_stripe_urls,                         # Builds success/cancel URLs with query params
-    try_reuse_existing_checkout_session,        # Avoids creating new sessions unnecessarily
+# Fee pricing and return band %
+from .services.pricing import (
+    calculate_listing_price_pence,
+    get_return_pct_range
 )
-
-logger = logging.getLogger(__name__)  # Module logger (handy for debugging in production)
+from .services.payments import (
+    # Clears payment fields and status back to DRAFT
+    reset_payment_state,
+    # Activates listing once Stripe confirms paid
+    activate_listing_from_paid_session,
+    # Guards missing Stripe secrets
+    ensure_stripe_configured,
+    # Builds success/cancel URLs with query params
+    build_stripe_urls,
+    # Avoids creating new sessions unnecessarily
+    try_reuse_existing_checkout_session,
+)
+# Module logger (handy for debugging in production)
+logger = logging.getLogger(__name__)
 
 # --- Upload validation limits ---
 MAX_IMAGE_SIZE = 5 * 1024 * 1024          # 5MB per image
 MAX_DOCUMENT_SIZE = 10 * 1024 * 1024      # 10MB per document
 
-ALLOWED_IMAGE_EXTENSIONS = {"jpg", "jpeg", "png", "webp"}     # Allowed image suffixes
-ALLOWED_DOCUMENT_EXTENSIONS = {"pdf", "doc", "docx"}          # Allowed document suffixes
+# Allowed image suffixes
+ALLOWED_IMAGE_EXTENSIONS = {"jpg", "jpeg", "png", "webp"}
+# Allowed document suffixes
+ALLOWED_DOCUMENT_EXTENSIONS = {"pdf", "doc", "docx"}
 
 ALLOWED_DOCUMENT_MIME_TYPES = {
     "application/pdf",
@@ -49,7 +65,8 @@ ALLOWED_DOCUMENT_MIME_TYPES = {
 
 # --- Simple static location data used by JS dropdown APIs ---
 COUNTIES_BY_COUNTRY = {
-    "england": ["Greater London", "Kent", "Essex", "Surrey", "Greater Manchester"],
+    "england": ["Greater London", "Kent", "Essex",
+                "Surrey", "Greater Manchester"],
     "scotland": ["Glasgow City", "Edinburgh", "Aberdeenshire"],
     "wales": ["Cardiff", "Swansea", "Gwynedd"],
 }
@@ -78,7 +95,8 @@ def _parse_target_int_from_funding_band(funding_band) -> int:
     if not funding_band:
         return 0
     try:
-        low_str, high_str = str(funding_band).split("_", 1)  # keep low unused; high is the target
+        # keep low unused; high is the target
+        low_str, high_str = str(funding_band).split("_", 1)
         return int(high_str)
     except Exception:
         return 0
@@ -89,7 +107,7 @@ def _pledge_progress_for_listing(listing: Listing) -> dict:
     Computes pledged/remaining/target/progress for a single listing.
     Returned keys are safe and always present.
     """
-    # Total pledged amount (PLEDGED only) aggregated in pence to avoid float issues
+    # Total pledged amount aggregated in pence to avoid float issues
     pledged_pence = (
         Investment.objects.filter(
             listing=listing,
@@ -99,7 +117,9 @@ def _pledge_progress_for_listing(listing: Listing) -> dict:
     )
 
     # Convert to GBP display string used in templates
-    pledged_gbp = (Decimal(pledged_pence) / Decimal("100")).quantize(Decimal("0.01"))
+    pledged_gbp = (
+        Decimal(pledged_pence) / Decimal("100")
+        ).quantize(Decimal("0.01"))
     pledged_gbp_formatted = f"£{pledged_gbp:,.2f}"
 
     # Funding target derived from funding band
@@ -154,7 +174,8 @@ def validate_uploaded_files(
         # Extension validation
         if ext not in allowed_exts:
             raise ValueError(
-                f"{label}: {filename} — only {allowed_exts_label} files are allowed."
+                f"{label}: {filename} — "
+                f"only {allowed_exts_label} files are allowed."
             )
 
         # Size validation
@@ -167,12 +188,14 @@ def validate_uploaded_files(
 
         if mime_prefix and not content_type.startswith(mime_prefix):
             raise ValueError(
-                f"{label}: {filename} — only {allowed_exts_label} files are allowed."
+                f"{label}: {filename} — only "
+                f"{allowed_exts_label} files are allowed."
             )
 
         if mime_types and content_type not in mime_types:
             raise ValueError(
-                f"{label}: {filename} — only {allowed_exts_label} files are allowed."
+                f"{label}: {filename} — only "
+                f"{allowed_exts_label} files are allowed."
             )
 
 
@@ -220,13 +243,23 @@ def _step_flags_from_payload(
         and _is_filled(return_band)
         and _is_filled(duration_days)
     )
-    step4 = _is_filled(country) and _is_filled(county) and _is_filled(postcode_prefix)
+    step4 = (
+        _is_filled(country)
+        and _is_filled(county)
+        and _is_filled(postcode_prefix)
+    )
     step5 = bool(has_media)
     step6 = bool(is_active)
 
     # Activation should only show as available BEFORE activation
-    can_activate = step1 and step2 and step3 and step4 and step5 and (not step6)
-
+    can_activate = (
+        step1
+        and step2
+        and step3
+        and step4
+        and step5
+        and (not step6)
+    )
     return {
         "step1_done": step1,
         "step2_done": step2,
@@ -305,7 +338,8 @@ def _money(x: Decimal) -> str:
 def _assign_field_from_raw(listing: Listing, field_name: str, raw) -> None:
     """
     Draft-safe assignment:
-    - Empty -> None OR "" depending on DB nullability (prevents NOT NULL crashes)
+    - Empty -> None OR "" depending on
+    DB nullability (prevents NOT NULL crashes)
     - duration_days/project_duration_days -> int coercion
     - everything else -> raw string
     """
@@ -345,13 +379,15 @@ def _assign_field_from_raw(listing: Listing, field_name: str, raw) -> None:
 def api_listing_stepper_flags(request, pk=None):
     """
     Returns JSON step flags based on *current form values* without saving.
-    This is what lets create/edit steppers update WITHOUT submitting the full form.
+    This is what lets create/edit
+    steppers update WITHOUT submitting the full form.
 
     - For create: call this with no pk (or pk=None route)
     - For edit: call this with pk so existing media can count towards Step 5
 
     For Step 5 (uploads), the client should send:
-      media_selected = "1" if there are any file inputs selected in the browser.
+      media_selected = "1" if there are
+      any file inputs selected in the browser.
 
     This avoids trying to transmit files just to compute the stepper.
     """
@@ -390,7 +426,8 @@ def api_listing_stepper_flags(request, pk=None):
             and flags["step3_done"]
             and flags["step4_done"]
         ):
-            msg = "Complete steps 1–4 to enable activation. You can save a draft at any time."
+            msg = "Complete steps 1–4 to enable activation. "
+            "You can save a draft at any time."
         elif not flags["step5_done"]:
             msg = "Upload at least one image or document to complete Step 5."
         else:
@@ -412,20 +449,24 @@ def create_listing_view(request):
     """
     Supports two submit actions:
     - action=save_draft  -> saves partial listing (no strict form validation)
-    - action=activate    -> requires full validation, saves draft, then proceeds to activation (Stripe checkout)
+    - action=activate    -> requires full validation, saves draft,
+    then proceeds to activation (Stripe checkout)
 
     NOTE:
-    This view supplies step flags to the template (like edit_listing_view does),
+    This view supplies step flags to the template
+    (like edit_listing_view does),
     so both pages can use the same stepper logic.
     """
     if request.method == "POST":
-        action = (request.POST.get("action") or "save_draft").strip()  # Button-controlled action
-
-        form = ListingCreateForm(request.POST)  # Full form (only strictly enforced for activate)
+        # Button-controlled action
+        action = (request.POST.get("action") or "save_draft").strip()
+        # Full form (only strictly enforced for activate)
+        form = ListingCreateForm(request.POST)
         media_form = ListingMediaForm()         # Upload form (multi-inputs)
-
-        images = request.FILES.getlist("images")        # Multi-upload images
-        documents = request.FILES.getlist("documents")  # Multi-upload documents
+        # Multi-upload images
+        images = request.FILES.getlist("images")
+        # Multi-upload documents
+        documents = request.FILES.getlist("documents")
 
         # Stepper flags computed from current POST values
         flags = _step_flags_from_payload(
@@ -434,7 +475,8 @@ def create_listing_view(request):
             is_active=False,
         )
 
-        # Validate files up-front so draft saving doesn't accept disallowed files
+        # Validate files up-front so draft saving
+        # doesn't accept disallowed files
         try:
             if images:
                 validate_uploaded_files(
@@ -455,7 +497,8 @@ def create_listing_view(request):
                     allowed_exts_label="PDF, DOC or DOCX",
                 )
         except ValueError as e:
-            # File validation errors are shown via messages framework and template alert
+            # File validation errors are shown via
+            # messages framework and template alert
             messages.error(request, str(e))
             return render(
                 request,
@@ -464,9 +507,15 @@ def create_listing_view(request):
                     "form": form,
                     "media_form": media_form,
                     # Preserve dropdown state even if form didn't validate
-                    "posted_country": (request.POST.get("country") or "").strip(),
-                    "posted_county": (request.POST.get("county") or "").strip(),
-                    "posted_outcode": (request.POST.get("postcode_prefix") or "").strip(),
+                    "posted_country": (
+                        request.POST.get("country") or ""
+                        ).strip(),
+                    "posted_county": (
+                        request.POST.get("county") or ""
+                        ).strip(),
+                    "posted_outcode": (
+                        request.POST.get("postcode_prefix") or ""
+                        ).strip(),
                     **flags,
                 },
             )
@@ -505,7 +554,8 @@ def create_listing_view(request):
             # Activation requires form validity
             if not form.is_valid():
                 messages.error(
-                    request, "Please complete the required fields before activating."
+                    request, "Please complete the "
+                    "required fields before activating."
                 )
                 return render(
                     request,
@@ -538,7 +588,8 @@ def create_listing_view(request):
             if not _listing_ready_for_activation(listing):
                 messages.error(
                     request,
-                    "Complete Steps 1–5 (including at least one upload) before activating.",
+                    "Complete Steps 1–5 (including at least one upload) "
+                    "before activating.",
                 )
                 return redirect("listings:edit_listing", pk=listing.pk)
 
@@ -589,8 +640,8 @@ def edit_listing_view(request, pk):
 
     if request.method == "POST":
         action = (request.POST.get("action") or "save_draft").strip()
-
-        form = ListingCreateForm(request.POST, instance=listing)  # Bound to instance for activate flow
+        # Bound to instance for activate flow
+        form = ListingCreateForm(request.POST, instance=listing)
         media_form = ListingMediaForm()
 
         images = request.FILES.getlist("images")
@@ -617,7 +668,8 @@ def edit_listing_view(request, pk):
                     allowed_exts_label="PDF, DOC or DOCX",
                 )
         except ValueError as e:
-            # On validation error, re-render edit page with existing media preserved
+            # On validation error,
+            # re-render edit page with existing media preserved
             messages.error(request, str(e))
             flags = _listing_step_flags(listing)
             return render(
@@ -634,7 +686,8 @@ def edit_listing_view(request, pk):
             )
 
         if action == "save_draft":
-            # Partial-save logic: use raw POST assignment rather than strict form validation
+            # Partial-save logic:
+            # use raw POST assignment rather than strict form validation
             for field_name in ListingCreateForm.Meta.fields:
                 raw = request.POST.get(field_name)
                 _assign_field_from_raw(listing, field_name, raw)
@@ -657,14 +710,16 @@ def edit_listing_view(request, pk):
                     media_type=ListingMedia.MediaType.DOCUMENT,
                 )
 
-            messages.success(request, "Draft updated. You can keep editing anytime.")
+            messages.success(request,
+                             "Draft updated. You can keep editing anytime.")
             return redirect("listings:edit_listing", pk=listing.pk)
 
         if action == "activate":
             # Activation requires full form validation
             if not form.is_valid():
                 messages.error(
-                    request, "Please complete the required fields before activating."
+                    request, "Please complete the "
+                    "required fields before activating."
                 )
                 flags = _listing_step_flags(listing)
                 return render(
@@ -703,7 +758,8 @@ def edit_listing_view(request, pk):
             if not _listing_ready_for_activation(listing):
                 messages.error(
                     request,
-                    "Complete Steps 1–5 (including at least one upload) before activating.",
+                    "Complete Steps 1–5 (including at least one upload) "
+                    "before activating.",
                 )
                 return redirect("listings:edit_listing", pk=listing.pk)
 
@@ -747,8 +803,8 @@ def listing_detail_view(request, pk):
     documents = listing.media.filter(
         media_type=ListingMedia.MediaType.DOCUMENT
     ).order_by("uploaded_at")
-
-    pledge_ctx = _pledge_progress_for_listing(listing)  # Provides pledged/remaining/target/progress_pct
+    # Provides pledged/remaining/target/progress_pct
+    pledge_ctx = _pledge_progress_for_listing(listing)
 
     return render(
         request,
@@ -829,11 +885,12 @@ def activate_listing_view(request, pk):
 
     if not _listing_ready_for_activation(listing):
         messages.error(
-            request, "Complete Steps 1–5 (including at least one upload) before activating."
+            request, "Complete Steps 1–5 "
+            "(including at least one upload) before activating."
         )
         return redirect("listings:edit_listing", pk=listing.pk)
-
-    return start_listing_checkout_view(request, pk=listing.pk)  # Delegates to Stripe checkout creator
+    # Delegates to Stripe checkout creator
+    return start_listing_checkout_view(request, pk=listing.pk)
 
 
 @login_required
@@ -872,16 +929,18 @@ def start_listing_checkout_view(request, pk):
             duration_days=duration_days,
         )
     except ValueError:
-        messages.error(request, "Pricing could not be calculated for this listing.")
+        messages.error(request, "Pricing could not "
+                                "be calculated for this listing.")
         return redirect("listings:listing_detail", pk=listing.pk)
-
-    success_url, cancel_url = build_stripe_urls(listing=listing)  # Redirect targets
+    # Redirect targets
+    success_url, cancel_url = build_stripe_urls(listing=listing)
 
     # Create a Stripe Checkout session
     session = stripe.checkout.Session.create(
         mode="payment",
         currency="gbp",
-        client_reference_id=str(listing.pk),  # Used by webhook to identify listing
+        # Used by webhook to identify listing
+        client_reference_id=str(listing.pk),
         metadata={
             "listing_id": str(listing.pk),
             "user_id": str(request.user.pk),
@@ -905,7 +964,8 @@ def start_listing_checkout_view(request, pk):
     # Persist expected price and session id so webhook can validate later
     listing.expected_amount_pence = int(amount_pence)
     listing.stripe_checkout_session_id = session.id
-    listing.save(update_fields=["expected_amount_pence", "stripe_checkout_session_id"])
+    listing.save(update_fields=["expected_amount_pence",
+                                "stripe_checkout_session_id"])
 
     return redirect(session.url, permanent=False)  # Stripe-hosted checkout URL
 
@@ -917,31 +977,39 @@ def payment_success_view(request):
     session_id = (request.GET.get("session_id") or "").strip()
 
     if not (listing_id and session_id and settings.STRIPE_SECRET_KEY):
-        messages.success(request, "Payment received. Your listing will activate shortly.")
+        messages.success(request, "Payment received. "
+                                  "Your listing will activate shortly.")
         return redirect("users:dashboard")
 
     stripe.api_key = settings.STRIPE_SECRET_KEY
 
     try:
-        session = stripe.checkout.Session.retrieve(session_id)  # Server-side verification
+        # Server-side verification
+        session = stripe.checkout.Session.retrieve(session_id)
     except stripe.error.StripeError:
-        messages.success(request, "Payment received. Your listing will activate shortly.")
+        messages.success(request, "Payment received. "
+                                  "Your listing will activate shortly.")
         return redirect("users:dashboard")
 
-    # Atomic activation attempt (prevents double-activate from webhook and return)
+    # Atomic activation attempt
+    # (prevents double-activate from webhook and return)
     try:
         with transaction.atomic():
             listing = Listing.objects.select_for_update().get(
                 pk=listing_id, owner=request.user
             )
-            activated = activate_listing_from_paid_session(listing=listing, session=session)
+            activated = activate_listing_from_paid_session(
+                listing=listing, session=session,
+                )
     except Listing.DoesNotExist:
         activated = False
 
     if activated:
-        messages.success(request, "Payment received. Your listing is now active.")
+        messages.success(request, "Payment received. "
+                                  "Your listing is now active.")
     else:
-        messages.success(request, "Payment received. Your listing will activate shortly.")
+        messages.success(request, "Payment received. "
+                                  "Your listing will activate shortly.")
 
     return redirect("users:dashboard")
 
@@ -963,7 +1031,8 @@ def payment_cancel_view(request, pk):
         ]
     )
 
-    messages.info(request, "Payment cancelled. Your listing is still saved as a draft.")
+    messages.info(request, "Payment cancelled. "
+                           "Your listing is still saved as a draft.")
     return redirect("listings:listing_detail", pk=pk)
 
 
@@ -972,7 +1041,8 @@ def payment_cancel_view(request, pk):
 def stripe_webhook(request):
     # Stripe server-to-server webhook endpoint
     if not settings.STRIPE_WEBHOOK_SECRET or not settings.STRIPE_SECRET_KEY:
-        return HttpResponse(status=400)  # Matches your StripeWebhookTests expectation
+        # Matches StripeWebhookTests expectation
+        return HttpResponse(status=400)
 
     stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -1007,18 +1077,30 @@ def stripe_webhook(request):
 
         # Lock listing row to avoid double activation
         with transaction.atomic():
-            listing = Listing.objects.select_for_update().filter(pk=listing_id).first()
+            listing = (
+                Listing.objects
+                .select_for_update()
+                .filter(pk=listing_id)
+                .first()
+            )
             if not listing:
                 return HttpResponse(status=200)
 
             if listing.status == Listing.Status.ACTIVE:
                 return HttpResponse(status=200)
 
-            # Safety: ignore if webhook session doesn't match the one we created
-            if listing.stripe_checkout_session_id and session_id != listing.stripe_checkout_session_id:
+            # Safety: ignore if webhook session
+            # doesn't match the one we created
+            if (
+                listing.stripe_checkout_session_id
+                and session_id != listing.stripe_checkout_session_id
+            ):
                 return HttpResponse(status=200)
 
-            activate_listing_from_paid_session(listing=listing, session=session)
+            activate_listing_from_paid_session(
+                listing=listing,
+                session=session,
+            )
 
     return HttpResponse(status=200)
 
@@ -1041,7 +1123,7 @@ def api_outcodes(request):
 
 @login_required
 def search_listings_view(request):
-    # Search filter page for investors 
+    # Search filter page for investors
     project_name = (request.GET.get("project_name") or "").strip()
     listed_by = (request.GET.get("listed_by") or "").strip()
 
@@ -1058,9 +1140,12 @@ def search_listings_view(request):
 
     qs = (
         Listing.objects.filter(status=Listing.Status.ACTIVE)
-        .exclude(owner=request.user)          # Tests assert own listings excluded
-        .select_related("owner")              # Used for "listed by" display
-        .prefetch_related("media")            # Used for media.count in template
+        # Tests assert own listings excluded
+        .exclude(owner=request.user)
+        # Used for "listed by" display
+        .select_related("owner")
+        # Used for media.count in template
+        .prefetch_related("media")
         .order_by("-created_at")
     )
 
@@ -1104,11 +1189,13 @@ def search_listings_view(request):
     page_obj = paginator.get_page(page_number)
 
     # Attach progress % for each listing card
-    for l in page_obj.object_list:
+    for listing in page_obj.object_list:
         try:
-            l.progress_pct = _pledge_progress_for_listing(l)["progress_pct"]
+            listing.progress_pct = (
+                 _pledge_progress_for_listing(listing)["progress_pct"]
+            )
         except Exception:
-            l.progress_pct = 0
+            listing.progress_pct = 0
 
     # Choices used to render dropdowns with current selection
     source_use_choices = Listing._meta.get_field("source_use").choices
@@ -1181,11 +1268,15 @@ def estimate_return_view(request, pk):
     try:
         amount = Decimal(raw)  # Parse as Decimal to avoid float inaccuracies
     except Exception:
-        return JsonResponse({"ok": False, "error": "Invalid amount."}, status=400)
+        return JsonResponse(
+            {"ok": False, "error": "Invalid amount."},
+            status=400
+        )
 
     if amount <= 0:
         return JsonResponse(
-            {"ok": False, "error": "Amount must be greater than 0."}, status=400
+            {"ok": False, "error": "Amount must be greater than 0."},
+            status=400
         )
 
     # Return range derived from listing.return_band
