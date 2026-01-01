@@ -191,9 +191,9 @@ if not DEBUG:
 
     # MESSAGE TAGS 
     MESSAGE_TAGS = {
-    messages.DEBUG:    'secondary',
-    messages.INFO:     'info',
-    messages.SUCCESS:  'success',
-    messages.WARNING:  'warning',
-    messages.ERROR:    'danger', 
+        messages.DEBUG:    'secondary',
+        messages.INFO:     'info',
+        messages.SUCCESS:  'success',
+        messages.WARNING:  'warning',
+        messages.ERROR:    'danger', 
 }

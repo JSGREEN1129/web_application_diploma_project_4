@@ -31,7 +31,8 @@ class CustomUserCreationForm(UserCreationForm):
 
         # Prevent duplicate accounts
         if User.objects.filter(email=email).exists():
-            raise forms.ValidationError("A user with this email already exists.")
+            raise forms.ValidationError("A user with this "
+                                        "email already exists.")
 
         return email
 
@@ -62,10 +63,11 @@ class CustomAuthenticationForm(AuthenticationForm):
     # Email-based username field
     username = forms.EmailField(
         label="Email",
-        widget=forms.EmailInput(attrs={"autofocus": True, "class": "form-control"}),
+        widget=forms.EmailInput(attrs={"autofocus": True,
+                                       "class": "form-control"}),
     )
 
-    # Password field 
+    # Password field
     password = forms.CharField(
         label="Password",
         strip=False,
@@ -74,7 +76,8 @@ class CustomAuthenticationForm(AuthenticationForm):
 
     def clean_username(self):
         """
-        Normalise the email and provide a clear error if no matching account exists.
+        Normalise the email and provide
+        a clear error if no matching account exists.
         """
         email = (self.cleaned_data.get("username") or "").strip().lower()
 
