@@ -8,7 +8,7 @@
   <div class="container text-center">
 
     <div class="mb-4">
-      <h1 class="fw-bold mb-3">We can’t find that page</h1>
+      <h1 class="fw-bold text-success mb-3">We can’t find that page</h1>
 
       <p class="text-muted mx-auto mb-4" style="max-width: 600px;">
         The page you’re looking for may have been moved, renamed, or is no longer available.
@@ -19,7 +19,7 @@
           {{ primary_label }}
         </a>
         {% if secondary_href %}
-          <a href="{{ secondary_href }}" class="btn btn-lg btn-outline-secondary px-4">
+          <a href="{{ secondary_href }}" class="btn btn-lg btn-success px-4">
             {{ secondary_label }}
           </a>
         {% endif %}

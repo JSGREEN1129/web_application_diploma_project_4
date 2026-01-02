@@ -10,6 +10,7 @@ import stripe
 from django.conf import settings
 # Django messages framework
 from django.contrib import messages
+from django.views.decorators.cache import never_cache
 from django.contrib.auth.decorators import login_required
 # Pagination for search results
 from django.core.paginator import Paginator
@@ -373,7 +374,7 @@ def _assign_field_from_raw(listing: Listing, field_name: str, raw) -> None:
     # Everything else: store as raw value
     setattr(listing, field_name, raw)
 
-
+@never_cache
 @login_required
 @require_POST
 def api_listing_stepper_flags(request, pk=None):
@@ -443,7 +444,7 @@ def api_listing_stepper_flags(request, pk=None):
         }
     )
 
-
+@never_cache
 @login_required
 def create_listing_view(request):
     """
@@ -615,7 +616,7 @@ def create_listing_view(request):
         {"form": form, "media_form": media_form, **flags},
     )
 
-
+@never_cache
 @login_required
 def edit_listing_view(request, pk):
     # Owner-only edit page for drafts
@@ -787,7 +788,7 @@ def edit_listing_view(request, pk):
         },
     )
 
-
+@never_cache
 @login_required
 def listing_detail_view(request, pk):
     # Owner-only listing detail page (shows uploads and pledge progress)
@@ -817,7 +818,7 @@ def listing_detail_view(request, pk):
         },
     )
 
-
+@never_cache
 @login_required
 @require_POST
 def listing_delete_view(request, pk):
@@ -850,7 +851,7 @@ def listing_delete_view(request, pk):
     messages.success(request, "Listing deleted.")
     return redirect("users:dashboard")
 
-
+@never_cache
 @login_required
 @require_POST
 def listing_media_delete_view(request, pk, media_id):
@@ -869,7 +870,7 @@ def listing_media_delete_view(request, pk, media_id):
     messages.success(request, "File deleted.")
     return redirect("listings:edit_listing", pk=listing.pk)
 
-
+@never_cache
 @login_required
 def activate_listing_view(request, pk):
     # Activation entry point — redirects into checkout
@@ -892,7 +893,7 @@ def activate_listing_view(request, pk):
     # Delegates to Stripe checkout creator
     return start_listing_checkout_view(request, pk=listing.pk)
 
-
+@never_cache
 @login_required
 def start_listing_checkout_view(request, pk):
     # Creates a Stripe Checkout session for listing upload fee payment
@@ -969,7 +970,7 @@ def start_listing_checkout_view(request, pk):
 
     return redirect(session.url, permanent=False)  # Stripe-hosted checkout URL
 
-
+@never_cache
 @login_required
 def payment_success_view(request):
     # Success redirect target after Stripe payment completes
@@ -1013,7 +1014,7 @@ def payment_success_view(request):
 
     return redirect("users:dashboard")
 
-
+@never_cache
 @login_required
 def payment_cancel_view(request, pk):
     # Cancel redirect target (user-facing): keeps listing as draft
@@ -1104,7 +1105,7 @@ def stripe_webhook(request):
 
     return HttpResponse(status=200)
 
-
+@never_cache
 @login_required
 @require_GET
 def api_counties(request):
@@ -1112,7 +1113,7 @@ def api_counties(request):
     country = (request.GET.get("country") or "").strip().lower()
     return JsonResponse({"counties": COUNTIES_BY_COUNTRY.get(country, [])})
 
-
+@never_cache
 @login_required
 @require_GET
 def api_outcodes(request):
@@ -1120,7 +1121,7 @@ def api_outcodes(request):
     county = (request.GET.get("county") or "").strip()
     return JsonResponse({"outcodes": OUTCODES_BY_COUNTY.get(county, [])})
 
-
+@never_cache
 @login_required
 def search_listings_view(request):
     # Search filter page for investors
@@ -1226,7 +1227,7 @@ def search_listings_view(request):
         },
     )
 
-
+@never_cache
 @login_required
 def opportunity_detail_view(request, pk):
     # Investor-facing listing page
@@ -1257,9 +1258,9 @@ def opportunity_detail_view(request, pk):
         },
     )
 
-
-@require_GET
+@never_cache
 @login_required
+@require_GET
 def estimate_return_view(request, pk):
     # AJAX endpoint used by pledge UI: returns JSON estimate for entered amount
     listing = get_object_or_404(Listing, pk=pk, status=Listing.Status.ACTIVE)

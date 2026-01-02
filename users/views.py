@@ -106,6 +106,7 @@ def register_view(request):
 
 
 # LOGOUT
+@never_cache
 def logout_view(request):
     """
     Log the user out and return them to the login screen.
@@ -116,6 +117,7 @@ def logout_view(request):
 
 
 # DASHBOARD
+@never_cache
 @login_required
 def dashboard_view(request):
     """
