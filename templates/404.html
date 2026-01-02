@@ -1,7 +1,31 @@
-<!doctype html>
-<html>
-  <head><title>404</title></head>
-  <body>
-    <h1>Custom 404 works</h1>
-  </body>
-</html>
+{% extends 'core/base_users.html' %}
+{% load static %}
+
+{% block title %}404 - Page Not Found{% endblock %}
+{# Overrides the title of the HTML page #}
+
+{% block content %}
+<section class="d-flex align-items-center py-3">
+    <div class="container py-3">
+        <div class="row align-items-center">
+            <div class="col-md-6 order-md-2 text-center">
+                <script src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.8.5/dist/dotlottie-wc.js" type="module"></script>
+                {# Animated illustration shown for 404 error #}
+                <dotlottie-wc
+                    src="https://lottie.host/0776192f-d626-44fa-b407-d93432f3effc/pABYRgUqzr.lottie"
+                    style="width: 100%; max-width: 500px; height: auto"
+                    autoplay
+                    loop>
+                </dotlottie-wc>
+            </div>
+            <div class="col-md-6 text-center text-md-start mt-4 mt-md-0">
+                <h2>Error 404</h2>
+                <p>
+                    The page you are looking for was moved, removed, or might never have existed.
+                </p>
+                <a class="btn btn-lg btn-primary" href="{% url 'homepage' %}">Back to homepage</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
