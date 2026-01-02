@@ -9,7 +9,7 @@ import dj_database_url
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Detect Render deployment environment
-ON_RENDER = bool(os.environ.get("RENDER"))
+ON_RENDER = bool(os.environ.get("RENDER_EXTERNAL_HOSTNAME")) or bool(os.environ.get("RENDER_SERVICE_ID"))
 
 # DEBUG mode 
 _debug_env = os.environ.get("DJANGO_DEBUG")
@@ -81,7 +81,7 @@ ROOT_URLCONF = "GreenSquareCapital.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -197,3 +197,5 @@ if not DEBUG:
         messages.WARNING:  'warning',
         messages.ERROR:    'danger', 
 }
+
+print("DEBUG =", DEBUG)
